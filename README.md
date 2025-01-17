@@ -19,7 +19,7 @@ If running on MacOS with arm platform, add: `--platform linux/amd64`
 ### Regenie (via Docker)
 
 ```bash
-docker run -it --rm sequential-gwas /root/miniforge3/bin/mamba run -n regenie_env regenie --help
+docker run -it --rm sequential-gwas /opt/miniforge3/bin/mamba run -n regenie_env regenie --help
 ```
 
 If running on MacOS with arm platform, add: `--platform linux/amd64`
