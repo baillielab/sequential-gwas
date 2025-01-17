@@ -53,6 +53,7 @@ jobs:
           platforms: linux/amd64
   test:
     name: Test Workflow
+    needs: build_and_publish
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     permissions: # needed to allow julia-actions/cache to proactively delete old caches that it has created
