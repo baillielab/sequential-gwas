@@ -1,8 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
 
-// Miscellanous params
-params.CHROMOSOMES = (1..22).collect { "chr${it}" }
+// Input files params
+ 
 
 // QC params
 params.QC_MAF = 0.01
@@ -110,9 +110,16 @@ process RegenieStep1 {
 }
 
 workflow {
-    genotypes_ch = Channel.fromPath("test/assets/unphased_bed/ukb*", checkIfExists: true).collect()
+    // Input
+    genotypes_ch = Channel.fromPath(params.GENOTYPING_ARRAYS, checkIfExists: true).collect()
+
+    // Merging
     merge_list_ch = MakeMergeList(genotypes_ch)
     merged_genotypes_ch = MergeBEDs(genotypes_ch, merge_list_ch)
+
+    // QC genotypes
     RegenieQC(merged_genotypes_ch)
-    RegenieStep1()
+
+    //GWAS
+    // RegenieStep1()
 }
