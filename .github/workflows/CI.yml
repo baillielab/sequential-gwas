@@ -34,7 +34,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: olivierlabayle/targeted-estimation
+          images: olivierlabayle/sequential-gwas
           tags: |
             type=schedule
             type=ref,event=branch
