@@ -17,3 +17,8 @@ RUN /opt/miniforge3/bin/mamba create -y -n regenie_env -c conda-forge -c biocond
 # Install plink2
 
 RUN /opt/miniforge3/bin/mamba create -y -n plink2_env -c conda-forge -c bioconda plink2
+
+# Install UCSC liftover
+
+RUN /opt/miniforge3/bin/mamba create -y -n liftover_env -c bioconda ucsc-liftover
+

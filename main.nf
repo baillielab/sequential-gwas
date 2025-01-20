@@ -14,9 +14,8 @@ params.QC_INDIVIDUAL_MISSING_RATE = 0.1
 // Regenie params
 params.REGENIE_BSIZE = 1000
 
-def get_prefix(file){
-    return file.toString().take(file.toString().lastIndexOf('.'))
-}
+include { get_prefix } from './modules/utils.nf'
+
 
 def write_chr_list(mergeList, genotypes) {
     def bed_files_with_chr = []
