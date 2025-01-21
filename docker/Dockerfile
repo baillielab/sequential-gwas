@@ -22,3 +22,8 @@ RUN /opt/miniforge3/bin/mamba create -y -n plink2_env -c conda-forge -c bioconda
 
 RUN /opt/miniforge3/bin/mamba create -y -n liftover_env -c bioconda ucsc-liftover
 
+# Add Project code and install dependencies
+
+COPY . /opt/sequential-gwas
+
+RUN julia --project=/opt/sequential-gwas -e 'using Pkg; Pkg.instantiate()'
