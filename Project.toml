@@ -17,7 +17,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 [compat]
 BGEN = "0.2.1"
 CSV = "0.10.15"
-CairoMakie = "0.12.18"
+CairoMakie = "0.12.18, 0.13"
 DataFrames = "1.7.0"
 DelimitedFiles = "1.9.1"
 Mmap = "1.11.0"
