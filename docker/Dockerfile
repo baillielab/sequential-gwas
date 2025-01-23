@@ -1,6 +1,6 @@
 FROM julia:1.11-bullseye
 
-RUN apt-get update && apt-get install -y wget procps
+RUN apt-get update && apt-get install -y wget procps clang
 
 # Install conda
 
@@ -14,6 +14,10 @@ RUN /opt/miniforge3/bin/mamba init
 
 RUN /opt/miniforge3/bin/mamba create -y -n regenie_env -c conda-forge -c bioconda regenie==4.0
 
+# Install plink
+
+RUN /opt/miniforge3/bin/mamba create -y -n plink_env -c conda-forge -c bioconda plink
+
 # Install plink2
 
 RUN /opt/miniforge3/bin/mamba create -y -n plink2_env -c conda-forge -c bioconda plink2
@@ -22,8 +26,10 @@ RUN /opt/miniforge3/bin/mamba create -y -n plink2_env -c conda-forge -c bioconda
 
 RUN /opt/miniforge3/bin/mamba create -y -n liftover_env -c bioconda ucsc-liftover
 
-# Add Project code and install dependencies
+# Add Project code, install dependencies and build sysimage
 
 COPY . /opt/sequential-gwas
 
 RUN julia --project=/opt/sequential-gwas -e 'using Pkg; Pkg.instantiate()'
+
+RUN julia --project=/opt/sequential-gwas /opt/sequential-gwas/src/sysimage.jl

@@ -1,10 +1,10 @@
-using SequantialGWAS
+using SequentialGWAS
 using Test
 using Aqua
 
-@testset "SequantialGWAS.jl" begin
+@testset "SequentialGWAS.jl" begin
     # @testset "Code quality (Aqua.jl)" begin
-    #     Aqua.test_all(SequantialGWAS)
+    #     Aqua.test_all(SequentialGWAS)
     # end
 
     # Test workflow

@@ -1,7 +1,7 @@
 using Test
-using SequantialGWAS
+using SequentialGWAS
 
-PKGDIR = pkgdir(SequantialGWAS)
+PKGDIR = pkgdir(SequentialGWAS)
 
 @testset "Test workflow" begin
     cd(PKGDIR)

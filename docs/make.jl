@@ -1,14 +1,14 @@
-using SequantialGWAS
+using SequentialGWAS
 using Documenter
 
-DocMeta.setdocmeta!(SequantialGWAS, :DocTestSetup, :(using SequantialGWAS); recursive=true)
+DocMeta.setdocmeta!(SequentialGWAS, :DocTestSetup, :(using SequentialGWAS); recursive=true)
 
 makedocs(;
-    modules=[SequantialGWAS],
+    modules=[SequentialGWAS],
     authors="Olivier Labayle <olabayle@gmail.com> and contributors",
-    sitename="SequantialGWAS.jl",
+    sitename="SequentialGWAS.jl",
     format=Documenter.HTML(;
-        canonical="https://baillielab.github.io/SequantialGWAS.jl",
+        canonical="https://baillielab.github.io/SequentialGWAS.jl",
         edit_link="main",
         assets=String[],
     ),

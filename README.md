@@ -11,7 +11,7 @@ The purpose of this project is to provide an end-to-end reproducible GWAS pipeli
 
 ## ODAP
 
-Since the data is sensitive, it is meant to run on the [ODAP](https://odap.ac.uk/) platform. To get access, you will need to contact the relevant person, at the moment [dominique.mccormick@ed.ac.uk](dominique.mccormick@ed.ac.uk). More information on accessing ODAP can be found [here](https://git.ecdf.ed.ac.uk/odap-users-guide/odap-users-guide).
+Since the data is sensitive, it is meant to run on the [ODAP](https://odap.ac.uk/) platform (at least for now). To get access, you will need to contact the relevant person, at the moment [dominique.mccormick@ed.ac.uk](dominique.mccormick@ed.ac.uk). More information on accessing ODAP can be found [here](https://git.ecdf.ed.ac.uk/odap-users-guide/odap-users-guide).
 
 ## High Level Workflow Preview
 
@@ -45,7 +45,6 @@ As currently understood and relative to the data filesystem in `/odp-beegfs/a015
 
 ### Phenotypes
 
-
 ## Build Docker Image Locally
 
 ```bash
@@ -56,30 +55,40 @@ docker build -t sequential-gwas -f docker/Dockerfile .
 
 ## Dependencies
 
-In order to execute the workflows in this repository only 2 software need to be installed, and they should already be present on ODAP:
+In order to run the workflows in this repository only 2 software need to be installed, and they should already be present on ODAP:
 
-- Nextflow
-- Singularity
+- Nextflow 24.10.3 ([see how to setup](https://git.ecdf.ed.ac.uk/odap-users-guide/odap-users-guide/-/wikis/nexflow))
+- Singularity 3.9.4 (Should be ready to use)
 
 ## Usage
 
-First import the project within ODAP, from the project root directory run:
+First import the project within ODAP, and, from the project root directory run:
 
 
 ```bash
-nextflow run main.nf
+nextflow run main.nf -profile odap
 ```
 
-## Code Development on ODAP2
+## For Developers: Code Development on ODAP2
 
-First import the [docker image](https://hub.docker.com/repository/docker/olivierlabayle/sequential-gwas/general) as a singularity container within ODAP which we assume is called `sequential-gwas`.
+First import the [docker image](https://hub.docker.com/repository/docker/olivierlabayle/sequential-gwas/general) as a singularity container within ODAP which we assume is called `sequential-gwas.sif`.
 
 ### Julia REPL
 
 To get a shell while mounting the repo within the container:
 
 ```bash
-singularity shell --bind $PWD:/mnt sequential-gwas julia --project=/mnt
+singularity shell --bind $PWD:/mnt/sequential-gwas sequential-gwas.sif
+```
+
+```bash
+singularity shell --bind $PWD:/mnt/sequential-gwas sequential-gwas.sif 
+```
+
+Then run the julia REPL
+
+```bash
+JULIA_DEPOT_PATH=$JULIA_DEPOT_PATH:/root/.julia julia --project=/mnt/sequential-gwas
 ```
 
 ### Extra Tools

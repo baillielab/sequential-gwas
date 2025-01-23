@@ -1,4 +1,4 @@
-module SequantialGWAS
+module SequentialGWAS
 
 using CSV
 using DataFrames

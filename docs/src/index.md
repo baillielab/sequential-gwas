@@ -1,14 +1,14 @@
 ```@meta
-CurrentModule = SequantialGWAS
+CurrentModule = SequentialGWAS
 ```
 
-# SequantialGWAS
+# SequentialGWAS
 
-Documentation for [SequantialGWAS](https://github.com/baillielab/sequential-gwas).
+Documentation for [SequentialGWAS](https://github.com/baillielab/sequential-gwas).
 
 ```@index
 ```
 
 ```@autodocs
-Modules = [SequantialGWAS]
+Modules = [SequentialGWAS]
 ```

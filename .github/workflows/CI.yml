@@ -112,6 +112,6 @@ jobs:
         shell: julia --project=docs --color=yes {0}
         run: |
           using Documenter: DocMeta, doctest
-          using SequantialGWAS
-          DocMeta.setdocmeta!(SequantialGWAS, :DocTestSetup, :(using SequantialGWAS); recursive=true)
-          doctest(SequantialGWAS)
+          using SequentialGWAS
+          DocMeta.setdocmeta!(SequentialGWAS, :DocTestSetup, :(using SequentialGWAS); recursive=true)
+          doctest(SequentialGWAS)
