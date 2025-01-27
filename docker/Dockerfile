@@ -1,6 +1,13 @@
 FROM julia:1.11-bullseye
 
-RUN apt-get update && apt-get install -y wget procps clang
+RUN apt-get update && apt-get install -y wget procps clang libblas-dev liblapack-dev libopenblas-dev
+
+# Install QCTOOL
+
+RUN wget -O qctool.tgz https://www.well.ox.ac.uk/~gav/resources/qctool_v2.2.5-CentOS_Linux7.9-x86_64.tgz 
+RUN tar -xvzf qctool.tgz
+RUN mv qctool_v2.2.5-Ce-x86_64/qctool /usr/local/bin
+RUN qctool -h
 
 # Install conda
 
