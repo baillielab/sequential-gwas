@@ -16,6 +16,26 @@ process PedToBed {
         """
 }
 
+process BasicQC{
+    input:
+        tuple path(bed_file), path(bim_file), path(fam_file)
+
+    output:
+        tuple path(bed_file), path(bim_file), path(fam_file)
+
+    script:
+    bed_prefix = get_prefix(bed_file)
+        """
+        /opt/miniforge3/bin/mamba run -n plink2_env plink2 --bfile ${bed_prefix} \
+            --geno ${params.QC_GENOTYPE_MISSING_RATE} \
+            --mind ${params.QC_INDIVIDUAL_MISSING_RATE} \ 
+            --maf ${params.QC_MAF} \
+            --hwe ${params.QC_HWE} \
+            --make-bed 
+            --out ${bed_prefix}.qced
+        """
+}
+
 
 process LiftOver {
     publishDir "results/lifted_over_genotypes", mode: 'symlink'
@@ -34,12 +54,14 @@ process LiftOver {
 
 
 workflow CombineGenotypingArrays {
-    chain_file = Channel.fromPath(params.CHAIN_FILE)
-    r8_array_ch = Channel.fromFilePairs(params.R8_GENOTYPES)
-    before_2024_array_ch = Channel.fromFilePairs(params.BEFORE_2024_GENOTYPES)
-    since_2024_array_ch = Channel.fromFilePairs(params.SINCE_2024_GENOTYPES)
+    chain_file = Channel.fromPath(params.GRC37_TO_GRC38_CHAIN_FILE, checkIfExists: true)
+    r8_array = Channel.fromFilePairs(params.R8_GENOTYPES, checkIfExists: true)
+    before_2024_array = Channel.fromFilePairs(params.BEFORE_2024_GENOTYPES, checkIfExists: true)
+    since_2024_array = Channel.fromFilePairs(params.SINCE_2024_GENOTYPES, checkIfExists: true)
 
-    array_ch = r8_array_ch.concat(before_2024_array_ch).concat(since_2024_array_ch)
-    PedToBed(all_ped_files)
-    // LiftOver()
+    grc38_genotypes = PedToBed(since_2024_array)
+    grc37_genotypes = PedToBed(r8_array.concat(before_2024_array))
+    qced_grc38_genotypes = BasicQC(grc38_genotypes)
+    qced_grc37_genotypes = BasicQC(grc37_genotypes)
+    LiftOver(qced_grc37_genotypes, chain_file)
 }

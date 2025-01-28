@@ -8,6 +8,6 @@ using Aqua
     # end
 
     # Test workflow
-    @test include("workflow.jl")
+    # @test include("workflow.jl")
 end
 

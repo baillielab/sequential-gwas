@@ -2,14 +2,14 @@
 nextflow.enable.dsl = 2
 
 // Input files params
- 
+params.GRC37_TO_GRC38_CHAIN_FILE = "${projectDir}/assets/hg19ToHg38.over.chain.gz"
 
 // QC params
 params.QC_MAF = 0.01
 params.QC_MAC = 100
-params.QC_GENOTYPE_MISSING_RATE = 0.1
+params.QC_GENOTYPE_MISSING_RATE = 0.05
 params.QC_HWE = 1e-15
-params.QC_INDIVIDUAL_MISSING_RATE = 0.1
+params.QC_INDIVIDUAL_MISSING_RATE = 0.05
 
 // Regenie params
 params.REGENIE_BSIZE = 1000
