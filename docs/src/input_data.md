@@ -1,4 +1,4 @@
-# Input Data
+# Input Data
 
 Since GenOMICC is an ongoing project where the data is continuously collected, it came and will continue to arrive in different formats. This page aims at making it clear what are the inputs and outputs to the pipeline.
 

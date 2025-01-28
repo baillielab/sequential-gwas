@@ -2,7 +2,7 @@
 
 The dataset is composed of 4 different cohorts: GenOMICC, MILD, REACT and ISARIC.
 
-## 1. GenOMICC (Genetics Of Mortality In Critical Care)
+## GenOMICC (Genetics Of Mortality In Critical Care)
 
 - Link to the study webpage: [https://genomicc.org/](https://genomicc.org/).
 
@@ -23,7 +23,7 @@ Additional Information:
 
 TBD
 
-## 2. ISARIC
+## ISARIC
 
 Link to the study webpage: [https://isaric.org/](https://isaric.org/).
 
@@ -36,7 +36,7 @@ Additional Information:
 - The severity varies and a severity score is provided
 - Many biological and contextual covariates exist but are sparse
 
-## 3. MILD
+## MILD
 
 Link to the study webpage: ?
 
@@ -46,7 +46,7 @@ Inclusion criteria:
 - Volunteers (It is not clear in what way?)
 - Not hospitalised 
 
-## 4. REACT (Real-time Assessment of Community Transmission)
+## REACT (Real-time Assessment of Community Transmission)
 
 - Link to the study webpage [https://www.imperial.ac.uk/medicine/research-and-impact/groups/react-study/](https://www.imperial.ac.uk/medicine/research-and-impact/groups/react-study/).
 

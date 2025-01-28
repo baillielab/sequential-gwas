@@ -16,8 +16,7 @@ docker build -t sequential-gwas -f docker/Dockerfile .
 
 ## Code Development on ODAP2
 
-!!! warning 
-    When you really need to.
+When you really need to.
 
 First import the [docker image](https://hub.docker.com/repository/docker/olivierlabayle/sequential-gwas/general) as a singularity container within ODAP which we assume is called `sequential-gwas.sif`.
 

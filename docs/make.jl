@@ -15,7 +15,7 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Cohorts Description" => "cohorts.md",
-        "Input Data" => "input_data.md",
+        "Input Data Description" => "input_data.md",
         "Run" => "run.md",
         "Outputs" => "outputs.md",
         "Development" => "development.md",
