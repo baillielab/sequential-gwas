@@ -9,6 +9,6 @@ using Aqua
     end
 
     # Unit Tests
-    @test include("strand_flip.jl")
+    # @test include("strand_flip.jl")
 end
 

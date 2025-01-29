@@ -16,7 +16,13 @@ Depending on the time period, individuals may have been genotyped, whole genome 
 | Before 2024 microarray | 20/09/2021   | 06/12/2023 | GSA-MD-24v3-0_A1 | GRC37 | 20210920_20231206_QC_VFinal | PLINK_040724_0954/20210920_20231206_QC_VFinal.ped |
 | Since 2024 microarray  | 04/06/2024   | 10/06/2024 | GSA-MD-48v4-0_A1 | GRC38 | 20240604_20240610_QC_VFinal | PLINK_040724_0114/20240604_20240610_QC_VFinal.ped |
 
-The Illumina manifest files corresponding to each array were downloaded from [Illumina's website](https://emea.support.illumina.com/array/array_kits/infinium-global-screening-array/downloads.html) and are stored in `assets`. The description of the manifest columns can be found [here](https://knowledge.illumina.com/microarray/general/microarray-general-reference_material-list/000001565).
+The Illumina manifest files corresponding to each array can be downloaded from [Illumina's website](https://emea.support.illumina.com/array/array_kits/infinium-global-screening-array/downloads.html). The description of the manifest columns can be found [here](https://knowledge.illumina.com/microarray/general/microarray-general-reference_material-list/000001565). Because the files are too big to be version controlled, variants on the - RefStrand were extracted and stored in `assets`.
+
+This has been done using the following command:
+
+```bash
+julia --project --startup-file=no bin/seq-gwas.jl snps-to-flip --help
+```
 
 ### Whole Genome Sequencing
 
