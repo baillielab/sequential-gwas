@@ -31,7 +31,7 @@ RUN /opt/miniforge3/bin/mamba create -y -n plink2_env -c conda-forge -c bioconda
 
 # Install UCSC liftover
 
-RUN /opt/miniforge3/bin/mamba create -y -n liftover_env -c bioconda ucsc-liftover
+RUN /opt/miniforge3/bin/mamba create -y -n liftover_env -c bioconda ucsc-liftover python=2.7
 
 # Add Project code, install dependencies and build sysimage
 
@@ -39,4 +39,4 @@ COPY . /opt/sequential-gwas
 
 RUN julia --project=/opt/sequential-gwas -e 'using Pkg; Pkg.instantiate()'
 
-RUN julia --project=/opt/sequential-gwas /opt/sequential-gwas/src/sysimage.jl
+# RUN julia --project=/opt/sequential-gwas /opt/sequential-gwas/src/sysimage.jl
