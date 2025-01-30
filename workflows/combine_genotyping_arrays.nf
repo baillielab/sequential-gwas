@@ -1,11 +1,13 @@
 include { get_prefix } from '../modules/utils.nf'
 
 process PedToBed {
+    publishDir "results/array-genotypes/bed", mode: 'symlink'
+
     input:
-        tuple val(genome_build), path(map_file), path(ped_file)
+        tuple path(map_file), path(ped_file)
 
     output:
-        tuple val(genome_build), path("${input_prefix}.bed"), path("${input_prefix}.bim"), path("${input_prefix}.fam")
+        tuple path("${input_prefix}.bed"), path("${input_prefix}.bim"), path("${input_prefix}.fam")
 
     script:
         input_prefix = get_prefix(ped_file)
@@ -14,12 +16,15 @@ process PedToBed {
         """
 }
 
-process BasicQC{
+process QCRawGenotypes{
+    publishDir "results/array-genotypes/qced", mode: 'symlink'
+
     input:
-        tuple val(genome_build), path (variants_to_flip), path(bed_file), path(bim_file), path(fam_file)
+        tuple path(bed_file), path(bim_file), path(fam_file)
+        path variants_to_flip
 
     output:
-        tuple val(genome_build), path("${input_prefix}.qced.bed"), path("${input_prefix}.qced.bim"), path("${input_prefix}.qced.fam")
+        tuple path("${input_prefix}.qced.bed"), path("${input_prefix}.qced.bim"), path("${input_prefix}.qced.fam")
 
     script:
         input_prefix = get_prefix(bed_file)
@@ -27,7 +32,6 @@ process BasicQC{
         /opt/miniforge3/bin/mamba run -n plink_env plink --bfile ${input_prefix} \
             --geno ${params.QC_GENOTYPE_MISSING_RATE} \
             --mind ${params.QC_INDIVIDUAL_MISSING_RATE} \
-            --maf ${params.QC_MAF} \
             --hwe ${params.QC_HWE} \
             --flip ${variants_to_flip} \
             --make-bed \
@@ -36,47 +40,84 @@ process BasicQC{
 }
 
 process LiftOver {
-    publishDir "results/lifted_over_genotypes", mode: 'symlink'
+    publishDir "results/array-genotypes/lifted_over", mode: 'symlink'
 
     input:
-        tuple val(genome_build), path(chain_file), path(map_file), path(ped_file)
+        tuple path(map_file), path(ped_file)
+        path chain_file
         
     output:
-        tuple val(genome_build), path("${input_prefix}.liftedOver.map"), path("${input_prefix}.liftedOver.ped"), emit: genotypes
-        path("${input_prefix}.bed.unlifted"), emit: unlifted
+        tuple path("${input_prefix}.liftedOver.map"), path("${input_prefix}.liftedOver.ped"), emit: genotypes
+        path("${input_prefix}.bed.unlifted"), optional: true
 
     script:
         input_prefix = get_prefix(map_file)
-        if (chain_file.getName() != "NO_LIFTOVER_NEEDED") { 
-            """
-            /opt/miniforge3/bin/mamba run -n liftover_env python /mnt/code/bin/liftover.py \
-                -m ${input_prefix}.map \
-                -p ${input_prefix}.ped \
-                -o ${input_prefix}.liftedOver \
-                -c ${chain_file}
-            """
-        }
-        else {
-            """
-            ln -s ${input_prefix}.ped ${input_prefix}.liftedOver.ped
-            ln -s ${input_prefix}.map ${input_prefix}.liftedOver.map
-            """
-        }
+        """
+        /opt/miniforge3/bin/mamba run -n liftover_env python /opt/sequential-gwas/bin/liftover.py \
+            -m ${input_prefix}.map \
+            -p ${input_prefix}.ped \
+            -o ${input_prefix}.liftedOver \
+            -c ${chain_file}
+        """
+}
+
+def make_merge_list(merge_list, genotype_files) {
+    def bed_files = genotype_files.findAll() { it.toString().endsWith(".bed") }
+    println(bed_files)
+    bed_files.each { it -> merge_list << "${get_prefix(it)}\n" }
+}
+
+process MergeGenotypes {
+    publishDir "results/array-genotypes/merged", mode: 'symlink'
+
+    input:
+        path genotype_files
+        path merge_list
+
+    output:
+        tuple path("genotypes.merged.bed"), path("genotypes.merged.bim"), path("genotypes.merged.fam")
+
+    script:
+        """
+        /opt/miniforge3/bin/mamba run -n plink_env plink \
+            --merge-list ${merge_list} \
+            --make-bed \
+            --out genotypes.merged
+        """
 }
 
 workflow GenotypesQC {
     take: 
-        genotypes
+        grc37_genotypes
+        grc38_genotypes
         variants_to_flip
         chain_file
 
     main:
-        lifted_genotypes = LiftOver(chain_file.combine(genotypes, by: 0))
-        genotypes_bed = PedToBed(lifted_genotypes.genotypes)
-        qced_genotypes = BasicQC(variants_to_flip.combine(genotypes_bed, by: 0))
+        lifted_genotypes = LiftOver(grc37_genotypes, chain_file)
+        genotypes_bed = PedToBed(lifted_genotypes.genotypes.concat(grc38_genotypes))
+        qced_genotypes = QCRawGenotypes(genotypes_bed, variants_to_flip)
     
     emit:
         qced_genotypes
+}
+
+process QCMergedGenotypes {
+    input:
+        path genotypes
+
+    output:
+        tuple path("genotypes.merged.qced.bed"), path("genotypes.merged.qced.bim"), path("genotypes.merged.qced.fam")
+
+    script:
+        """
+        /opt/miniforge3/bin/mamba run -n plink_env plink --bfile genotypes.merged \
+            --geno ${params.QC_GENOTYPE_MISSING_RATE} \
+            --mind ${params.QC_INDIVIDUAL_MISSING_RATE} \
+            --hwe ${params.QC_HWE} \
+            --make-bed \
+            --out genotypes.merged.qced
+        """
 }
 
 workflow CombineGenotypingArrays {
@@ -86,13 +127,14 @@ workflow CombineGenotypingArrays {
     grc37_genotypes = r8_array.concat(before_2024_array)
     // GRC38 Genotypes
     grc38_genotypes = Channel.fromPath("${params.SINCE_2024_GENOTYPES}*", checkIfExists: true).collect()
-    // QC and LiftOver Genotypes
-    genotypes = Channel.of("grch37", "grch37", "grch38")
-        .merge(grc37_genotypes.concat(grc38_genotypes))
-    variants_to_flip = Channel.of("grch37", "grch38")
-        .merge(Channel.fromPath([params.VARIANTS_TO_FLIP_GRC37, params.VARIANTS_TO_FLIP_GRC38], checkIfExists: true))
-    chains_files = Channel.of("grch37", "grch38")
-        .merge(Channel.fromPath([params.GRC37_TO_GRC38_CHAIN_FILE, "${projectDir}/assets/NO_LIFTOVER_NEEDED"], checkIfExists: true))
-    qced_liftedover_genotypes = GenotypesQC(genotypes, variants_to_flip, chains_files)
-
+    // LiftOver and QC Genotypes
+    variants_to_flip = file(params.VARIANTS_TO_FLIP_GRC38, checkIfExists: true)
+    chain_file = file(params.GRC37_TO_GRC38_CHAIN_FILE, checkIfExists: true)
+    qced_genotypes = GenotypesQC(grc37_genotypes, grc38_genotypes, variants_to_flip, chain_file)
+    // Merge Genotypes
+    merge_list = qced_genotypes
+        .map { it -> get_prefix(it[0].getName()) }
+        .collectFile(name: "merge_list.txt", newLine: true)
+    merged_genotypes = MergeGenotypes(qced_genotypes.collect(), merge_list)
+    QCMergedGenotypes(merged_genotypes)
 }

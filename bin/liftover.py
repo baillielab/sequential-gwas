@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-# This script to be used to run liftOver on genotype data stored in
+# This script has been copied from: https://github.com/sritchie73/liftOverPlink/blob/master/liftOverPlink.py
+# It is used to run liftOver on genotype data stored in
 # the plink format.
 # See: http://genome.sph.umich.edu/wiki/LiftOver
 # Downloaded from: http://genome.sph.umich.edu/wiki/LiftMap.py
