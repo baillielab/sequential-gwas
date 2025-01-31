@@ -9,11 +9,43 @@ function cli_settings()
     @add_arg_table! s begin
         "snps-to-flip"
             action = :command
-            help = "Extract SNPs to flip based on Illumina manifest file."
+            help = "Extracts SNPs to flip based on Illumina manifest file."
 
         "mock"
             action = :command
-            help = "Create mock data for testing purposes."
+            help = "Creates mock data for testing purposes."
+
+        "report-qc-effect"
+            action = :command
+            help = "Generates a report on the effects of the pipeline."
+
+        "write-variants-intersection"
+            action = :command
+            help = "Finds variants in all bim files and writes to file."
+    end
+
+    @add_arg_table! s["write-variants-intersection"] begin
+        "--output"
+            arg_type = String
+            required = false
+            default = "variants_intersection.txt"
+            help = "Output file name."
+        "--input-dir"
+            arg_type = String
+            required = false
+            default = "."
+            help = "Directory containing bim files."
+    end
+
+    @add_arg_table! s["report-qc-effect"] begin
+        "input-prefix"
+            arg_type = String
+            required = true
+            help = "Prefix to input genotypes data."
+        "output-prefix"
+            arg_type = String
+            required = true
+            help = "Prefix to output genotypes data."
     end
 
     @add_arg_table! s["snps-to-flip"] begin
@@ -26,7 +58,6 @@ function cli_settings()
             arg_type = String
             help = "Output .txt file with SNPs to flip (1 SNP per line)."
             default = "snps_to_flip.txt"
-
     end
 
     @add_arg_table! s["mock"] begin
@@ -86,6 +117,16 @@ function julia_main()::Cint
     cmd_settings = settings[cmd]
     if cmd == "snps-to-flip"
         make_snps_to_flip_list(cmd_settings["out"], cmd_settings["manifest-file"])
+    elseif cmd == "report-qc-effect"
+        report_qc_effect(
+            cmd_settings["input-prefix"], 
+            cmd_settings["output-prefix"]
+        )
+    elseif cmd == "write-variants-intersection"
+        write_variants_intersection(
+            cmd_settings["output"],
+            cmd_settings["input-dir"]
+        )
     elseif cmd == "mock"
         mock_data(
             cmd_settings["release-r8"],

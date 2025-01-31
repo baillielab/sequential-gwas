@@ -6,9 +6,12 @@ using DelimitedFiles
 using ArgParse
 using Random
 
-include("strand_flip.jl")
+include("one_time_checks.jl")
 include("mock.jl")
 include("cli.jl")
+include("read_write.jl")
+include("report.jl")
+
 
 export julia_main
 
