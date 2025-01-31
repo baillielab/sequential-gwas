@@ -12,7 +12,12 @@ process PedToBed {
     script:
         input_prefix = get_prefix(ped_file)
         """
-        /opt/miniforge3/bin/mamba run -n plink_env plink --file ${input_prefix} --make-bed --out ${input_prefix}
+        /opt/miniforge3/bin/mamba run -n plink_env plink \
+            --noweb \
+            --alleleACGT \
+            --file ${input_prefix} \
+            --make-bed \
+            --out ${input_prefix}
         """
 }
 
@@ -30,6 +35,7 @@ process QCRawGenotypes{
         input_prefix = get_prefix(bed_file)
         """
         /opt/miniforge3/bin/mamba run -n plink_env plink --bfile ${input_prefix} \
+            --noweb \
             --geno ${params.QC_GENOTYPE_MISSING_RATE} \
             --mind ${params.QC_INDIVIDUAL_MISSING_RATE} \
             --hwe ${params.QC_HWE} \
@@ -80,6 +86,7 @@ process MergeGenotypes {
     script:
         """
         /opt/miniforge3/bin/mamba run -n plink_env plink \
+            --noweb \
             --merge-list ${merge_list} \
             --make-bed \
             --out genotypes.merged
@@ -112,6 +119,7 @@ process QCMergedGenotypes {
     script:
         """
         /opt/miniforge3/bin/mamba run -n plink_env plink --bfile genotypes.merged \
+            --noweb \
             --geno ${params.QC_GENOTYPE_MISSING_RATE} \
             --mind ${params.QC_INDIVIDUAL_MISSING_RATE} \
             --hwe ${params.QC_HWE} \
