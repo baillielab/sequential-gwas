@@ -22,6 +22,23 @@ function cli_settings()
         "write-variants-intersection"
             action = :command
             help = "Finds variants in all bim files and writes to file."
+        
+        "write-chromosomes"
+            action = :command
+            help = "Write list of chromosomes present in genotypes to file."
+    end
+
+    @add_arg_table! s["write-chromosomes"] begin
+        "input-prefix"
+            arg_type = String
+            required = true
+            help = "Prefix to genotypes."
+
+        "--output"
+            arg_type = String
+            required = false
+            default = "chromosomes.txt"
+            help = "Output file name."
     end
 
     @add_arg_table! s["write-variants-intersection"] begin
@@ -117,6 +134,11 @@ function julia_main()::Cint
     cmd_settings = settings[cmd]
     if cmd == "snps-to-flip"
         make_snps_to_flip_list(cmd_settings["out"], cmd_settings["manifest-file"])
+    elseif cmd == "write-chromosomes"
+        write_chromosomes(
+            cmd_settings["input-prefix"], 
+            output=cmd_settings["output"]
+        )
     elseif cmd == "report-qc-effect"
         report_qc_effect(
             cmd_settings["input-prefix"], 

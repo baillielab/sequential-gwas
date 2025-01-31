@@ -32,3 +32,5 @@ work/
 results/
 .nextflow/
 .nextflow.*
+
+assets/topmed-api-token

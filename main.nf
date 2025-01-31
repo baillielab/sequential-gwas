@@ -17,6 +17,7 @@ params.QC_INDIVIDUAL_MISSING_RATE = 0.1
 params.REGENIE_BSIZE = 1000
 
 include { CombineGenotypingArrays } from './workflows/combine_genotyping_arrays.nf'
+include { ImputationWorkflow } from './workflows/imputation.nf'
 
 workflow {
     genotyping_arrays = CombineGenotypingArrays()

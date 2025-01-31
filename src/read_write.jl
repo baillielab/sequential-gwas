@@ -59,3 +59,12 @@ function write_variants_intersection(output_file, input_dir)
         end
     end
 end
+
+function write_chromosomes(input_prefix; output="chromosomes.txt")
+    chrs = SequentialGWAS.read_bim(input_prefix).CHR_CODE |> unique |> sort
+    open(output, "w") do io
+        for chr in chrs
+            println(io, chr)
+        end
+    end
+end
