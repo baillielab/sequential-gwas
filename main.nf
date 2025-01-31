@@ -9,9 +9,9 @@ params.VARIANTS_TO_FLIP_GRC37 = "${projectDir}/assets/GSA-24v3-0_A1-minus-strand
 // QC params
 params.QC_MAF = 0.01
 params.QC_MAC = 100
-params.QC_GENOTYPE_MISSING_RATE = 0.05
+params.QC_GENOTYPE_MISSING_RATE = 0.1
 params.QC_HWE = 1e-50
-params.QC_INDIVIDUAL_MISSING_RATE = 0.05
+params.QC_INDIVIDUAL_MISSING_RATE = 0.1
 
 // Regenie params
 params.REGENIE_BSIZE = 1000

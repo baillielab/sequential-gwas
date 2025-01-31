@@ -32,7 +32,7 @@ read_fam(prefix) = CSV.read(
     string(prefix, ".fam"), 
     DataFrame, 
     delim=' ', 
-    header=["FID", "IID", "FATHER_ID", "MOTHER", "SEX", "PHENOTYPE"]
+    header=["FID", "IID", "FATHER_ID", "MOTHER_ID", "SEX", "PHENOTYPE"]
 )
 
 function files_matching_prefix(prefix)
