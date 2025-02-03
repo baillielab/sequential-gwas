@@ -27,7 +27,7 @@ process BedToChrVCF {
         val chr
 
     output:
-        path "${output_prefix}.vcf"
+        path "${output_prefix}.vcf.gz"
 
     script:
         input_prefix = get_prefix(genotypes[0])
@@ -35,9 +35,11 @@ process BedToChrVCF {
         """
         /opt/miniforge3/bin/mamba run -n plink_env plink \
             --bfile ${input_prefix} \
-            --recode vcf \
             --chr ${chr} \
+            --output-chr chr26 \
+            --recode vcf \
             --out ${output_prefix}
+        bgzip ${output_prefix}.vcf
         """
 }
 
@@ -59,7 +61,7 @@ process GetChromosomes {
 workflow ImputationWorkflow {
     topmed_api_token = file("assets/topmed-api-token")
     bed_genotypes = Channel.fromPath("results/array-genotypes/merged_qced/genotypes.merged.qced*").collect()
-    chrs = GetChromosomes(bed_genotypes).splitText().view()
+    chrs = GetChromosomes(bed_genotypes).splitText() { it.trim() }
     vcf_genotypes = BedToChrVCF(bed_genotypes, chrs)
-    // ImputeGenotypes(topmed_api_token, vcf_genotypes)
+    ImputeGenotypes(topmed_api_token, vcf_genotypes)
 }
