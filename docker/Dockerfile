@@ -1,6 +1,15 @@
 FROM julia:1.11-bullseye
 
-RUN apt-get update && apt-get install -y wget procps clang libblas-dev liblapack-dev libopenblas-dev tabix
+ENV JULIA_DEPOT_PATH=/opt/julia-depot
+
+RUN apt-get update && apt-get install -y \
+    wget \
+    procps \
+    clang \
+    libblas-dev \
+    liblapack-dev \
+    libopenblas-dev \
+    tabix
 
 # Install QCTOOL
 
@@ -32,10 +41,18 @@ RUN /opt/miniforge3/bin/mamba create -y -n plink2_env -c conda-forge -c bioconda
 
 RUN /opt/miniforge3/bin/mamba create -y -n liftover_env -c bioconda ucsc-liftover python=2.7
 
+# Install Admixture
+
+RUN wget https://dalexander.github.io/admixture/binaries/admixture_linux-1.3.0.tar.gz
+
+RUN tar -xvzf admixture_linux-1.3.0.tar.gz
+
+RUN mv dist/admixture_linux-1.3.0/admixture /usr/local/bin
+
 # Add Project code, install dependencies and build sysimage
 
 COPY . /opt/sequential-gwas
 
 RUN julia --project=/opt/sequential-gwas -e 'using Pkg; Pkg.instantiate()'
 
-# RUN julia --project=/opt/sequential-gwas /opt/sequential-gwas/src/sysimage.jl
+RUN julia --project=/opt/sequential-gwas /opt/sequential-gwas/src/sysimage.jl
