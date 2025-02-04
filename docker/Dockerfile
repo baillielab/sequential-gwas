@@ -25,21 +25,27 @@ RUN bash Miniforge3.sh -b -p /opt/miniforge3
 
 RUN /opt/miniforge3/bin/mamba init
 
+ENV PATH=/opt/miniforge3/bin/:${PATH}
+
+# Install bcftools
+
+RUN mamba create -n bcftools_env -c conda-forge -c bioconda bcftools
+
 # Install regenie
 
-RUN /opt/miniforge3/bin/mamba create -y -n regenie_env -c conda-forge -c bioconda regenie==4.0
+RUN mamba create -y -n regenie_env -c conda-forge -c bioconda regenie==4.0
 
 # Install plink
 
-RUN /opt/miniforge3/bin/mamba create -y -n plink_env -c conda-forge -c bioconda plink
+RUN mamba create -y -n plink_env -c conda-forge -c bioconda plink
 
 # Install plink2
 
-RUN /opt/miniforge3/bin/mamba create -y -n plink2_env -c conda-forge -c bioconda plink2
+RUN mamba create -y -n plink2_env -c conda-forge -c bioconda plink2
 
 # Install UCSC liftover
 
-RUN /opt/miniforge3/bin/mamba create -y -n liftover_env -c bioconda ucsc-liftover python=2.7
+RUN mamba create -y -n liftover_env -c bioconda ucsc-liftover python=2.7
 
 # Install Admixture
 
@@ -56,3 +62,5 @@ COPY . /opt/sequential-gwas
 RUN julia --project=/opt/sequential-gwas -e 'using Pkg; Pkg.instantiate()'
 
 RUN julia --project=/opt/sequential-gwas /opt/sequential-gwas/src/sysimage.jl
+
+RUN echo 'alias juliasys="julia --project=/opt/sequential-gwas -J/opt/sequential-gwas/SequentialGWAS.so"' >> ~/.bashrc
