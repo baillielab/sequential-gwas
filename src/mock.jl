@@ -131,10 +131,10 @@ function resample_variants(alleles_A, alleles_B)
     return permutedims(resampled_alleles_A), permutedims(resampled_alleles_B)
 end
 
-function make_new_ped_lines!(sample_id_map, ped_lines, resampled_alleles_A, resampled_alleles_B, new_sample_ids;n_samples=1000)
+function make_new_ped_lines!(sample_id_map, ped_lines, resampled_alleles_A, resampled_alleles_B, new_sample_ids;n_arrays_individuals=1000)
     new_ped_lines = String[]
     idx = 1
-    while length(new_ped_lines) < n_samples
+    while length(new_ped_lines) < n_arrays_individuals
         line = ped_lines[idx]
         # Get the line up to the genotypes
         line_prefix = line[1:get_genotype_description_start(line)-2]
@@ -155,7 +155,7 @@ end
 
 function make_mock_ped_files(release_r8, release_2021_2023, release_2024_now, variants_indices; 
     outprefix = "mock",
-    n_samples = 1000, 
+    n_arrays_individuals = 1000, 
     )
     origin_ped_files = (
         release_r8 = read_ped(release_r8),
@@ -169,8 +169,8 @@ function make_mock_ped_files(release_r8, release_2021_2023, release_2024_now, va
         n_variants = size(variants_indices[file_id], 1)
         alleles_A, alleles_B = get_alleles(ped_lines, variants_indices[file_id])
         resampled_alleles_A, resampled_alleles_B = resample_variants(alleles_A, alleles_B)
-        new_sample_ids = string.("odap", idx*n_samples:idx*n_samples+n_samples-1)
-        new_ped_lines = make_new_ped_lines!(sample_id_map, ped_lines, resampled_alleles_A, resampled_alleles_B, new_sample_ids; n_samples=n_samples)
+        new_sample_ids = string.("odap", idx*n_arrays_individuals:idx*n_arrays_individuals+n_arrays_individuals-1)
+        new_ped_lines = make_new_ped_lines!(sample_id_map, ped_lines, resampled_alleles_A, resampled_alleles_B, new_sample_ids; n_arrays_individuals=n_arrays_individuals)
         write_ped(outfile_prefix(outprefix, file_id), new_ped_lines)
     end
     return sample_id_map
@@ -187,7 +187,7 @@ function mock_genetic_data(
     outprefix="mock",
     n_common_snps=100, 
     n_distinct_snps=10,
-    n_samples=1000,
+    n_arrays_individuals=1000,
     rng=123,
     verbosity=1
     )
@@ -206,7 +206,7 @@ function mock_genetic_data(
     verbosity > 0 && @info("Creating mock ped files.")
     sample_id_map = make_mock_ped_files(release_r8, release_2021_2023, release_2024_now, variants_indices; 
         outprefix = outprefix,
-        n_samples = n_samples
+        n_arrays_individuals = n_arrays_individuals
     )
     return sample_id_map
 end
@@ -239,7 +239,7 @@ function mock_data(release_r8,
     outprefix="mock",
     n_common_snps=100, 
     n_distinct_snps=10,
-    n_samples=1000,
+    n_arrays_individuals=1000,
     rng=123,
     verbosity=1)
     verbosity > 0 && @info("Mocking genotyping arrays.")
@@ -253,7 +253,7 @@ function mock_data(release_r8,
         outprefix=outprefix,
         n_common_snps=n_common_snps, 
         n_distinct_snps=n_distinct_snps,
-        n_samples=n_samples,
+        n_arrays_individuals=n_arrays_individuals,
         rng=rng,
         verbosity=verbosity-1
         )
