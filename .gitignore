@@ -34,3 +34,5 @@ results/
 .nextflow.*
 
 assets/topmed-api-token
+assets/GSA*
+assets/GRCh38.fa

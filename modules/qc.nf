@@ -20,7 +20,6 @@ process QCRawGenotypes{
             --geno ${params.QC_GENOTYPE_MISSING_RATE} \
             --mind ${params.QC_INDIVIDUAL_MISSING_RATE} \
             --hwe ${params.QC_HWE} \
-            --flip ${variants_to_flip} \
             --make-bed \
             --out ${input_prefix}.qced
         julia --project=/opt/sequential-gwas/ /opt/sequential-gwas/bin/seq-gwas.jl \
