@@ -17,10 +17,33 @@ write_map(file_prefix, array) = writedlm(string(file_prefix, ".map"), array, '\t
 
 outfile_prefix(prefix, file_id) = string(prefix, ".", file_id)
 
-function make_mock_map_files(release_r8, release_2021_2023, release_2024_now; 
+function make_mock_wgs(outprefix, wgs_prefix, wgs_snps, release_2024_now_map; 
+    n_wgs_individuals=10,
+    )
+    # Make regions file to extract
+    map_df = DataFrame(release_2024_now_map, ["CHR", "ID", "POS", "BP"])
+    wgs_snps_df = DataFrame(ID=wgs_snps)
+    merged = innerjoin(select(map_df, [:ID, :BP]), wgs_snps_df, on=:ID)
+    tmpdir = mktempdir()
+    regions_file = joinpath(tmpdir, "variants.tsv")
+    CSV.write(variants_file, merged, delim='\t', header=false)
+    # List gvcf files
+    gvcf_files = filter(endswith("gvcf.gz"), readdir(dirname(wgs_prefix)))
+    gvcf_files = rand(gvcf_files, n_wgs_individuals)
+    # Extract regions from gvcf files
+    for input_gvcf in gvcf_files
+        input_gvcf_filepath = joinpath(wgs_prefix, input_gvcf)
+        output_gvcf_filepath = string(outprefix, ".", basename(input_gvcf))
+        run(`bcftools view -O z -R $regions_file -o $output_gvcf_filepath $input_gvcf_filepath`)
+    end
+end
+
+function make_mock_map_files_and_wgs(release_r8, release_2021_2023, release_2024_now, wgs_prefix; 
     outprefix="mock",
-    n_common_snps=100, 
-    n_distinct_snps=10
+    n_common_snps=100,
+    n_distinct_snps=10,
+    n_wgs_individuals=10,
+    n_snps_wgs_not_genotyped=30
     )
     origin_map_files = (
         release_r8 = read_map(release_r8),
@@ -29,7 +52,12 @@ function make_mock_map_files(release_r8, release_2021_2023, release_2024_now;
     )
 
     snp_intersection = intersect((mapfile[:, 2] for mapfile in origin_map_files)...)
-    common_snps_set = rand(snp_intersection, n_common_snps)
+    wgs_snps= rand(snp_intersection, n_common_snps+n_snps_wgs_not_genotyped)
+
+    make_mock_wgs(outprefix, wgs_prefix, wgs_snps, origin_map_files.release_2024_now; 
+        n_wgs_individuals=n_wgs_individuals,
+    )
+    common_snps_set = wgs_snps[1:n_common_snps]
     distinct_snps_sets = (;(mapfile_id => rand(setdiff(mapfile[:, 2], snp_intersection), n_distinct_snps)
         for (mapfile_id, mapfile) in zip(keys(origin_map_files), origin_map_files))...)
     
@@ -149,10 +177,13 @@ function make_mock_ped_files(release_r8, release_2021_2023, release_2024_now, va
 end
 
 
-function mock_genotyping_arrays(
+function mock_genetic_data(
     release_r8,
     release_2021_2023, 
-    release_2024_now;
+    release_2024_now,
+    wgs_prefix;
+    n_snps_wgs_not_genotyped=n_snps_wgs_not_genotyped,
+    n_wgs_individuals=n_wgs_individuals,
     outprefix="mock",
     n_common_snps=100, 
     n_distinct_snps=10,
@@ -164,10 +195,12 @@ function mock_genotyping_arrays(
     Random.seed!(rng)
     # Make map files
     verbosity > 0 && @info("Creating mock map files.")
-    variants_indices = make_mock_map_files(release_r8, release_2021_2023, release_2024_now; 
+    variants_indices = make_mock_map_files_and_wgs(release_r8, release_2021_2023, release_2024_now, wgs_prefix; 
         outprefix=outprefix,
         n_common_snps=n_common_snps,
-        n_distinct_snps=n_distinct_snps
+        n_distinct_snps=n_distinct_snps,
+        n_wgs_individuals=n_wgs_individuals,
+        n_snps_wgs_not_genotyped=n_snps_wgs_not_genotyped
     )
     # Make ped files
     verbosity > 0 && @info("Creating mock ped files.")
@@ -199,7 +232,10 @@ end
 function mock_data(release_r8,
     release_2021_2023, 
     release_2024_now,
-    covariates_path;
+    covariates_path,
+    wgs_prefix;
+    n_snps_wgs_not_genotyped = 30,
+    n_wgs_individuals = 10,
     outprefix="mock",
     n_common_snps=100, 
     n_distinct_snps=10,
@@ -207,10 +243,13 @@ function mock_data(release_r8,
     rng=123,
     verbosity=1)
     verbosity > 0 && @info("Mocking genotyping arrays.")
-    sample_id_map = mock_genotyping_arrays(
+    sample_id_map = mock_genetic_data(
         release_r8,
         release_2021_2023, 
-        release_2024_now;
+        release_2024_now,
+        wgs_prefix;
+        n_snps_wgs_not_genotyped=n_snps_wgs_not_genotyped,
+        n_wgs_individuals=n_wgs_individuals,
         outprefix=outprefix,
         n_common_snps=n_common_snps, 
         n_distinct_snps=n_distinct_snps,
