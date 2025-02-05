@@ -17,7 +17,7 @@ write_map(file_prefix, array) = writedlm(string(file_prefix, ".map"), array, '\t
 
 outfile_prefix(prefix, file_id) = string(prefix, ".", file_id)
 
-function make_mock_wgs(outprefix, wgs_prefix, wgs_snps, release_2024_now_map; 
+function make_mock_wgs(outprefix, wgs_prefix, wgs_snps, release_2024_now_map, new_sample_ids; 
     n_wgs_individuals=10,
     )
     # Make regions file to extract
@@ -31,14 +31,22 @@ function make_mock_wgs(outprefix, wgs_prefix, wgs_snps, release_2024_now_map;
     gvcf_files = filter(endswith("gvcf.gz"), readdir(dirname(wgs_prefix)))
     gvcf_files = rand(gvcf_files, n_wgs_individuals)
     # Extract regions from gvcf files
-    for input_gvcf in gvcf_files
+    for (input_gvcf, new_sample_id) in zip(gvcf_files, new_sample_ids.wgs)
         input_gvcf_filepath = joinpath(wgs_prefix, input_gvcf)
         output_gvcf_filepath = string(outprefix, ".", basename(input_gvcf))
-        run(`bcftools view -O z -R $regions_file -o $output_gvcf_filepath $input_gvcf_filepath`)
+        tmpdir = mktempdir()
+        new_sample_file = joinpath(tmpdir, "new_sample.txt")
+        write(new_sample_file, new_sample_id)
+        run(`bcftools view -O z -R $regions_file $input_gvcf_filepath \| bcftools reheader -s $new_sample_file -o $output_gvcf_filepath`)
     end
 end
 
-function make_mock_map_files_and_wgs(release_r8, release_2021_2023, release_2024_now, wgs_prefix; 
+function make_mock_map_files_and_wgs(
+    release_r8, 
+    release_2021_2023, 
+    release_2024_now, 
+    wgs_prefix,
+    new_sample_ids; 
     outprefix="mock",
     n_common_snps=100,
     n_distinct_snps=10,
@@ -54,7 +62,7 @@ function make_mock_map_files_and_wgs(release_r8, release_2021_2023, release_2024
     snp_intersection = intersect((mapfile[:, 2] for mapfile in origin_map_files)...)
     wgs_snps= rand(snp_intersection, n_common_snps+n_snps_wgs_not_genotyped)
 
-    make_mock_wgs(outprefix, wgs_prefix, wgs_snps, origin_map_files.release_2024_now; 
+    make_mock_wgs(outprefix, wgs_prefix, wgs_snps, origin_map_files.release_2024_now, new_sample_ids; 
         n_wgs_individuals=n_wgs_individuals,
     )
     common_snps_set = wgs_snps[1:n_common_snps]
@@ -131,7 +139,12 @@ function resample_variants(alleles_A, alleles_B)
     return permutedims(resampled_alleles_A), permutedims(resampled_alleles_B)
 end
 
-function make_new_ped_lines!(sample_id_map, ped_lines, resampled_alleles_A, resampled_alleles_B, new_sample_ids;n_arrays_individuals=1000)
+function make_new_ped_lines(
+    ped_lines, resampled_alleles_A, 
+    resampled_alleles_B, 
+    new_sample_ids; 
+    n_arrays_individuals=1000
+    )
     new_ped_lines = String[]
     idx = 1
     while length(new_ped_lines) < n_arrays_individuals
@@ -140,7 +153,6 @@ function make_new_ped_lines!(sample_id_map, ped_lines, resampled_alleles_A, resa
         line_prefix = line[1:get_genotype_description_start(line)-2]
         prefix_elements = split(line_prefix, '\t')
         # Substitute the new sample id
-        sample_id_map[prefix_elements[2]] = new_sample_ids[idx]
         prefix_elements[2] = new_sample_ids[idx]
         # Replace genotypes with resampled
         new_line = string(
@@ -153,7 +165,12 @@ function make_new_ped_lines!(sample_id_map, ped_lines, resampled_alleles_A, resa
     return new_ped_lines
 end
 
-function make_mock_ped_files(release_r8, release_2021_2023, release_2024_now, variants_indices; 
+function make_mock_ped_files(
+    release_r8, 
+    release_2021_2023, 
+    release_2024_now,
+    new_sample_ids,
+    variants_indices; 
     outprefix = "mock",
     n_arrays_individuals = 1000, 
     )
@@ -164,16 +181,18 @@ function make_mock_ped_files(release_r8, release_2021_2023, release_2024_now, va
     );
 
     # Filter and Resample Variants
-    sample_id_map = Dict()
-    for (idx, (file_id, ped_lines)) in enumerate(zip(keys(origin_ped_files), origin_ped_files))
-        n_variants = size(variants_indices[file_id], 1)
+    for (file_id, ped_lines) in zip(keys(origin_ped_files), origin_ped_files)
         alleles_A, alleles_B = get_alleles(ped_lines, variants_indices[file_id])
         resampled_alleles_A, resampled_alleles_B = resample_variants(alleles_A, alleles_B)
-        new_sample_ids = string.("odap", idx*n_arrays_individuals:idx*n_arrays_individuals+n_arrays_individuals-1)
-        new_ped_lines = make_new_ped_lines!(sample_id_map, ped_lines, resampled_alleles_A, resampled_alleles_B, new_sample_ids; n_arrays_individuals=n_arrays_individuals)
+        new_ped_lines = make_new_ped_lines(
+            ped_lines, 
+            resampled_alleles_A, 
+            resampled_alleles_B, 
+            new_sample_ids[file_id]; 
+            n_arrays_individuals=n_arrays_individuals
+        )
         write_ped(outfile_prefix(outprefix, file_id), new_ped_lines)
     end
-    return sample_id_map
 end
 
 
@@ -181,21 +200,25 @@ function mock_genetic_data(
     release_r8,
     release_2021_2023, 
     release_2024_now,
-    wgs_prefix;
+    wgs_prefix,
+    new_sample_ids;
     n_snps_wgs_not_genotyped=n_snps_wgs_not_genotyped,
     n_wgs_individuals=n_wgs_individuals,
     outprefix="mock",
     n_common_snps=100, 
     n_distinct_snps=10,
     n_arrays_individuals=1000,
-    rng=123,
     verbosity=1
     )
-    # Fix random seed
-    Random.seed!(rng)
-    # Make map files
+
+    # Make map files and wgs
     verbosity > 0 && @info("Creating mock map files.")
-    variants_indices = make_mock_map_files_and_wgs(release_r8, release_2021_2023, release_2024_now, wgs_prefix; 
+    variants_indices = make_mock_map_files_and_wgs(
+        release_r8, 
+        release_2021_2023, 
+        release_2024_now,
+        wgs_prefix,
+        new_sample_ids; 
         outprefix=outprefix,
         n_common_snps=n_common_snps,
         n_distinct_snps=n_distinct_snps,
@@ -204,19 +227,23 @@ function mock_genetic_data(
     )
     # Make ped files
     verbosity > 0 && @info("Creating mock ped files.")
-    sample_id_map = make_mock_ped_files(release_r8, release_2021_2023, release_2024_now, variants_indices; 
+    make_mock_ped_files(
+        release_r8, 
+        release_2021_2023, 
+        release_2024_now, 
+        new_sample_ids, 
+        variants_indices; 
         outprefix = outprefix,
         n_arrays_individuals = n_arrays_individuals
     )
-    return sample_id_map
 end
 
-function mock_covariates(covariates_path, sample_id_map; outprefix="mock")
+function mock_covariates(covariates_path, new_sample_ids; outprefix="mock")
     covariates = CSV.read(covariates_path, DataFrame)
     id_pairs = collect(sample_id_map)
     sample_id_map = DataFrame([first.(id_pairs), last.(id_pairs)], ["OLD_ID", "NEW_ID"])
     covariates = innerjoin(covariates, sample_id_map, on=:genotype_file_id => :OLD_ID)
-    select!(covariates, 
+    select!(covariates,
         :NEW_ID => :genotype_file_id, 
         :age_years, 
         :sex, 
@@ -227,7 +254,6 @@ function mock_covariates(covariates_path, sample_id_map; outprefix="mock")
     )
     CSV.write(string(outprefix, ".covariates.csv"), covariates)
 end
-
 
 function mock_data(release_r8,
     release_2021_2023, 
@@ -242,21 +268,33 @@ function mock_data(release_r8,
     n_arrays_individuals=1000,
     rng=123,
     verbosity=1)
+    # Fix random seed
+    Random.seed!(rng)
+    # New sample ids
+    new_sample_ids_ = string.("odap", 1:3*n_arrays_individuals+n_wgs_individuals)
+    new_sample_ids = (
+        release_r8 = new_sample_ids_[1:n_arrays_individuals],
+        release_2021_2023 = new_sample_ids_[n_arrays_individuals+1:2*n_arrays_individuals],
+        release_2024_now = new_sample_ids_[2*n_arrays_individuals+1:3*n_arrays_individuals],
+        wgs = new_sample_ids_[3*n_arrays_individuals+1:end]
+    )
+    # Mock genetic data
     verbosity > 0 && @info("Mocking genotyping arrays.")
-    sample_id_map = mock_genetic_data(
+    mock_genetic_data(
         release_r8,
         release_2021_2023, 
         release_2024_now,
-        wgs_prefix;
+        wgs_prefix,
+        new_sample_ids;
         n_snps_wgs_not_genotyped=n_snps_wgs_not_genotyped,
         n_wgs_individuals=n_wgs_individuals,
         outprefix=outprefix,
         n_common_snps=n_common_snps, 
         n_distinct_snps=n_distinct_snps,
         n_arrays_individuals=n_arrays_individuals,
-        rng=rng,
         verbosity=verbosity-1
         )
+    # Mock covariates
     verbosity > 0 && @info("Mocking covariates.")
-    mock_covariates(covariates_path, sample_id_map; outprefix=outprefix)
+    # mock_covariates(covariates_path, new_sample_ids; outprefix=outprefix)
 end
