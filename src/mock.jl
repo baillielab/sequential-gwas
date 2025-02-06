@@ -1,8 +1,3 @@
-using CSV
-using DataFrames
-using DelimitedFiles
-using Random
-
 read_ped(file_prefix) = open(readlines, string(file_prefix, ".ped"))
 
 write_ped(file_prefix, lines) = open(string(file_prefix, ".ped"), "w") do io 
@@ -23,21 +18,28 @@ function make_mock_wgs(outprefix, wgs_prefix, wgs_snps, release_2024_now_map, ne
     # Make regions file to extract
     map_df = DataFrame(release_2024_now_map, ["CHR", "ID", "POS", "BP"])
     wgs_snps_df = DataFrame(ID=wgs_snps)
-    merged = innerjoin(select(map_df, [:ID, :BP]), wgs_snps_df, on=:ID)
+    merged = innerjoin(select(map_df, [:CHR, :ID, :BP]), wgs_snps_df, on=:ID)
+    merged.CHR .= string.("chr", merged.CHR)
+    merged.BP_MINUS_ONE = merged.BP .- 1
+    merged.BP_PLUS_ONE = merged.BP .+ 1
     tmpdir = mktempdir()
     regions_file = joinpath(tmpdir, "variants.tsv")
-    CSV.write(variants_file, merged, delim='\t', header=false)
+    CSV.write(regions_file, select(merged, [:CHR, :BP_MINUS_ONE, :BP_PLUS_ONE]), delim='\t', header=false)
     # List gvcf files
-    gvcf_files = filter(endswith("gvcf.gz"), readdir(dirname(wgs_prefix)))
+    gvcf_dir = dirname(wgs_prefix)
+    gvcf_files = filter(endswith("gvcf.gz"), readdir(gvcf_dir))
     gvcf_files = rand(gvcf_files, n_wgs_individuals)
     # Extract regions from gvcf files
+    input_gvcf = gvcf_files[2]
+    new_sample_id = new_sample_ids.wgs[2]
     for (input_gvcf, new_sample_id) in zip(gvcf_files, new_sample_ids.wgs)
-        input_gvcf_filepath = joinpath(wgs_prefix, input_gvcf)
-        output_gvcf_filepath = string(outprefix, ".", basename(input_gvcf))
-        tmpdir = mktempdir()
-        new_sample_file = joinpath(tmpdir, "new_sample.txt")
+        input_gvcf_filepath = joinpath(gvcf_dir, input_gvcf)
+        output_gvcf_filepath_temp = joinpath(tmpdir, string("temp_gvcf_", new_sample_id, ".gvcf.gz"))
+        output_gvcf_filepath = string(outprefix, ".", new_sample_id, ".gvcf.gz")
+        new_sample_file = joinpath(tmpdir, string("new_sample_", new_sample_id ,".txt"))
         write(new_sample_file, new_sample_id)
-        run(`bcftools view -O z -R $regions_file $input_gvcf_filepath \| bcftools reheader -s $new_sample_file -o $output_gvcf_filepath`)
+        run(`mamba run -n bcftools_env bcftools view -O z -R $regions_file -o $output_gvcf_filepath_temp $input_gvcf_filepath`)
+        run(`mamba run -n bcftools_env bcftools reheader -s $new_sample_file -o $output_gvcf_filepath $output_gvcf_filepath_temp`)
     end
 end
 
@@ -172,7 +174,8 @@ function make_mock_ped_files(
     new_sample_ids,
     variants_indices; 
     outprefix = "mock",
-    n_arrays_individuals = 1000, 
+    n_arrays_individuals = 1000,
+    verbosity=1
     )
     origin_ped_files = (
         release_r8 = read_ped(release_r8),
@@ -182,6 +185,7 @@ function make_mock_ped_files(
 
     # Filter and Resample Variants
     for (file_id, ped_lines) in zip(keys(origin_ped_files), origin_ped_files)
+        verbosity > 0 && @info(string("creating mock ped file: ", file_id))
         alleles_A, alleles_B = get_alleles(ped_lines, variants_indices[file_id])
         resampled_alleles_A, resampled_alleles_B = resample_variants(alleles_A, alleles_B)
         new_ped_lines = make_new_ped_lines(
@@ -234,17 +238,18 @@ function mock_genetic_data(
         new_sample_ids, 
         variants_indices; 
         outprefix = outprefix,
-        n_arrays_individuals = n_arrays_individuals
+        n_arrays_individuals = n_arrays_individuals,
+        verbosity=verbosity
     )
 end
 
 function mock_covariates(covariates_path, new_sample_ids; outprefix="mock")
     covariates = CSV.read(covariates_path, DataFrame)
-    id_pairs = collect(sample_id_map)
-    sample_id_map = DataFrame([first.(id_pairs), last.(id_pairs)], ["OLD_ID", "NEW_ID"])
-    covariates = innerjoin(covariates, sample_id_map, on=:genotype_file_id => :OLD_ID)
-    select!(covariates,
-        :NEW_ID => :genotype_file_id, 
+    new_ids = vcat(new_sample_ids...)
+    covariates_sample = shuffle(covariates)[1:length(new_ids), :]
+    covariates_sample.genotype_file_id = new_ids
+    select!(covariates_sample,
+        :genotype_file_id, 
         :age_years, 
         :sex, 
         :case_or_control, 
@@ -296,5 +301,5 @@ function mock_data(release_r8,
         )
     # Mock covariates
     verbosity > 0 && @info("Mocking covariates.")
-    # mock_covariates(covariates_path, new_sample_ids; outprefix=outprefix)
+    mock_covariates(covariates_path, new_sample_ids; outprefix=outprefix)
 end

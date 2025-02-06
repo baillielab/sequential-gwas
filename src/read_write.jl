@@ -48,16 +48,26 @@ function files_matching_prefix(prefix)
     )
 end
 
-function write_variants_intersection(output_file, input_dir)
+function write_variants_intersection(output_prefix, input_dir)
     bim_files = filter(endswith(".bim"), readdir(input_dir))
-    variants_intersection = mapreduce(intersect, bim_files) do file
-        read_bim(joinpath(input_dir, file)[1:end-4]).VARIANT_ID
+    shared_variants = read_bim(joinpath(input_dir, popfirst!(bim_files))[1:end-4])
+    select!(shared_variants, [:CHR_CODE, :BP_COORD, :VARIANT_ID])
+    for file in bim_files
+        new_bim = read_bim(joinpath(input_dir, file)[1:end-4])
+        shared_variants = innerjoin(
+            shared_variants, 
+            select(new_bim, [:CHR_CODE, :BP_COORD]), 
+            on=[:CHR_CODE, :BP_COORD]
+        )
     end
-    open(output_file, "w") do io
-        for variant_id in variants_intersection
-            println(io, variant_id)
-        end
-    end
+    shared_variants.BP_COORD_END = shared_variants.BP_COORD
+    # Write plink file
+    CSV.write(string(output_prefix, ".csv"), shared_variants[!, [:CHR_CODE, :BP_COORD, :BP_COORD_END, :VARIANT_ID]], delim='\t', header=false)
+    # Write gatk file
+    gatk_compliant = select(shared_variants, [:CHR_CODE, :BP_COORD, :BP_COORD_END])
+    gatk_compliant.BP_COORD_END .+= 1
+    gatk_compliant.BP_COORD .-= 1
+    CSV.write(string(output_prefix, ".bed"), gatk_compliant, delim='\t', header=false)
 end
 
 function write_chromosomes(input_prefix; output="chromosomes.txt")

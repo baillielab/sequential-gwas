@@ -36,7 +36,6 @@ process BedToChrVCF {
         /opt/miniforge3/bin/mamba run -n plink_env plink \
             --bfile ${input_prefix} \
             --chr ${chr} \
-            --output-chr chr26 \
             --recode vcf \
             --out ${output_prefix}
         bgzip ${output_prefix}.vcf

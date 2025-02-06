@@ -6,7 +6,8 @@ process MakeSharedVariantsList {
         path genotypes_files
 
     output:
-        path("variants_intersection.txt")
+        path("variants_intersection.csv"), emit: plink_compliant_list
+        path("variants_intersection.bed"), emit: gatk_compliant_list
 
     script:
         """
@@ -15,7 +16,7 @@ process MakeSharedVariantsList {
         """
 }
 
-process ExtractSharedVariants {
+process ExtractSharedVariantsFromPLINK {
     publishDir "results/array-genotypes/qced_shared_variants", mode: 'symlink'
 
     input:
@@ -32,7 +33,7 @@ process ExtractSharedVariants {
         /opt/miniforge3/bin/mamba run -n plink_env plink \
             --bfile ${input_prefix} \
             --noweb \
-            --extract ${shared_variants} \
+            --extract range ${shared_variants} \
             --make-bed \
             --out ${output_prefix}
         """

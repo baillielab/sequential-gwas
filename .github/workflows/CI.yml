@@ -101,7 +101,7 @@ jobs:
       - name: Install graphviz
         run: sudo apt-get install -y graphviz
       - name: Create DAG
-        run: nextflow run main.nf -with-dag docs/src/assets/dag.html -preview
+        run: nextflow run main.nf -with-dag docs/src/assets/dag.html -preview -c test/assets/workflow.config
       - name: Configure doc environment
         shell: julia --project=docs --color=yes {0}
         run: |

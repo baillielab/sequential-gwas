@@ -19,7 +19,6 @@ include("cli.jl")
 include("read_write.jl")
 include("report.jl")
 
-
 export julia_main
 
 end

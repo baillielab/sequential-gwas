@@ -9,13 +9,21 @@ RUN apt-get update && apt-get install -y \
     libblas-dev \
     liblapack-dev \
     libopenblas-dev \
-    tabix
+    tabix \
+    unzip \
+    openjdk-17-jdk
 
 # Install QCTOOL
 
 RUN wget -O qctool.tgz https://www.well.ox.ac.uk/~gav/resources/qctool_v2.2.5-CentOS_Linux7.9-x86_64.tgz 
 RUN tar -xvzf qctool.tgz
 RUN mv qctool_v2.2.5-Ce-x86_64/qctool /usr/local/bin
+
+# Install GATK
+RUN mkdir /opt/gatk
+RUN wget https://github.com/broadinstitute/gatk/releases/download/4.6.1.0/gatk-4.6.1.0.zip
+RUN unzip gatk-4.6.1.0.zip -d /opt/
+ENV PATH=/opt/gatk-4.6.1.0/:${PATH}
 
 # Install conda
 
@@ -27,9 +35,9 @@ RUN /opt/miniforge3/bin/mamba init
 
 ENV PATH=/opt/miniforge3/bin/:${PATH}
 
-# Install bcftools
+# Install bcftools & samtools
 
-RUN mamba create -n bcftools_env -c conda-forge -c bioconda bcftools
+RUN mamba create -n bcftools_env -c conda-forge -c bioconda bcftools samtools
 
 # Install regenie
 

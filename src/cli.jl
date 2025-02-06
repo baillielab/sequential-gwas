@@ -21,7 +21,7 @@ function cli_settings()
 
         "write-variants-intersection"
             action = :command
-            help = "Finds variants in all bim files and writes to file."
+            help = "Finds variants in all bim files and writes to both a plink compliant file (.csv) and a gatk compliant (.bed) file."
         
         "write-chromosomes"
             action = :command
@@ -42,11 +42,11 @@ function cli_settings()
     end
 
     @add_arg_table! s["write-variants-intersection"] begin
-        "--output"
+        "--output-prefix"
             arg_type = String
             required = false
-            default = "variants_intersection.txt"
-            help = "Output file name."
+            default = "variants_intersection"
+            help = "Output prefix to negerated csv and bed file."
         "--input-dir"
             arg_type = String
             required = false
@@ -146,7 +146,7 @@ function julia_main()::Cint
         )
     elseif cmd == "write-variants-intersection"
         write_variants_intersection(
-            cmd_settings["output"],
+            cmd_settings["output-prefix"],
             cmd_settings["input-dir"]
         )
     elseif cmd == "mock"

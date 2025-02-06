@@ -15,11 +15,12 @@ process QCRawGenotypes{
         input_prefix = get_prefix(bed_file)
         output_prefix = "${input_prefix}.qced"
         """
-        /opt/miniforge3/bin/mamba run -n plink_env plink --bfile ${input_prefix} \
-            --noweb \
+        /opt/miniforge3/bin/mamba run -n plink2_env plink2 --bfile ${input_prefix} \
             --geno ${params.QC_GENOTYPE_MISSING_RATE} \
             --mind ${params.QC_INDIVIDUAL_MISSING_RATE} \
             --hwe ${params.QC_HWE} \
+            --set-all-var-ids @:# \
+            --output-chr chr26 \
             --make-bed \
             --out ${input_prefix}.qced
         julia --project=/opt/sequential-gwas/ /opt/sequential-gwas/bin/seq-gwas.jl \
