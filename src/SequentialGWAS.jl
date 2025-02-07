@@ -11,6 +11,7 @@ using ZipFile
 using BufferedStreams
 using Downloads
 using PackageCompiler
+using Tables
 
 include("resources.jl")
 include("one_time_checks.jl")

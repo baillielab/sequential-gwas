@@ -6,7 +6,7 @@ write_ped(file_prefix, lines) = open(string(file_prefix, ".ped"), "w") do io
     end
 end
 
-read_map(file_prefix) = readdlm(string(file_prefix, ".map"))
+read_map(file) = readdlm(file)
 
 write_map(file_prefix, array) = writedlm(string(file_prefix, ".map"), array, '\t')
 
@@ -56,9 +56,9 @@ function make_mock_map_files_and_wgs(
     n_snps_wgs_not_genotyped=30
     )
     origin_map_files = (
-        release_r8 = read_map(release_r8),
-        release_2021_2023 = read_map(release_2021_2023),
-        release_2024_now = read_map(release_2024_now)
+        release_r8 = read_map(string(release_r8, ".map")),
+        release_2021_2023 = read_map(string(release_2021_2023, ".map")),
+        release_2024_now = read_map(string(release_2024_now, ".map"))
     )
 
     snp_intersection = intersect((mapfile[:, 2] for mapfile in origin_map_files)...)

@@ -1,13 +1,16 @@
 include { get_prefix} from './utils.nf'
 
 process MakeSharedVariantsList {
-    publishDir "results/array-genotypes/qced_shared_variants", mode: 'symlink'
+    publishDir "results/array-genotypes/qced_shared_variants", pattern: "variants_intersection.csv",  mode: 'symlink'
+    publishDir "results/wgs/shared_variants", pattern: "variants_intersection.{bed,bim}", mode: 'symlink'
+
     input:
         path genotypes_files
 
     output:
-        path("variants_intersection.csv"), emit: plink_compliant_list
-        path("variants_intersection.bed"), emit: gatk_compliant_list
+        path("variants_intersection.csv"), emit: joint_variants_plink
+        path("variants_intersection.bed"), emit: joint_variants_gatk
+        path("variants_intersection.bim"), emit: joint_variants_bim
 
     script:
         """
@@ -21,7 +24,7 @@ process ExtractSharedVariantsFromPLINK {
 
     input:
         tuple path(bed_file), path(bim_file), path(fam_file)
-        path shared_variants
+        path joint_variants
 
     output:
         tuple path("${output_prefix}.bed"), path("${output_prefix}.bim"), path("${output_prefix}.fam")
@@ -30,10 +33,10 @@ process ExtractSharedVariantsFromPLINK {
         input_prefix = get_prefix(bed_file)
         output_prefix = "${input_prefix}.shared"
         """
-        /opt/miniforge3/bin/mamba run -n plink_env plink \
+        /opt/miniforge3/bin/mamba run -n plink2_env plink2 \
             --bfile ${input_prefix} \
-            --noweb \
-            --extract range ${shared_variants} \
+            --extract range ${joint_variants} \
+            --output-chr chr26 \
             --make-bed \
             --out ${output_prefix}
         """

@@ -12,7 +12,7 @@ TESTDIR = joinpath(PKGDIR, "test")
     end
 
     # Array Genotypes Merging
-    include(joinpath(TESTDIR, "array_genotypes_merging.jl"))
+    include(joinpath(TESTDIR, "aggregate_genetic_data.jl"))
 
     # Unit Tests
     include(joinpath(TESTDIR, "read_write.jl"))

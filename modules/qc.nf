@@ -44,7 +44,6 @@ process QCMergedGenotypes {
         output_prefix = "${input_prefix}.qced"
         """
         /opt/miniforge3/bin/mamba run -n plink_env plink --bfile ${input_prefix} \
-            --noweb \
             --geno ${params.QC_GENOTYPE_MISSING_RATE} \
             --mind ${params.QC_INDIVIDUAL_MISSING_RATE} \
             --hwe ${params.QC_HWE} \

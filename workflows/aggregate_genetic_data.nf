@@ -24,8 +24,13 @@ workflow AggregateGeneticData {
 
     // Identify Shared Variants and extract them
     shared_variants = MakeSharedVariantsList(qced_genotypes.genotypes.collect())
-    qced_shared_genotypes = ExtractSharedVariantsFromPLINK(qced_genotypes.genotypes, shared_variants.plink_compliant_list)
-    wgs_shared_genotypes = GVCFGenotyping(wgs_gvcfs, shared_variants.gatk_compliant_list, reference_genome)
+    qced_shared_genotypes = ExtractSharedVariantsFromPLINK(qced_genotypes.genotypes, shared_variants.joint_variants_plink)
+    wgs_shared_genotypes = GVCFGenotyping(
+        wgs_gvcfs, 
+        shared_variants.joint_variants_gatk, 
+        shared_variants.joint_variants_bim,
+        reference_genome
+    )
 
     // Merge Genotypes
     all_genotypes = qced_shared_genotypes.concat(wgs_shared_genotypes)
@@ -33,7 +38,7 @@ workflow AggregateGeneticData {
         .map { it -> get_prefix(it[0].getName()) }
         .collectFile(name: "merge_list.txt", newLine: true)
     merged_genotypes = MergeGenotypes(all_genotypes.collect(), merge_list)
-    qced_merged_genotypes = QCMergedGenotypes(merged_genotypes)
+    QCMergedGenotypes(merged_genotypes)
     
     // Aggregate Reports
 }

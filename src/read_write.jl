@@ -1,6 +1,6 @@
 
 """
-    read_bim(prefix)
+    read_bim(file)
 
 Columns Description from: https://www.cog-genomics.org/plink/1.9/formats#bim
 - Chromosome code (either an integer, or 'X'/'Y'/'XY'/'MT'; '0' indicates unknown) or name
@@ -10,8 +10,8 @@ Columns Description from: https://www.cog-genomics.org/plink/1.9/formats#bim
 - Allele 1 (corresponding to clear bits in .bed; usually minor)
 - Allele 2 (corresponding to set bits in .bed; usually major)
 """
-read_bim(prefix) = CSV.read(
-    string(prefix, ".bim"), 
+read_bim(file) = CSV.read(
+    file, 
     DataFrame, 
     delim='\t', 
     header=["CHR_CODE", "VARIANT_ID", "POSITION", "BP_COORD", "ALLELE_1", "ALLELE_2"]
@@ -31,7 +31,6 @@ Columns Description from: https://www.cog-genomics.org/plink/1.9/formats#fam
 read_fam(prefix) = CSV.read(
     string(prefix, ".fam"), 
     DataFrame, 
-    delim=' ', 
     header=["FID", "IID", "FATHER_ID", "MOTHER_ID", "SEX", "PHENOTYPE"]
 )
 
@@ -50,31 +49,65 @@ end
 
 function write_variants_intersection(output_prefix, input_dir)
     bim_files = filter(endswith(".bim"), readdir(input_dir))
-    shared_variants = read_bim(joinpath(input_dir, popfirst!(bim_files))[1:end-4])
-    select!(shared_variants, [:CHR_CODE, :BP_COORD, :VARIANT_ID])
+    shared_variants = read_bim(joinpath(input_dir, popfirst!(bim_files)))
+    # select!(shared_variants, [:CHR_CODE, :BP_COORD, :VARIANT_ID])
     for file in bim_files
-        new_bim = read_bim(joinpath(input_dir, file)[1:end-4])
+        new_bim = read_bim(joinpath(input_dir, file))
         shared_variants = innerjoin(
             shared_variants, 
             select(new_bim, [:CHR_CODE, :BP_COORD]), 
             on=[:CHR_CODE, :BP_COORD]
         )
     end
-    shared_variants.BP_COORD_END = shared_variants.BP_COORD
+    # Write bim
+    CSV.write(
+        string(output_prefix, ".bim"), 
+        shared_variants, 
+        delim='\t', 
+        header=false
+    )
     # Write plink file
-    CSV.write(string(output_prefix, ".csv"), shared_variants[!, [:CHR_CODE, :BP_COORD, :BP_COORD_END, :VARIANT_ID]], delim='\t', header=false)
+    shared_variants.BP_COORD_END = shared_variants.BP_COORD
+    CSV.write(
+        string(output_prefix, ".csv"), 
+        shared_variants[!, [:CHR_CODE, :BP_COORD, :BP_COORD_END, :VARIANT_ID]], 
+        delim='\t', 
+        header=false
+    )
     # Write gatk file
-    gatk_compliant = select(shared_variants, [:CHR_CODE, :BP_COORD, :BP_COORD_END])
-    gatk_compliant.BP_COORD_END .+= 1
-    gatk_compliant.BP_COORD .-= 1
-    CSV.write(string(output_prefix, ".bed"), gatk_compliant, delim='\t', header=false)
+    # shared_variants.BP_COORD_END .+= 1
+    shared_variants.BP_COORD .-= 1
+    CSV.write(
+        string(output_prefix, ".bed"), 
+        select(shared_variants, [:CHR_CODE, :BP_COORD, :BP_COORD_END]), 
+        delim='\t', 
+        header=false
+    )
 end
 
 function write_chromosomes(input_prefix; output="chromosomes.txt")
-    chrs = SequentialGWAS.read_bim(input_prefix).CHR_CODE |> unique |> sort
+    chrs = SequentialGWAS.read_bim(string(input_prefix, ".bim")).CHR_CODE |> unique |> sort
     open(output, "w") do io
         for chr in chrs
             println(io, chr)
+        end
+    end
+end
+
+
+function complete_bim_with_ref(bim_file, ref_bim_file)
+    bim_file = SequentialGWAS.read_bim(bim_file)
+    ref_bim_file = SequentialGWAS.read_bim(ref_bim_file)
+    # Make the allele mapping for each variant
+    variant_alleles_map = Dict{String, Dict{String, String}}()
+    for row in Tables.namedtupleiterator(ref_bim_file)
+        variant_alleles_map[row.VARIANT_ID] = Dict(row.ALLELE_1 => row.ALLELE_2, row.ALLELE_2 => row.ALLELE_1)
+    end
+    # Fill the missing allele
+    for (idx, (variant_id, allele_1, allele_2)) in enumerate(zip(bim_file.VARIANT_ID, bim_file.ALLELE_1, bim_file.ALLELE_2))
+        println(idx)
+        if allele_1 == "."
+            bim_file.ALLELE_1[idx] = variant_alleles_map[variant_id][allele_2]
         end
     end
 end

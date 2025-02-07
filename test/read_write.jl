@@ -41,4 +41,13 @@ TESTDIR = joinpath(PKGDIR, "test")
     @test select(expected_intersection, [:CHR, :BP_START, :BP_END]) == variants_intersection
 end
 
+@test "Test complete-bim-with-ref" begin
+    bim_file = joinpath(TESTDIR, "assets", "complete_bim_with_ref", "incomplete.bim")
+    ref_bim_file = joinpath(TESTDIR, "assets", "complete_bim_with_ref", "variants_intersection.bim")
+    copy!(
+        ARGS, 
+        ["complete-bim-with-ref", bim_file, ref_bim_file]
+    )
+    julia_main()
+end
 end 

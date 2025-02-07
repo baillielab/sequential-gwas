@@ -1,5 +1,5 @@
 process MergeGenotypes {
-    publishDir "results/array-genotypes/merged", mode: 'symlink'
+    publishDir "results/merged", mode: 'symlink'
 
     input:
         path genotype_files
@@ -11,7 +11,7 @@ process MergeGenotypes {
     script:
         """
         /opt/miniforge3/bin/mamba run -n plink_env plink \
-            --noweb \
+            --output-chr chr26 \
             --merge-list ${merge_list} \
             --make-bed \
             --out genotypes.merged

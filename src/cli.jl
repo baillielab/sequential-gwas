@@ -17,7 +17,11 @@ function cli_settings()
 
         "report-qc-effect"
             action = :command
-            help = "Generates a report on the effects of the pipeline."
+            help = "Generates a report after a QC step."
+        
+        "report-liftover-effect"
+            action = :command
+            help = "Generates a report after lifting over."
 
         "write-variants-intersection"
             action = :command
@@ -63,6 +67,17 @@ function cli_settings()
             arg_type = String
             required = true
             help = "Prefix to output genotypes data."
+    end
+
+    @add_arg_table! s["report-liftover-effect"] begin
+        "before-prefix"
+            arg_type = String
+            required = true
+            help = "Prefix to input genotypes data (ped/map)."
+        "after-prefix"
+            arg_type = String
+            required = true
+            help = "Prefix to output genotypes data (ped/map)."
     end
 
     @add_arg_table! s["snps-to-flip"] begin
@@ -143,6 +158,11 @@ function julia_main()::Cint
         report_qc_effect(
             cmd_settings["input-prefix"], 
             cmd_settings["output-prefix"]
+        )
+    elseif cmd == "report-liftover-effect"
+        liftover_report(
+            cmd_settings["before-prefix"],
+            cmd_settings["after-prefix"]
         )
     elseif cmd == "write-variants-intersection"
         write_variants_intersection(

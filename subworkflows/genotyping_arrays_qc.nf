@@ -1,4 +1,5 @@
-include { LiftOver; PedToBed } from '../modules/misc.nf'
+include { PedToBed } from '../modules/ped_to_bed.nf'
+include { LiftOver } from '../modules/liftover.nf'
 include { QCRawGenotypes } from '../modules/qc.nf'
 include { MergeGenotypes } from '../modules/merge_plink_files.nf'
 
