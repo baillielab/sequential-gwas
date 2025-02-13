@@ -2,6 +2,8 @@
 nextflow.enable.dsl = 2
 
 // Input files params
+params.RESOURCES_DIR = "${projectDir}/assets/resources/"
+params.THOUSANDSGP_DIR = "${params.RESOURCES_DIR}/thousandsGP"
 params.REFERENCE_GENOME = "${projectDir}/assets/resources_broad_hg38_v0_Homo_sapiens_assembly38.fasta" // From: https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta
 params.GRC37_TO_GRC38_CHAIN_FILE = "${projectDir}/assets/hg19ToHg38.over.chain.gz"
 params.VARIANTS_TO_FLIP_GRC38 = "${projectDir}/assets/GSA-48v4-0_20085471_D2-minus-strand.txt"
@@ -19,6 +21,7 @@ params.REGENIE_BSIZE = 1000
 
 include { AggregateGeneticData } from './workflows/aggregate_genetic_data.nf'
 include { ImputationWorkflow } from './workflows/imputation.nf'
+include { ThousandsGP } from './workflows/thousands_gp.nf'
 
 workflow {
     AggregateGeneticData()

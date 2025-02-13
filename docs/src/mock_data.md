@@ -37,3 +37,7 @@ Some patterns currently in the data but which should be removed by Dominique in 
 
 - One individual has been genotyped twice
 - Some sample ids have non-standard encoding
+
+## Thousands Genomes
+
+The data was downloaded from the 1000GP [FTP](https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/) and pruned using the `bin/make_thousand_genomes_filter_files.jl` script.
