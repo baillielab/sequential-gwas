@@ -1,6 +1,6 @@
 include { get_prefix } from './utils.nf'
 
-process VCFToBed {
+process KGPVCFToBed {
     publishDir "${params.KGP_PUBLISH_DIR}/bed", mode: 'symlink'
 
     input:
@@ -13,7 +13,7 @@ process VCFToBed {
         input_prefix = get_prefix(vcf_file)[0..-5]
         """
         /opt/miniforge3/bin/mamba run -n plink2_env plink2 \
-            --set-all-var-ids @:# \
+            --keep-allele-order \
             --output-chr chr26 \
             --vcf ${vcf_file} \
             --make-bed \

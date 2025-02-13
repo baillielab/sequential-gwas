@@ -1,6 +1,6 @@
 include { get_prefix } from './utils.nf'
 
-process CleanTounsandsGP {
+process CleanKGP {
     input:
         tuple path(vcf_file), path(vcf_index)
 
