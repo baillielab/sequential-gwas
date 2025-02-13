@@ -34,6 +34,31 @@ read_fam(prefix) = CSV.read(
     header=["FID", "IID", "FATHER_ID", "MOTHER_ID", "SEX", "PHENOTYPE"]
 )
 
+read_ped(file_prefix) = open(readlines, string(file_prefix, ".ped"))
+
+write_ped(file_prefix, lines) = open(string(file_prefix, ".ped"), "w") do io 
+    for line in lines
+        println(io, line)
+    end
+end
+
+"""
+    read_map(file)
+
+Columns Description from: https://www.cog-genomics.org/plink/1.9/formats
+
+- Chromosome code. PLINK 1.9 also permits contig names here, but most older programs do not.
+- Variant identifier
+- Position in morgans or centimorgans (optional; also safe to use dummy value of '0')
+- Base-pair coordinate
+"""
+read_map(file) = CSV.read(file, DataFrame, delim='\t', header=["CHR", "ID", "POSITION", "BP_COORD"])
+
+"""
+    write_map(file_prefix, array)
+"""
+write_map(file_prefix, df) = CSV.write(string(file_prefix, ".map"), df, delim='\t', header=false)
+
 function files_matching_prefix(prefix)
     directory, _prefix = splitdir(prefix)
     _directory = directory == "" ? "." : directory

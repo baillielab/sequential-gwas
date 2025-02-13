@@ -26,14 +26,12 @@ function report_qc_effect(input_prefix, output_prefix)
 end
 
 function liftover_report(before_prefix, after_prefix)
-    variants_info = DataFrame(
-        read_map(string(before_prefix, ".map")), 
-        [:CHR, :ID, :POS_BEFORE, :BP_BEFORE]
-    )
-    variants_after_liftover = DataFrame(
-        read_map(string(after_prefix, ".map")), 
-        [:CHR, :ID, :POS_AFTER, :BP_AFTER]
-    )
+    variants_info = read_map(string(before_prefix, ".map"))
+    rename!(variants_info, :POSITION => :POS_BEFORE, :BP_COORD => :BP_BEFORE)
+
+    variants_after_liftover = read_map(string(after_prefix, ".map"))
+    rename!(variants_after_liftover, :POSITION => :POS_AFTER, :BP_COORD => :BP_AFTER)
+
     leftjoin!(variants_info, variants_after_liftover, on=[:CHR, :ID])
     variants_info.LIFTEDOVER = .!ismissing.(variants_info.BP_AFTER)
     CSV.write(string(before_prefix, ".liftover_report.csv"), variants_info)

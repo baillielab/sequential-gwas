@@ -1,16 +1,34 @@
-read_ped(file_prefix) = open(readlines, string(file_prefix, ".ped"))
-
-write_ped(file_prefix, lines) = open(string(file_prefix, ".ped"), "w") do io 
-    for line in lines
-        println(io, line)
-    end
-end
-
-read_map(file) = readdlm(file)
-
-write_map(file_prefix, array) = writedlm(string(file_prefix, ".map"), array, '\t')
-
 outfile_prefix(prefix, file_id) = string(prefix, ".", file_id)
+
+function make_variants_lists(origin_map_files;
+    n_common_snps=100,
+    n_distinct_snps=10,
+    n_snps_wgs_not_genotyped=30
+    )
+    wgs_variants = []
+    genotyping_arrays_common_variants = []
+    genotyping_arrays_unique_variants = Dict(
+        :release_r8 => [],
+        :release_2021_2023 => [],
+        :release_2024_now => []
+    )
+    for chr in 1:22
+        release_r8_variants = filter(:CHR => ==(chr), origin_map_files.release_r8).ID
+        release_2021_2023_variants = filter(:CHR => ==(chr), origin_map_files.release_2021_2023).ID
+        release_2024_now_variants = filter(:CHR => ==(chr), origin_map_files.release_2024_now).ID
+        common_variants = intersect(release_r8_variants, release_2021_2023_variants, release_2024_now_variants)
+        # Add chr variants to wgs_variants
+        chr_wgs_variants = rand(common_variants, n_common_snps+n_snps_wgs_not_genotyped)
+        append!(wgs_variants, chr_wgs_variants)
+        # Add chr variants to genotyping_arrays_common_variants
+        append!(genotyping_arrays_common_variants, chr_wgs_variants[1:n_common_snps])
+        # Add unique variants per release
+        genotyping_arrays_unique_variants[:release_r8] = rand(setdiff(release_r8_variants, common_variants), n_distinct_snps)
+        genotyping_arrays_unique_variants[:release_2021_2023] = rand(setdiff(release_2021_2023_variants, common_variants), n_distinct_snps)
+        genotyping_arrays_unique_variants[:release_2024_now] = rand(setdiff(release_2024_now_variants, common_variants), n_distinct_snps)
+    end
+    return wgs_variants, genotyping_arrays_common_variants, genotyping_arrays_unique_variants
+end
 
 function make_mock_wgs(outprefix, wgs_prefix, wgs_snps, release_2024_now_map, new_sample_ids; 
     n_wgs_individuals=10,
@@ -61,19 +79,20 @@ function make_mock_map_files_and_wgs(
         release_2024_now = read_map(string(release_2024_now, ".map"))
     )
 
-    snp_intersection = intersect((mapfile[:, 2] for mapfile in origin_map_files)...)
-    wgs_snps= rand(snp_intersection, n_common_snps+n_snps_wgs_not_genotyped)
+    wgs_variants, genotyping_arrays_common_variants, genotyping_arrays_unique_variants = make_variants_lists(
+        origin_map_files; 
+        n_common_snps=n_common_snps,
+        n_distinct_snps=n_distinct_snps,
+        n_snps_wgs_not_genotyped=n_snps_wgs_not_genotyped
+    )
 
-    make_mock_wgs(outprefix, wgs_prefix, wgs_snps, origin_map_files.release_2024_now, new_sample_ids; 
+    make_mock_wgs(outprefix, wgs_prefix, wgs_variants, origin_map_files.release_2024_now, new_sample_ids; 
         n_wgs_individuals=n_wgs_individuals,
     )
-    common_snps_set = wgs_snps[1:n_common_snps]
-    distinct_snps_sets = (;(mapfile_id => rand(setdiff(mapfile[:, 2], snp_intersection), n_distinct_snps)
-        for (mapfile_id, mapfile) in zip(keys(origin_map_files), origin_map_files))...)
-    
+
     snps_indices = Dict()
     for (mapfile_id, mapfile) in zip(keys(origin_map_files), origin_map_files)
-        retained_snps = vcat(common_snps_set, distinct_snps_sets[mapfile_id])
+        retained_snps = vcat(genotyping_arrays_common_variants, genotyping_arrays_unique_variants[mapfile_id])
         mapfile_snps_indices = sort(indexin(retained_snps, mapfile[:, 2]))
         subset_mapfile = mapfile[mapfile_snps_indices, :]
         snps_indices[mapfile_id] = mapfile_snps_indices
