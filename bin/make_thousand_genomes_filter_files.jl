@@ -17,8 +17,8 @@ using DataFrames
 using CSV
 
 GP_DIR = joinpath("assets", "resources", "thousandsGP")
-OUT_DIR = joinpath("test", "assets", "thousands_genomes")
-MAP_FILE_GENOMIC = joinpath("test", "assets", "mock.release_2024_now.map")
+OUT_DIR = joinpath("test", "assets", "kgp")
+MAP_FILE_GENOMIC = joinpath("test", "assets", "genomicc", "genotyping_arrays", "mock.release_2024_now.map")
 P = 20
 
 # Write individuals subset

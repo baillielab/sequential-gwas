@@ -4,8 +4,11 @@ include { MakeSharedVariantsList; ExtractSharedVariantsFromPLINK } from '../modu
 include { MergeGenotypes} from '../modules/merge_plink_files.nf'
 include { GVCFGenotyping} from '../subworkflows/gvcf_genotyping.nf'
 include { GenotypesQC } from '../subworkflows/genotyping_arrays_qc.nf'
+include { KGP } from './kgp.nf'
 
 workflow AggregateGeneticData {
+    // Process 1000GP dataset
+    kgp_genotypes = KGP()
     // Reference Genome
     reference_genome = file(params.REFERENCE_GENOME, checkIfExists: true)
     // WGS GVCFs

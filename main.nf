@@ -3,13 +3,13 @@ nextflow.enable.dsl = 2
 
 // Publish Directory
 params.PUBLISH_DIR = "results"
-params.KGP_PUBLISH_DIR = "${params.PUBLISH_DIR}/kGP"
+params.KGP_PUBLISH_DIR = "${params.PUBLISH_DIR}/kgp"
 params.ARRAY_GENOTYPES_PUBLISH_DIR = "${params.PUBLISH_DIR}/array_genotypes"
 params.WGS_PUBLISH_DIR = "${params.PUBLISH_DIR}/wgs"
 params.GATK_PUBLISH_DIR = "${params.PUBLISH_DIR}/gatk"
 
 // Input files params
-params.RESOURCES_DIR = "${projectDir}/assets/resources/"
+params.RESOURCES_DIR = "${projectDir}/assets/resources"
 params.KGP_DIR = "${params.RESOURCES_DIR}/kgp"
 params.REFERENCE_GENOME = "${projectDir}/assets/resources_broad_hg38_v0_Homo_sapiens_assembly38.fasta" // From: https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta
 params.GRC37_TO_GRC38_CHAIN_FILE = "${projectDir}/assets/hg19ToHg38.over.chain.gz"
