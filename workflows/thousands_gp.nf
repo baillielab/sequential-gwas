@@ -1,6 +1,8 @@
 include { DownloadOrAccessStoredResource } from '../modules/download_or_access.nf'
 include { CleanTounsandsGP } from '../modules/clean_thousands_gp.nf'
 include { VCFToBed } from '../modules/vcf_to_bed.nf'
+include { get_prefix } from '../modules/utils.nf'
+include { MergeGenotypes } from '../modules/merge_plink_files.nf'
 
 workflow ThousandsGP {
     chrs = Channel.of(1..22)
@@ -20,12 +22,16 @@ workflow ThousandsGP {
     all_1000P_files = chr_vcfs.concat(chr_vcfs_idx).concat(ped)
 
     resources = DownloadOrAccessStoredResource(all_1000P_files, params.THOUSANDSGP_DIR)
-    vcf_files = resources
+    kgp_vcf_files = resources
         .filter{ it.toString().contains("vcf") }
         .map{ [it.getName().replace(".tbi", ""), it] }
         .groupTuple(sort: true, size: 2)
         .map{ it[1] }
 
-    clean_vcf_files = CleanTounsandsGP(vcf_files)
-    VCFToBed(clean_vcf_files)
+    kgp_cleaned_vcf_files = CleanTounsandsGP(kgp_vcf_files)
+    kgp_plink_files = VCFToBed(kgp_cleaned_vcf_files)
+    merge_list = kgp_plink_files
+        .map { it -> get_prefix(it[0].getName()) }
+        .collectFile(name: "merge_list.txt", newLine: true)
+    kgp_plink_merged = MergeGenotypes(kgp_plink_files.collect(), merge_list, params.KGP_PUBLISH_DIR)
 }

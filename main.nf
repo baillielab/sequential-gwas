@@ -1,6 +1,13 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
 
+// Publish Directory
+params.PUBLISH_DIR = "results"
+params.KGP_PUBLISH_DIR = "${params.PUBLISH_DIR}/kGP"
+params.ARRAY_GENOTYPES_PUBLISH_DIR = "${params.PUBLISH_DIR}/array_genotypes"
+params.WGS_PUBLISH_DIR = "${params.PUBLISH_DIR}/wgs"
+params.GATK_PUBLISH_DIR = "${params.PUBLISH_DIR}/gatk"
+
 // Input files params
 params.RESOURCES_DIR = "${projectDir}/assets/resources/"
 params.THOUSANDSGP_DIR = "${params.RESOURCES_DIR}/thousandsGP"

@@ -1,7 +1,7 @@
 include { get_prefix} from './utils.nf'
 
 process QCRawGenotypes{
-    publishDir "results/array-genotypes/qced", mode: 'symlink'
+    publishDir "${params.ARRAY_GENOTYPES_PUBLISH_DIR}/qced", mode: 'symlink'
 
     input:
         tuple path(bed_file), path(bim_file), path(fam_file)
@@ -30,7 +30,7 @@ process QCRawGenotypes{
 }
 
 process QCMergedGenotypes {
-    publishDir "results/array-genotypes/merged_qced", mode: 'symlink'
+    publishDir "${params.ARRAY_GENOTYPES_PUBLISH_DIR}/merged_qced", mode: 'symlink'
 
     input:
         tuple path(bed_file), path(bim_file), path(fam_file)

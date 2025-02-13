@@ -1,8 +1,8 @@
 include { get_prefix} from './utils.nf'
 
 process MakeSharedVariantsList {
-    publishDir "results/array-genotypes/qced_shared_variants", pattern: "variants_intersection.csv",  mode: 'symlink'
-    publishDir "results/wgs/shared_variants", pattern: "variants_intersection.{bed,bim}", mode: 'symlink'
+    publishDir "${params.ARRAY_GENOTYPES_PUBLISH_DIR}/qced_shared_variants", pattern: "variants_intersection.csv",  mode: 'symlink'
+    publishDir "${params.WGS_PUBLISH_DIR}/shared_variants", pattern: "variants_intersection.{bed,bim}", mode: 'symlink'
 
     input:
         path genotypes_files
@@ -20,7 +20,7 @@ process MakeSharedVariantsList {
 }
 
 process ExtractSharedVariantsFromPLINK {
-    publishDir "results/array-genotypes/qced_shared_variants", mode: 'symlink'
+    publishDir "${params.ARRAY_GENOTYPES_PUBLISH_DIR}/qced_shared_variants", mode: 'symlink'
 
     input:
         tuple path(bed_file), path(bim_file), path(fam_file)

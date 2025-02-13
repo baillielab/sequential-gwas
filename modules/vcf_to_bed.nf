@@ -1,7 +1,7 @@
 include { get_prefix } from './utils.nf'
 
 process VCFToBed {
-    publishDir "results/thousandsGP/bed", mode: 'symlink'
+    publishDir "${params.KGP_PUBLISH_DIR}/bed", mode: 'symlink'
 
     input:
         tuple path(vcf_file), path(vcf_index)

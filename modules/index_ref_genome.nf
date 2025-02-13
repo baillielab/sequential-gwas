@@ -1,5 +1,5 @@
 process IndexReferenceGenome {
-    publishDir "results/reference-genome", mode: 'symlink'
+    publishDir "${params.GATK_PUBLISH_DIR}", mode: 'symlink'
 
     input:
         path reference_genome

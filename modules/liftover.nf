@@ -1,7 +1,7 @@
 include { get_prefix } from './utils.nf'
 
 process LiftOver {
-    publishDir "results/array-genotypes/lifted_over", mode: 'symlink'
+    publishDir "${params.ARRAY_GENOTYPES_PUBLISH_DIR}/lifted_over", mode: 'symlink'
 
     input:
         tuple path(map_file), path(ped_file)

@@ -1,9 +1,10 @@
 process MergeGenotypes {
-    publishDir "results/merged", mode: 'symlink'
+    publishDir "${publish_dir}/merged", mode: 'symlink'
 
     input:
         path genotype_files
         path merge_list
+        val publish_dir
 
     output:
         tuple path("genotypes.merged.bed"), path("genotypes.merged.bim"), path("genotypes.merged.fam")

@@ -37,7 +37,7 @@ workflow AggregateGeneticData {
     merge_list = all_genotypes
         .map { it -> get_prefix(it[0].getName()) }
         .collectFile(name: "merge_list.txt", newLine: true)
-    merged_genotypes = MergeGenotypes(all_genotypes.collect(), merge_list)
+    merged_genotypes = MergeGenotypes(all_genotypes.collect(), merge_list, params.ARRAY_GENOTYPES_PUBLISH_DIR)
     QCMergedGenotypes(merged_genotypes)
     
     // Aggregate Reports

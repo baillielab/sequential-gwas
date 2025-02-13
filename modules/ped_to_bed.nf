@@ -1,7 +1,7 @@
 include { get_prefix} from './utils.nf'
 
 process PedToBed {
-    publishDir "results/array-genotypes/bed", mode: 'symlink'
+    publishDir "${params.ARRAY_GENOTYPES_PUBLISH_DIR}/bed", mode: 'symlink'
 
     input:
         tuple path(map_file), path(ped_file)

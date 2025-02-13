@@ -1,5 +1,5 @@
 process GenotypeGVCFs{
-    publishDir "results/wgs/shared_variants", mode: 'symlink'
+    publishDir "${params.WGS_PUBLISH_DIR}/shared_variants", mode: 'symlink'
 
     input:
         tuple val(prefix), path(gvcf)

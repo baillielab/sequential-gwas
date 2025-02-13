@@ -32,6 +32,7 @@ work/
 results/
 .nextflow/
 .nextflow.*
+trace*
 
 assets/topmed-api-token
 assets/GSA*
