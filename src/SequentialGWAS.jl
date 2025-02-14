@@ -19,6 +19,7 @@ include("mock.jl")
 include("cli.jl")
 include("read_write.jl")
 include("report.jl")
+include("qc_from_kgp.jl")
 
 export julia_main
 

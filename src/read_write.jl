@@ -18,7 +18,7 @@ read_bim(file) = CSV.read(
 )
 
 """
-    read_fam(prefix)
+    read_fam(file)
 
 Columns Description from: https://www.cog-genomics.org/plink/1.9/formats#fam
 - Family ID ('FID')
@@ -28,8 +28,8 @@ Columns Description from: https://www.cog-genomics.org/plink/1.9/formats#fam
 - Sex code ('1' = male, '2' = female, '0' = unknown)
 - Phenotype value ('1' = control, '2' = case, '-9'/'0'/non-numeric = missing data if case/control)
 """
-read_fam(prefix) = CSV.read(
-    string(prefix, ".fam"), 
+read_fam(file) = CSV.read(
+    file, 
     DataFrame, 
     header=["FID", "IID", "FATHER_ID", "MOTHER_ID", "SEX", "PHENOTYPE"]
 )

@@ -23,9 +23,9 @@ function cli_settings()
             action = :command
             help = "Generates a report after lifting over."
 
-        "write-variants-intersection"
+        "qc-from-kgp"
             action = :command
-            help = "Finds variants in all bim files and writes to both a plink compliant file (.csv) and a gatk compliant (.bed) file."
+            help = "Generates shared variants file and for each input, variants to flip, a new bim file and a summary of the suggested actions."
         
         "write-chromosomes"
             action = :command
@@ -45,17 +45,28 @@ function cli_settings()
             help = "Output file name."
     end
 
-    @add_arg_table! s["write-variants-intersection"] begin
-        "--output-prefix"
-            arg_type = String
-            required = false
-            default = "variants_intersection"
-            help = "Output prefix to negerated csv and bed file."
-        "--input-dir"
+    @add_arg_table! s["qc-from-kgp"] begin
+        "--outdir"
             arg_type = String
             required = false
             default = "."
-            help = "Directory containing bim files."
+            help = "Output directory."
+        "--release-r8-bim"
+            arg_type = String
+            required = true
+            help = "Bim file corresponding to the release-r8."
+        "--release-2021-2023-bim"
+            arg_type = String
+            required = true
+            help = "Bim file corresponding to the release-2021-2023."
+        "--release-2024-now-bim"
+            arg_type = String
+            required = true
+            help = "Bim file corresponding to the release-2024-now."
+        "--kgp-bim"
+            arg_type = String
+            required = true
+            help = "Bim file corresponding to the KGP."
     end
 
     @add_arg_table! s["report-qc-effect"] begin
@@ -164,10 +175,14 @@ function julia_main()::Cint
             cmd_settings["before-prefix"],
             cmd_settings["after-prefix"]
         )
-    elseif cmd == "write-variants-intersection"
-        write_variants_intersection(
-            cmd_settings["output-prefix"],
-            cmd_settings["input-dir"]
+    elseif cmd == "qc-from-kgp"
+        generate_qc_extraction_files_from_kgp(
+            cmd_settings["release-r8-bim"],
+            cmd_settings["release-2021-2023-bim"],
+            cmd_settings["release-2024-now-bim"],
+            cmd_settings["kgp-bim"],
+            outdir=cmd_settings["outdir"],
+            
         )
     elseif cmd == "mock"
         mock_data(

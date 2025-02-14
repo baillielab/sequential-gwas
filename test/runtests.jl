@@ -16,5 +16,6 @@ TESTDIR = joinpath(PKGDIR, "test")
 
     # Unit Tests
     include(joinpath(TESTDIR, "read_write.jl"))
+    include(joinpath(TESTDIR, "qc_from_kgp.jl"))
 end
 

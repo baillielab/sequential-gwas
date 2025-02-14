@@ -4,10 +4,10 @@ process GenotypeGVCFs{
     input:
         tuple val(prefix), path(gvcf)
         path join_variants_gatk
-        path joint_variants_bim
         path reference_genome
         path reference_genome_index
         path reference_genome_dict
+        path kgp_bim
 
     output:
         tuple path("${prefix}.shared.bed"), path("${prefix}.shared.bim"), path("${prefix}.shared.fam")

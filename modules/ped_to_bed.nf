@@ -4,10 +4,10 @@ process PedToBed {
     publishDir "${params.ARRAY_GENOTYPES_PUBLISH_DIR}/bed", mode: 'symlink'
 
     input:
-        tuple path(map_file), path(ped_file)
+        tuple val(id), path(ped_file), path(map_file)
 
     output:
-        tuple path("${input_prefix}.bed"), path("${input_prefix}.bim"), path("${input_prefix}.fam")
+        tuple val(id), path("${input_prefix}.bed"), path("${input_prefix}.bim"), path("${input_prefix}.fam")
 
     script:
         input_prefix = get_prefix(ped_file)

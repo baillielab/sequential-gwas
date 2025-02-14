@@ -6,8 +6,8 @@ workflow GVCFGenotyping {
     take:
         wgs_gvcfs
         shared_variants_regions
-        joint_variants_bim
         reference_genome
+        kgp_bim
         
     
     main:
@@ -16,10 +16,10 @@ workflow GVCFGenotyping {
         genotypes = GenotypeGVCFs(
             wgs_gvcfs, 
             shared_variants_regions,
-            joint_variants_bim,
             reference_genome, 
             reference_genome_index, 
-            reference_genome_dict
+            reference_genome_dict,
+            kgp_bim
         )
     
     emit:

@@ -4,11 +4,11 @@ process LiftOver {
     publishDir "${params.ARRAY_GENOTYPES_PUBLISH_DIR}/lifted_over", mode: 'symlink'
 
     input:
-        tuple path(map_file), path(ped_file)
+        tuple val(id), path(ped_file), path(map_file)
         path chain_file
         
     output:
-        tuple path("${output_prefix}.map"), path("${output_prefix}.ped"), emit: genotypes
+        tuple val(id), path("${output_prefix}.ped"), path("${output_prefix}.map"), emit: genotypes
         path("${input_prefix}.liftover_report.csv"), emit: report
 
     script:

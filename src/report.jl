@@ -1,14 +1,14 @@
 function get_filtered_variants_info(input_prefix, output_prefix)
-    input_variants_info = read_bim(input_prefix)
-    output_variants_info = read_bim(output_prefix)
+    input_variants_info = read_bim(string(input_prefix, ".bim"))
+    output_variants_info = read_bim(string(output_prefix, ".bim"))
     input_variants_info.VARIANT_ID = string.("chr", input_variants_info.CHR_CODE, ":", input_variants_info.BP_COORD)
     filtered_variants = DataFrame(VARIANT_ID = setdiff(input_variants_info.VARIANT_ID, output_variants_info.VARIANT_ID))
     return innerjoin(filtered_variants, input_variants_info, on=:VARIANT_ID)
 end
 
 function get_filtered_indiv_info(input_prefix, output_prefix)
-    input_indiv_info = read_fam(input_prefix)
-    output_indiv_info = read_fam(output_prefix)
+    input_indiv_info = read_fam(string(input_prefix, ".fam"))
+    output_indiv_info = read_fam(string(output_prefix, ".fam"))
     filtered_indiv = DataFrame(IID = setdiff(input_indiv_info.IID, output_indiv_info.IID))
     return innerjoin(filtered_indiv, input_indiv_info, on=:IID)
 end

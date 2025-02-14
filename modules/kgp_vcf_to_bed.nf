@@ -13,7 +13,6 @@ process KGPVCFToBed {
         input_prefix = get_prefix(vcf_file)[0..-5]
         """
         /opt/miniforge3/bin/mamba run -n plink2_env plink2 \
-            --keep-allele-order \
             --output-chr chr26 \
             --vcf ${vcf_file} \
             --make-bed \
