@@ -7,13 +7,14 @@ include { GenotypesQC } from '../subworkflows/genotyping_arrays_qc.nf'
 include { KGP } from './kgp.nf'
 include { QCFilesFromKGP } from '../modules/qc_from_kgp.nf'
 include { FlipAndExtract } from '../modules/flip_and_extract.nf'
+include { DownloadOrAccessReferenceGenome } from '../modules/download_reference_genome.nf'
 
 workflow AggregateGeneticData {
     // Process 1000GP dataset
     kgp_genotypes = KGP()
     kgp_bim = kgp_genotypes.map{ it -> it[1] }.first()
     // Reference Genome
-    reference_genome = file(params.REFERENCE_GENOME, checkIfExists: true)
+    reference_genome = DownloadOrAccessReferenceGenome()
     // WGS GVCFs
     wgs_gvcfs = Channel.fromFilePairs("${params.WGS_GVCFS}*{.gvcf.gz,.gvcf.gz.tbi}", checkIfExists: true)
     // GRC37 Genotypes
