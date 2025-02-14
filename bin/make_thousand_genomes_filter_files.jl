@@ -38,8 +38,8 @@ CSV.write(subpop_file, subpop, delim="\t", header=false)
 
 map_file_genomic = DataFrame(SequentialGWAS.read_map(MAP_FILE_GENOMIC), [:CHR, :ID, :POS, :BP])
 map_file_genomic.CHR .= "chr" .* string.(map_file_genomic.CHR)
-map_file_genomic.BP_START = map_file_genomic.BP .- 500
-map_file_genomic.BP_END = map_file_genomic.BP .+ 500
+map_file_genomic.BP_START = map_file_genomic.BP .- 10
+map_file_genomic.BP_END = map_file_genomic.BP .+ 10
 (chr_key, chr_group) = first(pairs(groupby(map_file_genomic, :CHR)))
 for (chr_key, chr_group) in pairs(groupby(map_file_genomic, :CHR))
     chr = chr_key.CHR

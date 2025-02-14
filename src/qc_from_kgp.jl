@@ -61,7 +61,16 @@ function set_action_column(bim, kgp_bim)
         :ALLELE_2
     )
     # Non unique variants are non-biallelic, we will drop them
-    joined_bim.NON_BIALLELIC = nonunique(select(joined_bim, [:CHR_CODE, :BP_COORD]))
+    joined_bim.NON_BIALLELIC = nonunique(
+        joined_bim, 
+        [:CHR_CODE, :BP_COORD],
+        keep = :noduplicates
+    )
+    joined_bim = unique(
+        joined_bim, 
+        [:CHR_CODE, :BP_COORD], 
+        keep=:first
+    )
     set_action_column!(joined_bim)
     return joined_bim
 end

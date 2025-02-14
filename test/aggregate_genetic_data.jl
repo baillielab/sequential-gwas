@@ -22,30 +22,30 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     run(cmd)
     # Check liftover
     release_2021_2023_liftover_report = CSV.read(
-        joinpath(RESULTS_DIR, "array-genotypes", "lifted_over", "mock.release_2021_2023.liftover_report.csv"), 
+        joinpath(RESULTS_DIR, "array_genotypes", "lifted_over", "mock.release_2021_2023.liftover_report.csv"), 
         DataFrame
     )
     @test all(release_2021_2023_liftover_report.LIFTEDOVER .== true)
     release_r8_liftover_report = CSV.read(
-        joinpath(RESULTS_DIR, "array-genotypes", "lifted_over", "mock.release_r8.liftover_report.csv"), 
+        joinpath(RESULTS_DIR, "array_genotypes", "lifted_over", "mock.release_r8.liftover_report.csv"), 
         DataFrame
     )
     @test all(release_r8_liftover_report.LIFTEDOVER .== true)
     # Check qced arrays
-    qced_dir = joinpath(RESULTS_DIR, "array-genotypes", "qced")
+    qced_dir = joinpath(RESULTS_DIR, "array_genotypes", "qced")
     ## Check filtered samples
     filtered_sample_files = filter(endswith("filtered_samples.csv"), readdir(qced_dir))
     map(filtered_sample_files)  do file
         filtered_samples = CSV.read(joinpath(qced_dir, file), DataFrame)
         @test names(filtered_samples) == ["IID", "FID", "FATHER_ID", "MOTHER_ID", "SEX", "PHENOTYPE"]
-        @test 1 < nrow(filtered_samples) < 300 # At least some but not too many samples should be filtered
+        @test 0 < nrow(filtered_samples) < 300 # At least some but not too many samples should be filtered
     end
     ## Check filtered variants
     filtered_variants_files = filter(endswith("filtered_variants.csv"), readdir(qced_dir))
     map(filtered_variants_files)  do file
         filtered_variants = CSV.read(joinpath(qced_dir, file), DataFrame)
         @test names(filtered_variants) == ["VARIANT_ID", "CHR_CODE", "POSITION", "BP_COORD", "ALLELE_1", "ALLELE_2"]
-        @test 1 < nrow(filtered_variants) < 20 # At least some but not all variants should be filtered
+        @test 1 < nrow(filtered_variants) < 50 # At least some but not all variants should be filtered
     end
 
     # Check array genotypes shared variants

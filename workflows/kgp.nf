@@ -6,7 +6,6 @@ include { MergeGenotypes } from '../modules/merge_plink_files.nf'
 
 workflow KGP {
     chrs = Channel.of(1..22)
-    // Question: How did they know these VCF files (instead of the 1000GP release) would contain our variants?
     chr_vcfs = chrs
         .map { it -> [
             "https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased", 
@@ -17,7 +16,6 @@ workflow KGP {
             "https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased", 
             "CCDG_14151_B01_GRM_WGS_2020-08-05_chr${it}.filtered.shapeit2-duohmm-phased.vcf.gz.tbi"
             ]} 
-    // panel = Channel.of(["ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502", "integrated_call_samples_v3.20130502.ALL.panel"])
     ped = Channel.of(["ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage", "20130606_g1k_3202_samples_ped_population.txt"])
     all_1000P_files = chr_vcfs.concat(chr_vcfs_idx).concat(ped)
 
@@ -34,7 +32,7 @@ workflow KGP {
         .map { it -> get_prefix(it[0].getName()) }
         .collectFile(name: "merge_list.txt", newLine: true)
     kgp_plink_merged = MergeGenotypes(kgp_plink_files.collect(), merge_list, params.KGP_PUBLISH_DIR)
-
+    // Add Removed related invidiuals step: TODO
     emit:
         kgp_plink_merged
 }

@@ -7,7 +7,7 @@ using DataFrames
 
 TESTDIR = joinpath(pkgdir(SequentialGWAS), "test")
 
-@testset "Test qc-from-kgp"
+@testset "Test qc-from-kgp" begin
     outdir = mktempdir()
     release_r8_bim_file = joinpath(TESTDIR, "assets", "qc_from_kgp", "release_r8.bim")
     release_2021_2023_bim_file = joinpath(TESTDIR, "assets", "qc_from_kgp", "release_2021_2023.bim")
@@ -38,6 +38,9 @@ TESTDIR = joinpath(pkgdir(SequentialGWAS), "test")
         SequentialGWAS.read_bim(joinpath(outdir, "release_2024_now.new.bim"))
     ]
     variants_intersection = CSV.read(joinpath(outdir, "variants_intersection.txt"), DataFrame, header=[:ID], delim="\t")
+    @test_skip true == false # TODO
+end
+
 end
 
 true
