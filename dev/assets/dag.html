@@ -21,58 +21,111 @@
 <pre class="mermaid" style="text-align: center;">
 flowchart TB
     subgraph " "
-    v0["Channel.fromPath"]
-    v2["Channel.fromPath"]
-    v5["Channel.fromPath"]
-    v7["chain_file"]
-    v12["variants_to_flip"]
+    v0["Channel.of"]
+    v3["Channel.of"]
+    v6["store_dir"]
+    v17["publish_dir"]
+    v22["Channel.fromFilePairs"]
+    v23["Channel.of"]
+    v25["Channel.of"]
+    v28["Channel.of"]
+    v30["chain_file"]
+    v35["variants_to_flip"]
+    v57["publish_dir"]
     end
-    subgraph CombineGenotypingArrays
-    subgraph GenotypesQC
-    v8([LiftOver])
-    v11([PedToBed])
-    v13([QCRawGenotypes])
+    subgraph AggregateGeneticData
+    subgraph KGP
+    v7([DownloadOrAccessStoredResource])
+    v12([CleanKGP])
+    v13([KGPVCFToBed])
+    v18([MergeGenotypes])
     v1(( ))
-    v6(( ))
+    v8(( ))
     v14(( ))
     v16(( ))
-    end
-    v17([MakeSharedVariantsList])
-    v18([ExtractSharedVariants])
-    v22([MergeGenotypes])
-    v23([QCMergedGenotypes])
     v19(( ))
-    v21(( ))
+    end
+    v21([DownloadOrAccessReferenceGenome])
+    subgraph GenotypesQC
+    v31([LiftOver])
+    v34([PedToBed])
+    v36([QCRawGenotypes])
+    v24(( ))
+    v29(( ))
+    v37(( ))
+    v39(( ))
+    end
+    v40([QCFilesFromKGP])
+    v47([FlipAndExtract])
+    subgraph GVCFGenotyping
+    v49([IndexReferenceGenome])
+    v50([CreateSequenceDictionary])
+    v51([GenotypeGVCFs])
+    end
+    v58([MergeGenotypes])
+    v59([QCMergedGenotypes])
+    v42(( ))
+    v43(( ))
+    v48(( ))
+    v52(( ))
     end
     subgraph " "
-    v9[" "]
-    v15["reports"]
-    v24[" "]
-    v25[" "]
+    v32[" "]
+    v38["reports"]
+    v41[" "]
+    v60[" "]
+    v61[" "]
     end
     v0 --> v1
-    v2 --> v1
-    v5 --> v6
+    v3 --> v1
+    v6 --> v7
+    v1 --> v7
     v7 --> v8
-    v1 --> v8
-    v8 --> v9
-    v8 --> v6
-    v6 --> v11
-    v11 --> v13
+    v8 --> v12
     v12 --> v13
-    v13 --> v18
     v13 --> v14
     v13 --> v16
-    v14 --> v15
-    v16 --> v17
     v17 --> v18
+    v14 --> v18
+    v16 --> v18
     v18 --> v19
-    v18 --> v21
-    v19 --> v22
-    v21 --> v22
-    v22 --> v23
-    v23 --> v25
+    v21 --> v49
+    v21 --> v50
+    v21 --> v51
+    v22 --> v51
     v23 --> v24
+    v25 --> v24
+    v28 --> v29
+    v30 --> v31
+    v24 --> v31
+    v31 --> v32
+    v31 --> v29
+    v29 --> v34
+    v34 --> v36
+    v35 --> v36
+    v36 --> v37
+    v36 --> v39
+    v36 --> v43
+    v37 --> v38
+    v19 --> v40
+    v39 --> v40
+    v40 --> v41
+    v40 --> v42
+    v40 --> v43
+    v40 --> v48
+    v42 --> v47
+    v43 --> v47
+    v47 --> v52
+    v49 --> v51
+    v50 --> v51
+    v19 --> v51
+    v48 --> v51
+    v51 --> v52
+    v57 --> v58
+    v52 --> v58
+    v58 --> v59
+    v59 --> v61
+    v59 --> v60
 
 </pre>
 <script type="module">
