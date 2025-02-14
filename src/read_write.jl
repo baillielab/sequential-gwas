@@ -120,19 +120,27 @@ function write_chromosomes(input_prefix; output="chromosomes.txt")
 end
 
 
-function complete_bim_with_ref(bim_file, ref_bim_file)
-    bim_file = SequentialGWAS.read_bim(bim_file)
-    ref_bim_file = SequentialGWAS.read_bim(ref_bim_file)
+function complete_bim_with_ref(bim_file, ref_bim_file; output=bim_file)
+    bim = SequentialGWAS.read_bim(bim_file)
+    ref_bim = SequentialGWAS.read_bim(ref_bim_file)
     # Make the allele mapping for each variant
-    variant_alleles_map = Dict{String, Dict{String, String}}()
-    for row in Tables.namedtupleiterator(ref_bim_file)
-        variant_alleles_map[row.VARIANT_ID] = Dict(row.ALLELE_1 => row.ALLELE_2, row.ALLELE_2 => row.ALLELE_1)
+    variants_map = Dict()
+    for row in Tables.namedtupleiterator(ref_bim)
+        chr, pos, ref, alt = split(row.VARIANT_ID, ":")
+        variants_map[string(chr, ":", pos)] = (
+            variant_id = row.VARIANT_ID,
+            allele_map = Dict(row.ALLELE_1 => row.ALLELE_2, row.ALLELE_2 => row.ALLELE_1)
+        )
     end
-    # Fill the missing allele
-    for (idx, (variant_id, allele_1, allele_2)) in enumerate(zip(bim_file.VARIANT_ID, bim_file.ALLELE_1, bim_file.ALLELE_2))
-        println(idx)
-        if allele_1 == "."
-            bim_file.ALLELE_1[idx] = variant_alleles_map[variant_id][allele_2]
+    # Fill the missing allele and update the variant id
+    bim.VARIANT_ID = convert(Vector{String}, bim.VARIANT_ID)
+    bim.ALLELE_1 = convert(Vector{String}, bim.ALLELE_1)
+    for row in eachrow(bim)
+        info = variants_map[row.VARIANT_ID]
+        row.VARIANT_ID = info.variant_id
+        if row.ALLELE_1 == "."
+            row.ALLELE_1 = info.allele_map[row.ALLELE_2]
         end
     end
+    CSV.write(output, bim, header=false, delim="\t")
 end

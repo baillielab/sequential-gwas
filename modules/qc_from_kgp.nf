@@ -1,6 +1,6 @@
 include { get_prefix } from './utils.nf'
 
-process QCFromKGP {
+process QCFilesFromKGP {
     publishDir "${params.ARRAY_GENOTYPES_PUBLISH_DIR}/qc_files_from_kgp", mode: 'symlink'
 
     input:

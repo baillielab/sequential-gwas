@@ -27,9 +27,28 @@ function cli_settings()
             action = :command
             help = "Generates shared variants file and for each input, variants to flip, a new bim file and a summary of the suggested actions."
         
+        "complete-bim-with-ref"
+            action = :command
+            help = "Completes a bim file with the KGP."
+
         "write-chromosomes"
             action = :command
             help = "Write list of chromosomes present in genotypes to file."
+    end
+
+    @add_arg_table! s["complete-bim-with-ref"] begin
+        "bim"
+            arg_type = String
+            help = "Path to bim file."
+
+        "ref-bim"
+            arg_type = String
+            help = "Path to KGP bim file."
+        
+        "--output"
+            arg_type = String
+            help = "Output bim file."
+            default = "complete.bim"
     end
 
     @add_arg_table! s["write-chromosomes"] begin
@@ -183,6 +202,12 @@ function julia_main()::Cint
             cmd_settings["kgp-bim"],
             outdir=cmd_settings["outdir"],
             
+        )
+    elseif cmd == "complete-bim-with-ref"
+        complete_bim_with_ref(
+            cmd_settings["bim"],
+            cmd_settings["ref-bim"],
+            output=cmd_settings["output"]
         )
     elseif cmd == "mock"
         mock_data(

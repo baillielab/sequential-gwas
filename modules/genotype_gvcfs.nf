@@ -10,9 +10,10 @@ process GenotypeGVCFs{
         path kgp_bim
 
     output:
-        tuple path("${prefix}.shared.bed"), path("${prefix}.shared.bim"), path("${prefix}.shared.fam")
+        tuple path("${output_prefix}.bed"), path("${output_prefix}.bim"), path("${output_prefix}.fam")
 
     script:
+        output_prefix = "${prefix}.shared"
         """
         gatk GenotypeGVCFs \
             -R ${reference_genome} \
@@ -21,11 +22,18 @@ process GenotypeGVCFs{
             --interval-padding 10 \
             --force-output-intervals ${join_variants_gatk} \
             -O ${prefix}.shared.vcf.gz
+        
         /opt/miniforge3/bin/mamba run -n plink2_env plink2 \
             --vcf ${prefix}.shared.vcf.gz \
             --output-chr chr26 \
             --set-all-var-ids @:# \
             --make-bed \
             --out ${prefix}.shared
+        
+        julia --project=/opt/sequential-gwas/ /opt/sequential-gwas/bin/seq-gwas.jl \
+            complete-bim-with-ref \
+            ${output_prefix}.bim \
+            ${kgp_bim} \
+            --output ${output_prefix}.bim
         """
 }

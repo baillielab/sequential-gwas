@@ -1,4 +1,4 @@
-module TestQCFromKGP
+module TestQCFilesFromKGP
 
 using Test
 using SequentialGWAS

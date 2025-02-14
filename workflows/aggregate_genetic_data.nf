@@ -5,7 +5,7 @@ include { MergeGenotypes} from '../modules/merge_plink_files.nf'
 include { GVCFGenotyping} from '../subworkflows/gvcf_genotyping.nf'
 include { GenotypesQC } from '../subworkflows/genotyping_arrays_qc.nf'
 include { KGP } from './kgp.nf'
-include { QCFromKGP } from '../modules/qc_from_kgp.nf'
+include { QCFilesFromKGP } from '../modules/qc_from_kgp.nf'
 include { FlipAndExtract } from '../modules/flip_and_extract.nf'
 
 workflow AggregateGeneticData {
@@ -51,7 +51,7 @@ workflow AggregateGeneticData {
         release_2024_now: it[0] == "release-2024-now"
                         return [it[0], it[2]]
     }
-    kgp_qc_all_files = QCFromKGP(
+    kgp_qc_all_files = QCFilesFromKGP(
         qced_bim_files.release_r8,
         qced_bim_files.release_20212023,
         qced_bim_files.release_2024_now,
