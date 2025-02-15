@@ -20,6 +20,7 @@ include("cli.jl")
 include("read_write.jl")
 include("report.jl")
 include("qc_from_kgp.jl")
+include("relatedness.jl")
 
 export julia_main
 

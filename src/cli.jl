@@ -30,6 +30,10 @@ function cli_settings()
         "complete-bim-with-ref"
             action = :command
             help = "Completes a bim file with the KGP."
+        
+        "get-kgp-unrelated-individuals"
+            action = :command
+            help = "Completes a bim file with the KGP."
 
         "write-chromosomes"
             action = :command
@@ -49,6 +53,19 @@ function cli_settings()
             arg_type = String
             help = "Output bim file."
             default = "complete.bim"
+    end
+
+    @add_arg_table! s["get-kgp-unrelated-individuals"] begin
+        "pedigrees"
+            arg_type = String
+            required = true
+            help = "Prefix to pedigree file."
+
+        "--output"
+            arg_type = String
+            required = false
+            default = "kgp_unrelated_individuals.txt"
+            help = "Output file name."
     end
 
     @add_arg_table! s["write-chromosomes"] begin
@@ -208,6 +225,11 @@ function julia_main()::Cint
             cmd_settings["bim"],
             cmd_settings["ref-bim"],
             output=cmd_settings["output"]
+        )
+    elseif cmd == "get-kgp-unrelated-individuals"
+        kgp_unrelated_individuals(
+            cmd_settings["pedigrees"],
+            outfile=cmd_settings["output"]
         )
     elseif cmd == "mock"
         mock_data(

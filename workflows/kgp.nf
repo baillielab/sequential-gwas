@@ -3,6 +3,7 @@ include { CleanKGP } from '../modules/clean_thousands_gp.nf'
 include { KGPVCFToBed } from '../modules/kgp_vcf_to_bed.nf'
 include { get_prefix } from '../modules/utils.nf'
 include { MergeGenotypes } from '../modules/merge_plink_files.nf'
+include { KeepKGPUnrelated } from '../modules/kgp_unrelated.nf'
 
 workflow KGP {
     chrs = Channel.of(1..22)
@@ -25,6 +26,9 @@ workflow KGP {
         .map{ [it.getName().replace(".tbi", ""), it] }
         .groupTuple(sort: true, size: 2)
         .map{ it[1] }
+    pedigree_file = resources
+        .filter{ it.toString().contains("samples_ped_population") }
+        .first()
 
     kgp_cleaned_vcf_files = CleanKGP(kgp_vcf_files)
     kgp_plink_files = KGPVCFToBed(kgp_cleaned_vcf_files)
@@ -32,7 +36,8 @@ workflow KGP {
         .map { it -> get_prefix(it[0].getName()) }
         .collectFile(name: "merge_list.txt", newLine: true)
     kgp_plink_merged = MergeGenotypes(kgp_plink_files.collect(), merge_list, params.KGP_PUBLISH_DIR)
-    // Add Removed related invidiuals step: TODO
+    kgp_unrelated = KeepKGPUnrelated(kgp_plink_merged.collect(), pedigree_file)
+
     emit:
-        kgp_plink_merged
+        kgp_unrelated
 }
