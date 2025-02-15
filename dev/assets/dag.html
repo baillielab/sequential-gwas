@@ -24,108 +24,115 @@ flowchart TB
     v0["Channel.of"]
     v3["Channel.of"]
     v6["store_dir"]
-    v17["publish_dir"]
-    v22["Channel.fromFilePairs"]
-    v23["Channel.of"]
-    v25["Channel.of"]
-    v28["Channel.of"]
-    v30["chain_file"]
-    v35["variants_to_flip"]
-    v57["publish_dir"]
+    v19["publish_dir"]
+    v26["Channel.fromFilePairs"]
+    v27["Channel.of"]
+    v29["Channel.of"]
+    v32["Channel.of"]
+    v34["chain_file"]
+    v39["variants_to_flip"]
+    v61["publish_dir"]
     end
     subgraph AggregateGeneticData
     subgraph KGP
     v7([DownloadOrAccessStoredResource])
-    v12([CleanKGP])
-    v13([KGPVCFToBed])
-    v18([MergeGenotypes])
+    v14([CleanKGP])
+    v15([KGPVCFToBed])
+    v20([MergeGenotypes])
+    v22([KeepKGPUnrelated])
     v1(( ))
     v8(( ))
-    v14(( ))
+    v12(( ))
     v16(( ))
-    v19(( ))
+    v18(( ))
+    v21(( ))
+    v23(( ))
     end
-    v21([DownloadOrAccessReferenceGenome])
+    v25([DownloadOrAccessReferenceGenome])
     subgraph GenotypesQC
-    v31([LiftOver])
-    v34([PedToBed])
-    v36([QCRawGenotypes])
-    v24(( ))
-    v29(( ))
-    v37(( ))
-    v39(( ))
-    end
-    v40([QCFilesFromKGP])
-    v47([FlipAndExtract])
-    subgraph GVCFGenotyping
-    v49([IndexReferenceGenome])
-    v50([CreateSequenceDictionary])
-    v51([GenotypeGVCFs])
-    end
-    v58([MergeGenotypes])
-    v59([QCMergedGenotypes])
-    v42(( ))
+    v35([LiftOver])
+    v38([PedToBed])
+    v40([QCRawGenotypes])
+    v28(( ))
+    v33(( ))
+    v41(( ))
     v43(( ))
-    v48(( ))
+    end
+    v44([QCFilesFromKGP])
+    v51([FlipAndExtract])
+    subgraph GVCFGenotyping
+    v53([IndexReferenceGenome])
+    v54([CreateSequenceDictionary])
+    v55([GenotypeGVCFs])
+    end
+    v62([MergeGenotypes])
+    v63([QCMergedGenotypes])
+    v46(( ))
+    v47(( ))
     v52(( ))
+    v56(( ))
     end
     subgraph " "
-    v32[" "]
-    v38["reports"]
-    v41[" "]
-    v60[" "]
-    v61[" "]
+    v36[" "]
+    v42["reports"]
+    v45[" "]
+    v64[" "]
+    v65[" "]
     end
     v0 --> v1
     v3 --> v1
     v6 --> v7
     v1 --> v7
     v7 --> v8
-    v8 --> v12
-    v12 --> v13
-    v13 --> v14
-    v13 --> v16
-    v17 --> v18
-    v14 --> v18
-    v16 --> v18
-    v18 --> v19
-    v21 --> v49
-    v21 --> v50
-    v21 --> v51
-    v22 --> v51
-    v23 --> v24
-    v25 --> v24
-    v28 --> v29
-    v30 --> v31
-    v24 --> v31
-    v31 --> v32
-    v31 --> v29
-    v29 --> v34
-    v34 --> v36
+    v7 --> v12
+    v8 --> v14
+    v14 --> v15
+    v15 --> v16
+    v15 --> v18
+    v19 --> v20
+    v16 --> v20
+    v18 --> v20
+    v20 --> v21
+    v12 --> v22
+    v21 --> v22
+    v22 --> v23
+    v25 --> v53
+    v25 --> v54
+    v25 --> v55
+    v26 --> v55
+    v27 --> v28
+    v29 --> v28
+    v32 --> v33
+    v34 --> v35
+    v28 --> v35
     v35 --> v36
-    v36 --> v37
-    v36 --> v39
-    v36 --> v43
-    v37 --> v38
-    v19 --> v40
+    v35 --> v33
+    v33 --> v38
+    v38 --> v40
     v39 --> v40
     v40 --> v41
-    v40 --> v42
     v40 --> v43
-    v40 --> v48
-    v42 --> v47
-    v43 --> v47
-    v47 --> v52
-    v49 --> v51
-    v50 --> v51
-    v19 --> v51
-    v48 --> v51
-    v51 --> v52
-    v57 --> v58
-    v52 --> v58
-    v58 --> v59
-    v59 --> v61
-    v59 --> v60
+    v40 --> v47
+    v41 --> v42
+    v23 --> v44
+    v43 --> v44
+    v44 --> v45
+    v44 --> v46
+    v44 --> v47
+    v44 --> v52
+    v46 --> v51
+    v47 --> v51
+    v51 --> v56
+    v53 --> v55
+    v54 --> v55
+    v23 --> v55
+    v52 --> v55
+    v55 --> v56
+    v61 --> v62
+    v56 --> v62
+    v62 --> v63
+    v63 --> v65
+    v63 --> v64
 
 </pre>
 <script type="module">
