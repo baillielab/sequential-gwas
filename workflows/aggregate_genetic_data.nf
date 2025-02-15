@@ -7,7 +7,7 @@ include { MergeGenotypingArraysAndWGS } from '../subworkflows/merge_genotypes.nf
 workflow AggregateGeneticData {
     // Process 1000GP dataset
     kgp_genotypes = KGP()
-    kgp_bim = kgp_genotypes.map{ it -> it[1] }.first()
+    kgp_bim = kgp_genotypes.map{ it -> it[1] }
     // Reference Genome
     reference_genome = DownloadOrAccessReferenceGenome()
     // WGS GVCFs
