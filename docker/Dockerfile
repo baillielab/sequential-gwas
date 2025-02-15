@@ -24,7 +24,7 @@ RUN wget https://www.kingrelatedness.com/KINGcode.tar.gz \
     && mkdir /opt/king \
     && tar -xzf KINGcode.tar.gz -C /opt/king \
     && cd /opt/king \
-    && g++ -O2 -fopenmp -o king *.cpp -lm -lz \
+    && c++ -lm -lz -O2 -fopenmp -o king *.cpp \
     && cp king /usr/local/bin/
 
 # Install GATK
