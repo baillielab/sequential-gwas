@@ -1,5 +1,5 @@
 process MergeGenotypes {
-    publishDir "${publish_dir}/merged", mode: 'symlink'
+    publishDir "${publish_dir}", mode: 'symlink'
 
     input:
         path genotype_files

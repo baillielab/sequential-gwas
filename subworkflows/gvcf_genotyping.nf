@@ -5,7 +5,8 @@ include { GenotypeGVCFs } from '../modules/genotype_gvcfs.nf'
 workflow GVCFGenotyping {
     take:
         wgs_gvcfs
-        shared_variants_regions
+        shared_variants_gatk
+        shared_variants_plink
         reference_genome
         kgp_bim
         
@@ -15,7 +16,8 @@ workflow GVCFGenotyping {
         reference_genome_dict = CreateSequenceDictionary(reference_genome)
         genotypes = GenotypeGVCFs(
             wgs_gvcfs, 
-            shared_variants_regions,
+            shared_variants_gatk,
+            shared_variants_plink,
             reference_genome, 
             reference_genome_index, 
             reference_genome_dict,

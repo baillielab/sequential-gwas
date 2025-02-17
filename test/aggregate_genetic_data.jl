@@ -91,29 +91,45 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
         end
     end
 
-    # Check wgs shared variants
-    bed_shared_variants_list = CSV.read(
-        joinpath(qced_shared_variants_dir, "variants_intersection.bed"), 
+    # Check WGS
+    wgs_dir = joinpath(RESULTS_DIR, "wgs", "genotyped")
+    gatk_shared_variants = CSV.read(
+        joinpath(kgp_qc_files_dir, "variants_intersection.bed"), 
         DataFrame, 
         header=[:CHR, :BP_START, :BP_END]
     )
-    @test nrow(bed_shared_variants_list) == nrow(shared_variants_list)
-    @test bed_shared_variants_list.BP_START == shared_variants_list.BP_START .- 1
-    @test bed_shared_variants_list.BP_END == shared_variants_list.BP_END .+ 1
+    @test length(shared_variants) == nrow(gatk_shared_variants)
+    @test all(gatk_shared_variants.BP_START == gatk_shared_variants.BP_END .- 1)
+    @test all(gatk_shared_variants.BP_END == [parse(Int, x[2]) for x in split.(shared_variants, ":")])
 
+    odap_bim_files = joinpath.(wgs_dir, string.("mock.odap", 3001:3010, ".shared.bim"))
+    for bim_file in odap_bim_files
+        bim = SequentialGWAS.read_bim(bim_file)
+        # Check chr:pos:ref:alt format
+        @test all(length.(split.(bim.VARIANT_ID, ":")) .== 4)
+        # Check exactly required variants were genotyped
+        @test length(setdiff(shared_variants, bim.VARIANT_ID)) == 0
+        @test length(setdiff(bim.VARIANT_ID, shared_variants)) == 0
+    end
+    
     # Check merged genotypes
-    merged_bim = SequentialGWAS.read_bim(joinpath(RESULTS_DIR, "merged", "genotypes.merged"))
-    @test sort(merged_bim.VARIANT_ID) == sort(shared_variants_list.VARIANT_ID)
+    merge_dir = joinpath(RESULTS_DIR, "merged")
+    merged_bim = SequentialGWAS.read_bim(joinpath(merge_dir, "merged", "genotypes.merged.bim"))
+    @test sort(merged_bim.VARIANT_ID) == sort(shared_variants)
+    merged_fam = SequentialGWAS.read_fam(joinpath(merge_dir, "merged", "genotypes.merged.fam"))
 
-    # Check merged QC
+    # Check QC of merged genotypes
     ## Check filtered samples
-    filtered_samples = CSV.read(joinpath(RESULTS_DIR, "merged_qced", "genotypes.merged.qced.filtered_samples.csv"), DataFrame)
-    @test names(filtered_samples) == ["IID", "FID", "FATHER_ID", "MOTHER_ID", "SEX", "PHENOTYPE"]
-    @test nrow(filtered_samples) > 10
-    ## Check filtered variants
-    filtered_samples = CSV.read(joinpath(RESULTS_DIR, "merged_qced", "genotypes.merged.qced.filtered_variants.csv"), DataFrame)
-    @test names(filtered_samples) == ["VARIANT_ID", "CHR_CODE", "POSITION", "BP_COORD", "ALLELE_1", "ALLELE_2"]
-    @test nrow(filtered_samples) == 0
+    qced_merged_bim = SequentialGWAS.read_bim(joinpath(merge_dir, "qced", "genotypes.merged.qced.bim"))
+    @test sort(qced_merged_bim.VARIANT_ID) == sort(shared_variants)
+    qced_merged_fam = SequentialGWAS.read_fam(joinpath(merge_dir, "qced", "genotypes.merged.qced.fam"))
+    unrelated_king = CSV.read(
+        joinpath(RESULTS_DIR, "merged/king_relatedness/kingunrelated.txt"),
+        DataFrame,
+        header=[:INDEX, :IID]
+    )
+    @test nrow(qced_merged_fam) < nrow(merged_fam)
+    @test issubset(qced_merged_fam.IID, unrelated_king.IID)
 end
 
 end

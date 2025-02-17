@@ -7,6 +7,7 @@ params.KGP_PUBLISH_DIR = "${params.PUBLISH_DIR}/kgp"
 params.ARRAY_GENOTYPES_PUBLISH_DIR = "${params.PUBLISH_DIR}/array_genotypes"
 params.WGS_PUBLISH_DIR = "${params.PUBLISH_DIR}/wgs"
 params.GATK_PUBLISH_DIR = "${params.PUBLISH_DIR}/gatk"
+params.MERGED_PUBLISH_DIR = "${params.PUBLISH_DIR}/merged"
 
 // Input files params
 params.RESOURCES_DIR = "${projectDir}/assets/resources"

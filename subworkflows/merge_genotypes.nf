@@ -18,7 +18,7 @@ workflow MergeGenotypingArraysAndWGS {
         merged_genotypes = MergeGenotypes(
             all_genotypes.collect(), 
             merge_list, 
-            params.ARRAY_GENOTYPES_PUBLISH_DIR
+            "${params.MERGED_PUBLISH_DIR}/merged"
         )
         unrelated_individuals = KingRelationshipInference(merged_genotypes)
         qced_merged_genotypes = QCMergedGenotypes(merged_genotypes, unrelated_individuals)

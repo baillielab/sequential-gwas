@@ -49,6 +49,7 @@ workflow AggregateGeneticData {
     wgs_shared_genotypes = GVCFGenotyping(
         wgs_gvcfs, 
         qced_genotypes.gatk_shared_variants,
+        qced_genotypes.plink_shared_variants,
         reference_genome,
         kgp_bim
     )

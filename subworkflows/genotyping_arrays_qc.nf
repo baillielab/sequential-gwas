@@ -52,5 +52,6 @@ workflow GenotypesQC {
     emit:
         genotypes = qced_flipped_genotypes
         gatk_shared_variants = kgp_qc_files.shared_variants_gatk.first()
+        plink_shared_variants = shared_variants_plink
 
 }

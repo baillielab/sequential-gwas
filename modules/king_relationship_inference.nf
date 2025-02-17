@@ -1,4 +1,6 @@
 process KingRelationshipInference {
+    publishDir "${params.MERGED_PUBLISH_DIR}/king_relatedness", mode: 'symlink'
+
     input:
         tuple path(bed_file), path(bim_file), path(fam_file)
 
