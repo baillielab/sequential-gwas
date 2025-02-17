@@ -51,20 +51,44 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
         @test 0 < nrow(filtered_variants) < 50 # At least some but not all variants should be filtered
     end
 
-    # Check array genotypes shared variants
-    qced_shared_variants_dir = joinpath(RESULTS_DIR, "array-genotypes", "qced_shared_variants")
-    shared_variants_list = CSV.read(
-        joinpath(qced_shared_variants_dir, "variants_intersection.csv"), 
-        DataFrame, 
-        header=[:CHR, :BP_START, :BP_END, :VARIANT_ID]
-    )
-    @test nrow(shared_variants_list) > 40
-    bim_files = filter(endswith("shared.bim"), readdir(qced_shared_variants_dir))
-    map(bim_files) do file
-        bim_file = joinpath(qced_shared_variants_dir, file)
-        bim = SequentialGWAS.read_bim(bim_file[1:end-4])
-        
-        @test Set(bim.VARIANT_ID) == Set(shared_variants_list.VARIANT_ID)
+    # Check 1000 GP based QC
+    kgp_qc_files_dir = joinpath(RESULTS_DIR, "array_genotypes", "qc_files_from_kgp")
+    flipped_shared_dir = joinpath(RESULTS_DIR, "array_genotypes", "flipped_and_shared")
+    shared_variants = readlines(joinpath(kgp_qc_files_dir, "variants_intersection.txt"))
+    @test length(shared_variants) > 10
+    flipped_bim_files = joinpath.(flipped_shared_dir, ["release-r8.flipped.shared.bim", "release-2021-2023.flipped.shared.bim", "release-2024-now.flipped.shared.bim"])
+    flip_files = joinpath.(kgp_qc_files_dir, ["mock.release_r8.liftedOver.qced.flip.txt", "mock.release_2021_2023.liftedOver.qced.flip.txt", "mock.release_2024_now.qced.flip.txt"])
+    unflipped_bim_files = joinpath.(kgp_qc_files_dir, ["mock.release_r8.liftedOver.qced.new.bim", "mock.release_2021_2023.liftedOver.qced.new.bim", "mock.release_2024_now.qced.new.bim"])
+
+    for (flipped_bim_file, unflipped_bim_file, flip_file) in zip(flipped_bim_files, unflipped_bim_files, flip_files)
+        flipped_bim = SequentialGWAS.read_bim(flipped_bim_file)
+        # Check chr:pos:ref:alt format
+        @test all(length.(split.(flipped_bim.VARIANT_ID, ":")) .== 4)
+        # Check all shared variants are present in the bim file
+        @test sort(shared_variants) == sort(flipped_bim.VARIANT_ID)
+        # Check variants have been flipped
+        unflipped_bim = SequentialGWAS.read_bim(unflipped_bim_file)
+        select!(unflipped_bim, 
+            :VARIANT_ID, 
+            :ALLELE_1 => :UNFLIPPED_ALLELE_1, 
+            :ALLELE_2 => :UNFLIPPED_ALLELE_2
+        )
+        flipped_variants_list = readlines(flip_file)
+        flipped_variants = innerjoin(
+            innerjoin(
+                flipped_bim, 
+                DataFrame(VARIANT_ID=flipped_variants_list),
+                on=:VARIANT_ID
+            ),
+            unflipped_bim, 
+            on=:VARIANT_ID
+        )
+        @test nrow(flipped_variants) == length(flipped_variants_list)
+        complement = Dict("A" => "T", "T" => "A", "C" => "G", "G" => "C")
+        for row in eachrow(flipped_variants)
+            @test row.ALLELE_1 == complement[row.UNFLIPPED_ALLELE_1]
+            @test row.ALLELE_2 == complement[row.UNFLIPPED_ALLELE_2]
+        end
     end
 
     # Check wgs shared variants
