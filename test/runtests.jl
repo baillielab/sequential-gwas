@@ -11,12 +11,12 @@ TESTDIR = joinpath(PKGDIR, "test")
         Aqua.test_all(SequentialGWAS)
     end
 
-    # Array Genotypes Merging
-    include(joinpath(TESTDIR, "aggregate_genetic_data.jl"))
-
     # Unit Tests
     @test include(joinpath(TESTDIR, "read_write.jl"))
     @test include(joinpath(TESTDIR, "qc_from_kgp.jl"))
-    @tets include(joinpath(TESTDIR, "relatedness.jl"))
+    @test include(joinpath(TESTDIR, "relatedness.jl"))
+
+    # Test Genetic Data Aggregation Workflow
+    include(joinpath(TESTDIR, "aggregate_genetic_data.jl"))
 end
 

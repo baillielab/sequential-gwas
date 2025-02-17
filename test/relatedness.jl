@@ -2,6 +2,8 @@ module TestRelatedness
 
 using Test
 using SequentialGWAS
+using CSV
+using DataFrames
 
 TESTDIR = joinpath(pkgdir(SequentialGWAS), "test")
 
@@ -15,9 +17,10 @@ TESTDIR = joinpath(pkgdir(SequentialGWAS), "test")
         "--output", outfile
     ])
     julia_main()
-    kgp_unrelated_individuals(pedigree_file; outfile=outfile)
-    unrelated_individuals = CSV.read(outfile, DataFrame, header=[:FID, :IID])
-    @test_skip true == false
+    # Check only one individual per family is kept
+    pedigrees = CSV.read(pedigree_file, DataFrame)
+    unrelated_individuals = CSV.read(outfile, DataFrame, header=[:IID])
+    @test length(unique(pedigrees.FamilyID)) == length(unrelated_individuals.IID)
 end
 
 end
