@@ -29,7 +29,7 @@ function get_action(row)
         return "KEEP (MATCHING-REF-ALT)"
     # There are two cases:
     ## (i) The variant is palindromic, then either:
-    ##  - It wasn't properly flipped by GenomeStudio (TODO: maybe GenomeStudio won't do that anymore)
+    ##  - It wasn't properly flipped by GenomeStudio or earlier steps
     ##  - It has opposite allele frequency in our dataset (then all is fine)
     ## (ii) The variant is not palyndromic, it simply has an opposite allele frequency in our dataset (all is fine)
     ## Since opposite frequencies are not expected, we flip (i))

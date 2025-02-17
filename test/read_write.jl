@@ -22,7 +22,27 @@ TESTDIR = joinpath(PKGDIR, "test")
     ]
     )
     julia_main()
-    @test_skip true == false # TODO
+    old_bim = SequentialGWAS.read_bim(bim_file)
+    completed_bim = SequentialGWAS.read_bim(output)
+    ref_bim = SequentialGWAS.read_bim(ref_bim_file)
+    # Unchanged columns
+    @test old_bim.CHR_CODE == completed_bim.CHR_CODE
+    @test old_bim.BP_COORD == completed_bim.BP_COORD
+    @test old_bim.POSITION == completed_bim.POSITION
+    @test old_bim.ALLELE_2 == completed_bim.ALLELE_2
+    # "." filled with missing allele
+    @test all(completed_bim.ALLELE_1 .!== ".")
+    # Update variant ID to chr:pos:ref:alt format
+    @test all(x == 4 for x in length.(split.(completed_bim.VARIANT_ID, ":")))
+    # Check a few ALLELE_1 updates
+    variant_id = "chr1:56419369:C:T"
+    ref_row = filter(:VARIANT_ID => ==(variant_id), ref_bim)
+    completed_row = filter(:VARIANT_ID => ==(variant_id), completed_bim)
+    @test ref_row.ALLELE_1 == completed_row.ALLELE_1
+    variant_id = "chr2:22847824:G:A"
+    ref_row = filter(:VARIANT_ID => ==(variant_id), ref_bim)
+    completed_row = filter(:VARIANT_ID => ==(variant_id), completed_bim)
+    @test ref_row.ALLELE_1 == completed_row.ALLELE_1
 end
 
 end
