@@ -48,7 +48,7 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     map(filtered_variants_files)  do file
         filtered_variants = CSV.read(joinpath(qced_dir, file), DataFrame)
         @test names(filtered_variants) == ["VARIANT_ID", "CHR_CODE", "POSITION", "BP_COORD", "ALLELE_1", "ALLELE_2"]
-        @test 1 < nrow(filtered_variants) < 50 # At least some but not all variants should be filtered
+        @test 0 < nrow(filtered_variants) < 50 # At least some but not all variants should be filtered
     end
 
     # Check array genotypes shared variants

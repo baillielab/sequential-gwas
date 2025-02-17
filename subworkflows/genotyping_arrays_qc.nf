@@ -1,6 +1,6 @@
 include { PedToBed } from '../modules/ped_to_bed.nf'
 include { LiftOver } from '../modules/liftover.nf'
-include { QCGenotypingArray } from '../modules/qc_genotyping_array.nf'
+include { GenotypingArrayBasicQC } from '../modules/qc_genotyping_array.nf'
 include { MergeGenotypes } from '../modules/merge_plink_files.nf'
 include { QCFilesFromKGP } from '../modules/qc_from_kgp.nf'
 include { FlipAndExtract } from '../modules/flip_and_extract.nf'
@@ -19,7 +19,7 @@ workflow GenotypesQC {
         // Convert all files to PLINK bed format
         genotypes_bed = PedToBed(lifted_genotypes.genotypes.concat(grc38_genotypes))
         // Perform basic QC for all files
-        qced_genotypes = QCGenotypingArray(genotypes_bed, variants_to_flip)
+        qced_genotypes = GenotypingArrayBasicQC(genotypes_bed, variants_to_flip)
         // Generates QC files for each array using the 1000 Genomes Project
         qced_bim_files = qced_genotypes.genotypes.branch{ it ->
             release_r8: it[0] == "release-r8"
