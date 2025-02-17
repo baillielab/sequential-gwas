@@ -20,7 +20,7 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     cd(PKGDIR)
     cmd = Cmd(["nextflow", "run", "main.nf", "-c", "test/assets/workflow.config", "-profile", profile, "-resume"])
     run(cmd)
-    
+
     # Check 1000 GP
     kgp_dir = joinpath(RESULTS_DIR, "kgp", "merged_unrelated")
     bim = SequentialGWAS.read_bim(joinpath(kgp_dir, "genotypes.merged.unrelated.bim"))
@@ -31,16 +31,9 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     @test issubset(fam.IID, unrelated.IID)
 
     # Check liftover
-    release_2021_2023_liftover_report = CSV.read(
-        joinpath(RESULTS_DIR, "array_genotypes", "lifted_over", "mock.release_2021_2023.liftover_report.csv"), 
-        DataFrame
-    )
-    @test all(release_2021_2023_liftover_report.LIFTEDOVER .== true)
-    release_r8_liftover_report = CSV.read(
-        joinpath(RESULTS_DIR, "array_genotypes", "lifted_over", "mock.release_r8.liftover_report.csv"), 
-        DataFrame
-    )
-    @test all(release_r8_liftover_report.LIFTEDOVER .== true)
+    @test read(joinpath(RESULTS_DIR, "array_genotypes", "lifted_over", "mock.release_2021_2023.liftedOver.bed.unlifted")) == []
+    @test read(joinpath(RESULTS_DIR, "array_genotypes", "lifted_over", "mock.release_r8.liftedOver.bed.unlifted")) == []
+
     # Check qced arrays
     qced_dir = joinpath(RESULTS_DIR, "array_genotypes", "qced")
     ## Check filtered samples

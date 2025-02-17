@@ -9,7 +9,7 @@ process LiftOver {
         
     output:
         tuple val(id), path("${output_prefix}.ped"), path("${output_prefix}.map"), emit: genotypes
-        path("${input_prefix}.liftover_report.csv"), emit: report
+        path("${output_prefix}.bed.unlifted"), emit: report
 
     script:
         input_prefix = get_prefix(map_file)
@@ -20,8 +20,5 @@ process LiftOver {
             -p ${input_prefix}.ped \
             -o ${input_prefix}.liftedOver \
             -c ${chain_file}
-        julia --project=/opt/sequential-gwas/ /opt/sequential-gwas/bin/seq-gwas.jl \
-            report-liftover-effect \
-            ${input_prefix} ${output_prefix}
         """
 }

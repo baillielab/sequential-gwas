@@ -18,10 +18,6 @@ function cli_settings()
         "report-qc-effect"
             action = :command
             help = "Generates a report after a QC step."
-        
-        "report-liftover-effect"
-            action = :command
-            help = "Generates a report after lifting over."
 
         "qc-from-kgp"
             action = :command
@@ -116,17 +112,6 @@ function cli_settings()
             help = "Prefix to output genotypes data."
     end
 
-    @add_arg_table! s["report-liftover-effect"] begin
-        "before-prefix"
-            arg_type = String
-            required = true
-            help = "Prefix to input genotypes data (ped/map)."
-        "after-prefix"
-            arg_type = String
-            required = true
-            help = "Prefix to output genotypes data (ped/map)."
-    end
-
     @add_arg_table! s["snps-to-flip"] begin
         "manifest-file"
             arg_type = String
@@ -205,11 +190,6 @@ function julia_main()::Cint
         report_qc_effect(
             cmd_settings["input-prefix"], 
             cmd_settings["output-prefix"]
-        )
-    elseif cmd == "report-liftover-effect"
-        liftover_report(
-            cmd_settings["before-prefix"],
-            cmd_settings["after-prefix"]
         )
     elseif cmd == "qc-from-kgp"
         generate_qc_extraction_files_from_kgp(

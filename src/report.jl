@@ -24,15 +24,3 @@ function report_qc_effect(input_prefix, output_prefix)
     CSV.write(string(output_prefix, ".filtered_variants.csv"), filtered_variants_info)
     CSV.write(string(output_prefix, ".filtered_samples.csv"), filtered_indiv_info)
 end
-
-function liftover_report(before_prefix, after_prefix)
-    variants_info = read_map(string(before_prefix, ".map"))
-    rename!(variants_info, :POSITION => :POS_BEFORE, :BP_COORD => :BP_BEFORE)
-
-    variants_after_liftover = read_map(string(after_prefix, ".map"))
-    rename!(variants_after_liftover, :POSITION => :POS_AFTER, :BP_COORD => :BP_AFTER)
-
-    leftjoin!(variants_info, variants_after_liftover, on=[:CHR, :ID])
-    variants_info.LIFTEDOVER = .!ismissing.(variants_info.BP_AFTER)
-    CSV.write(string(before_prefix, ".liftover_report.csv"), variants_info)
-end
