@@ -1,64 +1,68 @@
-function set_action_column!(bim::DataFrame)
-    bim.ACTION = map(eachrow(bim)) do row
-        if row.VARIANT_ID === missing
-            return "DROP (NOT-IN-KGP)"
-        end
-        if row.NON_BIALLELIC === true
-            return "DROP (NON-BIALLELIC)"
-        end
-        # We now look at whether we need to flip the variant
-        chr, pos, ref, alt = split(row.VARIANT_ID, ":")
-        # Note: PLINK2 ALLELE_1 and ALLELE_2 are the minor and major alleles, respectively
-        # Ideal case, where the variant in our dataset matches the KGP dataset
-        if row.ALLELE_1 == alt && row.ALLELE_2 == ref
-            return "KEEP (MATCHING-REF-ALT)"
-        # There are two cases:
-        ## (i) The variant is palyndromic, then either:
-        ##  - It wasn't properly flipped by GenomeStudio (TODO: maybe GenomeStudio won't do that anymore)
-        ##  - It has opposite allele frequency in our dataset (then all is fine)
-        ## (ii) The variant is not palyndromic, it simply has an opposite allele frequency in our dataset (all is fine)
-        ## Since opposite frequencies are not expected, we flip (i))
-        elseif row.ALLELE_1 == ref && row.ALLELE_2 == alt
-            alt_ref_set = Set([ref, alt])
-            if alt_ref_set == Set(["A", "T"]) || alt_ref_set == Set(["C", "G"])
-                return "FLIP (AMBIGUOUS-NOT-MATCHING-KGP)"
-            else
-                return "KEEP (REVERSE-REF-ALT)"
-            end
+
+"""
+Compares the variant to the 1000 GP information and returns an action to take together with a reason.
+
+Potential actions are
+1. DROP
+2. KEEP
+3. FLIP
+
+Some particularly unexpected ACTION (REASON) are:
+
+- "KEEP (REVERSE-REF-ALT)"
+- "FLIP (COMPLEMENT-NOT-MATCHING-KGP)"
+
+Because they mean the minor/major alleles are reversed in our dataset as compared to the reference KGP.
+"""
+function get_action(row)
+    if row.KGP_VARIANT_ID === missing
+        return "DROP (NOT-IN-KGP)"
+    end
+    if row.NON_BIALLELIC === true
+        return "DROP (NON-BIALLELIC)"
+    end
+    # We now look at whether we need to flip the variant
+    chr, pos, ref, alt = split(row.KGP_VARIANT_ID, ":")
+    # Note: PLINK2 ALLELE_1 and ALLELE_2 are the minor and major alleles, respectively
+    # Ideal case, where the variant in our dataset matches the KGP dataset
+    if row.ALLELE_1 == alt && row.ALLELE_2 == ref
+        return "KEEP (MATCHING-REF-ALT)"
+    # There are two cases:
+    ## (i) The variant is palindromic, then either:
+    ##  - It wasn't properly flipped by GenomeStudio (TODO: maybe GenomeStudio won't do that anymore)
+    ##  - It has opposite allele frequency in our dataset (then all is fine)
+    ## (ii) The variant is not palyndromic, it simply has an opposite allele frequency in our dataset (all is fine)
+    ## Since opposite frequencies are not expected, we flip (i))
+    elseif row.ALLELE_1 == ref && row.ALLELE_2 == alt
+        alt_ref_set = Set([ref, alt])
+        if alt_ref_set == Set(["A", "T"]) || alt_ref_set == Set(["C", "G"])
+            return "FLIP (PALINDROMIC-NOT-MATCHING-KGP)"
         else
-            complement = Dict("A" => "T", "T" => "A", "C" => "G", "G" => "C")
-            if (row.ALLELE_1 == complement[alt] && row.ALLELE_2 == complement[ref]) || 
-                (row.ALLELE_1 == complement[ref] && row.ALLELE_2 == complement[alt])
-                return "FLIP (COMPLEMENT)"
-            else
-                return "DROP (ALLELES-NOT-MATCHING-KGP)"
-            end
+            return "KEEP (REVERSE-REF-ALT)"
+        end
+    else
+        complement = Dict("A" => "T", "T" => "A", "C" => "G", "G" => "C")
+        if row.ALLELE_1 == complement[alt] && row.ALLELE_2 == complement[ref]
+            return "FLIP (COMPLEMENT)"
+        elseif row.ALLELE_1 == complement[ref] && row.ALLELE_2 == complement[alt]
+            return "FLIP (COMPLEMENT-NOT-MATCHING-KGP)"
+        else
+            return "DROP (ALLELES-NOT-MATCHING-KGP)"
         end
     end
 end
 
-"""
-Compares the `bim` file to the `kgp_bim` and returns a new bim with an ACTION column
-containing the potential following values:
+function set_action_column!(bim::DataFrame)
+    bim.ACTION = map(eachrow(bim)) do row
+        get_action(row)
+    end
+end
 
-1. DROP (REASON)
-2. KEEP (REASON)
-3. FLIP (REASON)
-
-where "REASON" explains why the ACTION needs to be taken.
-"""
 function set_action_column(bim, kgp_bim)
     joined_bim = leftjoin(
         bim, 
         kgp_bim, 
         on=[:CHR_CODE, :BP_COORD]
-    )
-    select!(joined_bim, :CHR_CODE, 
-        :KGP_VARIANT_ID => :VARIANT_ID, 
-        :POSITION, 
-        :BP_COORD, 
-        :ALLELE_1, 
-        :ALLELE_2
     )
     # Non unique variants are non-biallelic, we will drop them
     joined_bim.NON_BIALLELIC = nonunique(
@@ -76,11 +80,11 @@ function set_action_column(bim, kgp_bim)
 end
 
 function generate_files_from_actions(outdir, prefixes_and_bims)
-    # Get and Write variants present in all files.
+    # Get and write shared variants present in all files.
     variants_intersection = intersect(
-        filter(:ACTION => !startswith("DROP"), prefixes_and_bims[:release_r8][2]).VARIANT_ID,
-        filter(:ACTION => !startswith("DROP"), prefixes_and_bims[:release_2021_2023][2]).VARIANT_ID,
-        filter(:ACTION => !startswith("DROP"), prefixes_and_bims[:release_2024_now][2]).VARIANT_ID
+        filter(:ACTION => !startswith("DROP"), prefixes_and_bims[:release_r8][2]).KGP_VARIANT_ID,
+        filter(:ACTION => !startswith("DROP"), prefixes_and_bims[:release_2021_2023][2]).KGP_VARIANT_ID,
+        filter(:ACTION => !startswith("DROP"), prefixes_and_bims[:release_2024_now][2]).KGP_VARIANT_ID
     )
     ## For plink
     CSV.write(
@@ -109,12 +113,12 @@ function generate_files_from_actions(outdir, prefixes_and_bims)
             bim
         )
         # Write new bim file, replace missing by chr:bp:all1:all2, they will be dropped downstream
-        new_bim = select(bim, :CHR_CODE, :VARIANT_ID, :POSITION, :BP_COORD, :ALLELE_1, :ALLELE_2)
-        new_bim.VARIANT_ID = map(eachrow(new_bim)) do row
-            if row.VARIANT_ID === missing
+        new_bim = select(bim, :CHR_CODE, :KGP_VARIANT_ID, :POSITION, :BP_COORD, :ALLELE_1, :ALLELE_2)
+        new_bim.KGP_VARIANT_ID = map(eachrow(new_bim)) do row
+            if row.KGP_VARIANT_ID === missing
                 return string(row.CHR_CODE, ":", row.BP_COORD, ":", row.ALLELE_1, ":", row.ALLELE_2)
             else
-                return row.VARIANT_ID
+                return row.KGP_VARIANT_ID
             end
         end
         CSV.write(
@@ -125,12 +129,12 @@ function generate_files_from_actions(outdir, prefixes_and_bims)
         )
         # Write flip lists
         to_flip = filter(
-            x -> startswith(x.ACTION, "FLIP") && x.VARIANT_ID in variants_intersection, 
+            x -> startswith(x.ACTION, "FLIP") && x.KGP_VARIANT_ID in variants_intersection, 
             bim
         )
         CSV.write(
             joinpath(outdir, string(prefix, ".flip.txt")), 
-            select(to_flip, [:VARIANT_ID]),
+            select(to_flip, [:KGP_VARIANT_ID]),
             header=false
         )
     end
