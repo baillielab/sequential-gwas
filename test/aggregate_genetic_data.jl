@@ -15,7 +15,13 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
         "dev" 
     else
         # The source code is taken from the image
-        "ci"
+        if ENV["CI_CONTAINER"] == "docker"
+            "dockerci"
+        elseif ENV["CI_CONTAINER"] == "singularity"
+            "singularityci"
+        else
+            throw(ArgumentError("Unsupported CI container"))
+        end
     end
     cd(PKGDIR)
     cmd = Cmd(["nextflow", "run", "main.nf", "-c", "test/assets/workflow.config", "-profile", profile, "-resume"])

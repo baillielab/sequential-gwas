@@ -52,7 +52,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
   test:
-    name: Test Workflow
+    name: Test Workflow with ${{ matrix.container }}
     needs: build_and_publish
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
@@ -68,8 +68,18 @@ jobs:
           - ubuntu-latest
         arch:
           - x64
+        container:
+          - DOCKER
+          - SINGULARITY
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Run Profile
+        run: echo "CI_CONTAINER=${{ matrix.container }}" >> "$GITHUB_ENV"
+      - name: Install Singularity
+        if: ${{ matrix.container == 'SINGULARITY' }}
+        uses: singularityhub/install-singularity@main
+        with:
+          singularity-version: '4.2.2'
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
