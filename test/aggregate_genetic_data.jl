@@ -20,6 +20,16 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     cd(PKGDIR)
     cmd = Cmd(["nextflow", "run", "main.nf", "-c", "test/assets/workflow.config", "-profile", profile, "-resume"])
     run(cmd)
+    
+    # Check 1000 GP
+    kgp_dir = joinpath(RESULTS_DIR, "kgp", "merged_unrelated")
+    bim = SequentialGWAS.read_bim(joinpath(kgp_dir, "genotypes.merged.unrelated.bim"))
+    @test unique(bim.CHR_CODE) == [string("chr", k) for k in 1:22]
+    @test nrow(bim) > 100
+    fam = SequentialGWAS.read_fam(joinpath(kgp_dir, "genotypes.merged.unrelated.fam"))
+    unrelated = CSV.read(joinpath(kgp_dir, "kgp_unrelated_individuals.txt"), DataFrame, header=[:IID])
+    @test issubset(fam.IID, unrelated.IID)
+
     # Check liftover
     release_2021_2023_liftover_report = CSV.read(
         joinpath(RESULTS_DIR, "array_genotypes", "lifted_over", "mock.release_2021_2023.liftover_report.csv"), 

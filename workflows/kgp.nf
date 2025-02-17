@@ -2,7 +2,7 @@ include { DownloadOrAccessStoredResource } from '../modules/download_or_access.n
 include { CleanKGP } from '../modules/clean_thousands_gp.nf'
 include { KGPVCFToBed } from '../modules/kgp_vcf_to_bed.nf'
 include { get_prefix } from '../modules/utils.nf'
-include { MergeGenotypes } from '../modules/merge_plink_files.nf'
+include { MergeGenotypes as MergeKGPChromosomes } from '../modules/merge_plink_files.nf'
 include { KeepKGPUnrelated } from '../modules/kgp_unrelated.nf'
 
 workflow KGP {
@@ -35,9 +35,9 @@ workflow KGP {
     merge_list = kgp_plink_files
         .map { it -> get_prefix(it[0].getName()) }
         .collectFile(name: "merge_list.txt", newLine: true)
-    kgp_plink_merged = MergeGenotypes(kgp_plink_files.collect(), merge_list, params.KGP_PUBLISH_DIR)
+    kgp_plink_merged = MergeKGPChromosomes(kgp_plink_files.collect(), merge_list, params.KGP_PUBLISH_DIR)
     kgp_unrelated = KeepKGPUnrelated(kgp_plink_merged.collect(), pedigree_file)
 
     emit:
-        kgp_unrelated
+        kgp_unrelated.genotypes
 }
