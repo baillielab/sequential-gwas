@@ -73,8 +73,6 @@ jobs:
           - SINGULARITY
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Run Profile
-        run: echo "CI_CONTAINER=${{ matrix.container }}" >> "$GITHUB_ENV"
       - name: Install Singularity
         if: ${{ matrix.container == 'SINGULARITY' }}
         uses: singularityhub/install-singularity@main
@@ -88,6 +86,8 @@ jobs:
       - uses: nf-core/setup-nextflow@v1.2.0
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
+        with:
+          prefix: CI_CONTAINER=${{ matrix.container }}
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v4
         with:
