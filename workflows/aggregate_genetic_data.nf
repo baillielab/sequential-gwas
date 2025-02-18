@@ -4,11 +4,12 @@ include { KGP } from './kgp.nf'
 include { DownloadOrAccessReferenceGenome } from '../modules/download_reference_genome.nf'
 include { MergeGenotypingArraysAndWGS } from '../subworkflows/merge_genotypes.nf'
 include { PCA } from '../subworkflows/pca.nf'
+include { AncestryEstimation } from '../subworkflows/ancestry.nf'
 
 workflow AggregateGeneticData {
     // Process 1000GP dataset
-    kgp_genotypes = KGP()
-    kgp_bim = kgp_genotypes.map{ it -> it[1] }
+    kgp = KGP()
+    kgp_bim = kgp.genotypes.map{ it -> it[1] }
     // Reference Genome
     reference_genome = DownloadOrAccessReferenceGenome()
     // WGS GVCFs
@@ -58,6 +59,13 @@ workflow AggregateGeneticData {
     merged_genotypes = MergeGenotypingArraysAndWGS(
         qced_genotypes.genotypes, 
         wgs_shared_genotypes
+    )
+    // Estimate Ancestry
+    AncestryEstimation(
+        merged_genotypes.genotypes,
+        qced_genotypes.plink_shared_variants,
+        kgp.genotypes, 
+        kgp.pedigree
     )
     // PCA
     PCA(merged_genotypes.genotypes)

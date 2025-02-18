@@ -75,8 +75,8 @@ RUN mv dist/admixture_linux-1.3.0/admixture /usr/local/bin
 
 COPY . /opt/sequential-gwas
 
-RUN julia --project=/opt/sequential-gwas -e 'using Pkg; Pkg.instantiate()'
+RUN julia --project=/opt/sequential-gwas -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
 
-RUN julia --project=/opt/sequential-gwas /opt/sequential-gwas/src/sysimage.jl
+# RUN julia --project=/opt/sequential-gwas /opt/sequential-gwas/src/sysimage.jl
 
-RUN echo 'alias juliasys="julia --project=/opt/sequential-gwas -J/opt/sequential-gwas/SequentialGWAS.so"' >> ~/.bashrc
+# RUN echo 'alias juliasys="julia --project=/opt/sequential-gwas -J/opt/sequential-gwas/SequentialGWAS.so"' >> ~/.bashrc

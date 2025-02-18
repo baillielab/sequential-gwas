@@ -43,5 +43,6 @@ workflow KGP {
     kgp_unrelated = KeepKGPUnrelated(kgp_plink_merged.collect(), pedigree_file)
 
     emit:
-        kgp_unrelated.genotypes
+        genotypes = kgp_unrelated.genotypes
+        pedigree = pedigree_file
 }

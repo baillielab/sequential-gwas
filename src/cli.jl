@@ -7,6 +7,10 @@ function cli_settings()
     )
 
     @add_arg_table! s begin
+        "make-pop-file"
+            action = :command
+            help = "Creates a .pop file from a .fam and a pedigree file for the admixture software."
+
         "plot-pca"
             action = :command
             help = "Plots PCA of genotypes."
@@ -38,6 +42,21 @@ function cli_settings()
         "write-chromosomes"
             action = :command
             help = "Write list of chromosomes present in genotypes to file."
+    end
+
+    @add_arg_table! s["make-pop-file"] begin
+        "fam-file"
+            arg_type = String
+            help = "Path to fam file"
+        
+        "pedigree-file"
+            arg_type = String
+            help = "Path to pedigree file"
+
+        "--output"
+            arg_type = String
+            help = "Output file name."
+            default = "pop.pop"
     end
 
     @add_arg_table! s["plot-pca"] begin
@@ -231,6 +250,12 @@ function julia_main()::Cint
         plot_pca(
             cmd_settings["eigenvectors"],
             outprefix=cmd_settings["outprefix"]
+        )
+    elseif cmd == "make-pop-file"
+        make_pop_file(
+            cmd_settings["fam-file"],
+            cmd_settings["pedigree-file"];
+            output=cmd_settings["output"]
         )
     elseif cmd == "mock"
         mock_data(

@@ -9,6 +9,7 @@ params.WGS_PUBLISH_DIR = "${params.PUBLISH_DIR}/wgs"
 params.GATK_PUBLISH_DIR = "${params.PUBLISH_DIR}/gatk"
 params.MERGED_PUBLISH_DIR = "${params.PUBLISH_DIR}/merged"
 params.PCA_PUBLISH_DIR = "${params.PUBLISH_DIR}/pca"
+params.ANCESTRY_PUBLISH_DIR = "${params.PUBLISH_DIR}/ancestry"
 
 // Input files params
 params.RESOURCES_DIR = "${projectDir}/assets/resources"

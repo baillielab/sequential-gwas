@@ -22,6 +22,7 @@ include("read_write.jl")
 include("report.jl")
 include("qc_from_kgp.jl")
 include("relatedness.jl")
+include("plots.jl")
 
 export julia_main
 
