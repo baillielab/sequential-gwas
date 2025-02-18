@@ -7,9 +7,9 @@ function cli_settings()
     )
 
     @add_arg_table! s begin
-        "make-pop-file"
+        "estimate-ancestry"
             action = :command
-            help = "Creates a .pop file from a .fam and a pedigree file for the admixture software."
+            help = "Estimate ancestry using the admixture software."
 
         "plot-pca"
             action = :command
@@ -44,10 +44,10 @@ function cli_settings()
             help = "Write list of chromosomes present in genotypes to file."
     end
 
-    @add_arg_table! s["make-pop-file"] begin
-        "fam-file"
+    @add_arg_table! s["estimate-ancestry"] begin
+        "genotypes-prefix"
             arg_type = String
-            help = "Path to fam file"
+            help = "Prefix to plink genotypes."
         
         "pedigree-file"
             arg_type = String
@@ -64,6 +64,11 @@ function cli_settings()
             arg_type = String
             required = true
             help = "Path to eigenvectors file."
+        
+        "ancestry"
+            arg_type = String
+            required = true
+            help = "Path to ancestry file."
 
         "--outprefix"
             arg_type = String
@@ -249,11 +254,12 @@ function julia_main()::Cint
     elseif cmd == "plot-pca"
         plot_pca(
             cmd_settings["eigenvectors"],
+            cmd_settings["ancestry"];
             outprefix=cmd_settings["outprefix"]
         )
-    elseif cmd == "make-pop-file"
-        make_pop_file(
-            cmd_settings["fam-file"],
+    elseif cmd == "estimate-ancestry"
+        estimate_ancestry(
+            cmd_settings["genotypes-prefix"],
             cmd_settings["pedigree-file"];
             output=cmd_settings["output"]
         )

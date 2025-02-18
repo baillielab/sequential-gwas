@@ -17,7 +17,6 @@ process LDPruning {
             --bfile ${input_prefix} \
             --maf ${params.PCA_MAF} \
             --indep-pairwise ${params.IP_VALUES} \
-            --output-chr chr26 \
             --make-bed \
             --out ${output_prefix}
         """

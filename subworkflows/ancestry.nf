@@ -28,7 +28,8 @@ workflow AncestryEstimation {
             "genotypes_and_kgp.merged"
             )
         ld_pruned_genotypes = LDPruning(merged)
-        popfile = MakePopFile(ld_pruned_genotypes, kgp_pedigree)
-        ancestry = EstimateAncestry(ld_pruned_genotypes, popfile)
+        ancestry = EstimateAncestry(ld_pruned_genotypes, kgp_pedigree)
 
+    emit:
+        ancestry.ancestry
 }

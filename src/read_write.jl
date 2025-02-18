@@ -105,15 +105,3 @@ function complete_bim_with_ref(bim_file, ref_bim_file; output=bim_file)
     end
     CSV.write(output, bim, header=false, delim="\t")
 end
-
-function make_pop_file(fam_file, pedigree_file; output="pop.pop")
-    fam = SequentialGWAS.read_fam(fam_file)
-    pedigree = CSV.read(pedigree_file, DataFrame, select=[:SampleID, :Superpopulation])
-    leftjoin!(fam, pedigree, on=:IID => :SampleID)
-    replace!(fam.Superpopulation, missing => "-")
-    open(output, "w") do io
-        for pop in fam.Superpopulation
-            println(io, pop)
-        end
-    end
-end

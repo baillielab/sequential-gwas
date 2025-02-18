@@ -1,17 +1,24 @@
 include { get_prefix } from './utils.nf'
 
 process EstimateAncestry {
+    publishDir "${params.ANCESTRY_PUBLISH_DIR}/ancestry", mode: 'symlink'
+
     input:
-        path genotypes
-        path popfile
+        tuple path(bed_file), path(bim_file), path(fam_file)
+        path pedigree
 
     output:
-        tuple path("${input_prefix}.5.P"), path("${input_prefix}.5.Q"), emit: pq_files
-        path("${input_prefix}.5.admixturelog"), emit: log_file
+        path("${input_prefix}.*.{P,Q}"), emit: pq_files
+        path("${output}"), emit: ancestry
 
     script:
-        input_prefix = get_prefix(genotypes)
+        input_prefix = get_prefix(bed_file)
+        output = "${input_prefix}.ancestry.csv"
         """
-        admixture ${input_prefix}.bed --supervised -j${task.cpus} -s 123 | tee ${input_prefix}.5.admixturelog
+        julia --project=/opt/sequential-gwas/ /opt/sequential-gwas/bin/seq-gwas.jl \
+            estimate-ancestry \
+            ${input_prefix} \
+            ${pedigree} \
+            --output=${output}
         """
 }

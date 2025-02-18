@@ -61,13 +61,13 @@ workflow AggregateGeneticData {
         wgs_shared_genotypes
     )
     // Estimate Ancestry
-    AncestryEstimation(
+    ancestry = AncestryEstimation(
         merged_genotypes.genotypes,
         qced_genotypes.plink_shared_variants,
         kgp.genotypes, 
         kgp.pedigree
     )
     // PCA
-    PCA(merged_genotypes.genotypes)
+    PCA(merged_genotypes.genotypes, ancestry)
     
 }
