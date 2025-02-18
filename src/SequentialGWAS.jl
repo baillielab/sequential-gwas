@@ -12,6 +12,7 @@ using BufferedStreams
 using Downloads
 using PackageCompiler
 using Tables
+using CairoMakie
 
 include("resources.jl")
 include("one_time_checks.jl")

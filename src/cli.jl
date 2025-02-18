@@ -7,6 +7,10 @@ function cli_settings()
     )
 
     @add_arg_table! s begin
+        "plot-pca"
+            action = :command
+            help = "Plots PCA of genotypes."
+
         "snps-to-flip"
             action = :command
             help = "Extracts SNPs to flip based on Illumina manifest file."
@@ -34,6 +38,18 @@ function cli_settings()
         "write-chromosomes"
             action = :command
             help = "Write list of chromosomes present in genotypes to file."
+    end
+
+    @add_arg_table! s["plot-pca"] begin
+        "eigenvectors"
+            arg_type = String
+            required = true
+            help = "Path to eigenvectors file."
+
+        "--outprefix"
+            arg_type = String
+            help = "Prefix to output files."
+            default = "pca"
     end
 
     @add_arg_table! s["complete-bim-with-ref"] begin
@@ -210,6 +226,11 @@ function julia_main()::Cint
         kgp_unrelated_individuals(
             cmd_settings["pedigrees"],
             outfile=cmd_settings["output"]
+        )
+    elseif cmd == "plot-pca"
+        plot_pca(
+            cmd_settings["eigenvectors"],
+            outprefix=cmd_settings["outprefix"]
         )
     elseif cmd == "mock"
         mock_data(

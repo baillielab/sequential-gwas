@@ -3,6 +3,7 @@ include { GenotypesQC } from '../subworkflows/genotyping_arrays_qc.nf'
 include { KGP } from './kgp.nf'
 include { DownloadOrAccessReferenceGenome } from '../modules/download_reference_genome.nf'
 include { MergeGenotypingArraysAndWGS } from '../subworkflows/merge_genotypes.nf'
+include { PCA } from '../subworkflows/pca.nf'
 
 workflow AggregateGeneticData {
     // Process 1000GP dataset
@@ -54,9 +55,11 @@ workflow AggregateGeneticData {
         kgp_bim
     )
     // Merge All Genotypes
-    MergeGenotypingArraysAndWGS(
+    merged_genotypes = MergeGenotypingArraysAndWGS(
         qced_genotypes.genotypes, 
         wgs_shared_genotypes
     )
+    // PCA
+    PCA(merged_genotypes.genotypes)
     
 }
