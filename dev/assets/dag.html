@@ -73,6 +73,11 @@ flowchart TB
     v63([QCMergedGenotypes])
     v55(( ))
     end
+    subgraph PCA
+    v65([LDPruning])
+    v66([PlinkPCA])
+    v67([PCAPlots])
+    end
     end
     subgraph " "
     v23[" "]
@@ -80,7 +85,7 @@ flowchart TB
     v41[" "]
     v44[" "]
     v64["reports"]
-    v65["genotypes"]
+    v68[" "]
     end
     v0 --> v1
     v3 --> v1
@@ -139,6 +144,9 @@ flowchart TB
     v62 --> v63
     v63 --> v65
     v63 --> v64
+    v65 --> v66
+    v66 --> v67
+    v67 --> v68
 
 </pre>
 <script type="module">
