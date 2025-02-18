@@ -40,23 +40,23 @@ RUN wget -O Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/lat
 
 # Install bcftools & samtools
 
-RUN mamba create -n bcftools_env -c conda-forge -c bioconda bcftools samtools
+RUN /opt/miniforge3/bin/mamba create -n bcftools_env -c conda-forge -c bioconda bcftools samtools
 
 # Install regenie
 
-RUN mamba create -y -n regenie_env -c conda-forge -c bioconda regenie==4.0
+RUN /opt/miniforge3/bin/mamba create -y -n regenie_env -c conda-forge -c bioconda regenie==4.0
 
 # Install plink
 
-RUN mamba create -y -n plink_env -c conda-forge -c bioconda plink
+RUN /opt/miniforge3/bin/mamba create -y -n plink_env -c conda-forge -c bioconda plink
 
 # Install plink2
 
-RUN mamba create -y -n plink2_env -c conda-forge -c bioconda plink2
+RUN /opt/miniforge3/bin/mamba create -y -n plink2_env -c conda-forge -c bioconda plink2
 
 # Install UCSC liftover
 
-RUN mamba create -y -n liftover_env -c bioconda ucsc-liftover python=2.7
+RUN /opt/miniforge3/bin/mamba create -y -n liftover_env -c bioconda ucsc-liftover python=2.7
 
 # Install Admixture
 
