@@ -38,7 +38,8 @@ workflow KGP {
     kgp_plink_merged = MergeKGPChromosomes(
         kgp_plink_files.collect(), 
         merge_list, 
-        "${params.KGP_PUBLISH_DIR}/merged"
+        "${params.KGP_PUBLISH_DIR}/merged",
+        "kgp.merged"
     )
     kgp_unrelated = KeepKGPUnrelated(kgp_plink_merged.collect(), pedigree_file)
 

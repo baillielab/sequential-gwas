@@ -5,9 +5,10 @@ process MergeGenotypes {
         path genotype_files
         path merge_list
         val publish_dir
+        val output_prefix
 
     output:
-        tuple path("genotypes.merged.bed"), path("genotypes.merged.bim"), path("genotypes.merged.fam")
+        tuple path("${output_prefix}.bed"), path("${output_prefix}.bim"), path("${output_prefix}.fam")
 
     script:
         """
@@ -15,6 +16,6 @@ process MergeGenotypes {
             --output-chr chr26 \
             --merge-list ${merge_list} \
             --make-bed \
-            --out genotypes.merged
+            --out ${output_prefix}
         """
 }

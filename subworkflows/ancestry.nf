@@ -24,10 +24,11 @@ workflow AncestryEstimation {
         merged = MergeGenotypes(
             all_genotypes.collect(), 
             merge_list,
-            "${params.ANCESTRY_PUBLISH_DIR}/merged"
+            "${params.ANCESTRY_PUBLISH_DIR}/merged",
+            "genotypes_and_kgp.merged"
             )
         ld_pruned_genotypes = LDPruning(merged)
         popfile = MakePopFile(ld_pruned_genotypes, kgp_pedigree)
-        ancestry = EstimateAncestry(genotypes, popfile)
+        ancestry = EstimateAncestry(ld_pruned_genotypes, popfile)
 
 }

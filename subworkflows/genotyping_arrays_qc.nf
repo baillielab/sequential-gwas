@@ -1,7 +1,6 @@
 include { PedToBed } from '../modules/ped_to_bed.nf'
 include { LiftOver } from '../modules/liftover.nf'
 include { GenotypingArrayBasicQC } from '../modules/qc_genotyping_array.nf'
-include { MergeGenotypes } from '../modules/merge_plink_files.nf'
 include { QCFilesFromKGP } from '../modules/qc_from_kgp.nf'
 include { FlipAndExtract } from '../modules/flip_and_extract.nf'
 

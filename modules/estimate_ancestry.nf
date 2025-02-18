@@ -12,6 +12,6 @@ process EstimateAncestry {
     script:
         input_prefix = get_prefix(genotypes)
         """
-        admixture ${input_prefix}.bed --supervised -j${task.cpu} -s 123 | tee ${input_prefix}.5.admixturelog
+        admixture ${input_prefix}.bed --supervised -j${task.cpus} -s 123 | tee ${input_prefix}.5.admixturelog
         """
 }
