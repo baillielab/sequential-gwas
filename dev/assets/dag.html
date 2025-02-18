@@ -32,6 +32,7 @@ flowchart TB
     v34["chain_file"]
     v39["variants_to_flip"]
     v60["publish_dir"]
+    v70["publish_dir"]
     end
     subgraph AggregateGeneticData
     subgraph KGP
@@ -73,10 +74,18 @@ flowchart TB
     v63([QCMergedGenotypes])
     v55(( ))
     end
+    subgraph AncestryEstimation
+    v65([ExtractSharedVariantsFromKGP])
+    v71([MergeGenotypes])
+    v72([LDPruning])
+    v73([MakePopFile])
+    v74([EstimateAncestry])
+    v66(( ))
+    end
     subgraph PCA
-    v65([LDPruning])
-    v66([PlinkPCA])
-    v67([PCAPlots])
+    v77([LDPruning])
+    v78([PlinkPCA])
+    v79([PCAPlots])
     end
     end
     subgraph " "
@@ -85,7 +94,9 @@ flowchart TB
     v41[" "]
     v44[" "]
     v64["reports"]
-    v68[" "]
+    v75[" "]
+    v76[" "]
+    v80[" "]
     end
     v0 --> v1
     v3 --> v1
@@ -104,6 +115,7 @@ flowchart TB
     v12 --> v22
     v21 --> v22
     v22 --> v23
+    v22 --> v65
     v22 --> v24
     v25 --> v52
     v25 --> v53
@@ -142,11 +154,23 @@ flowchart TB
     v61 --> v62
     v61 --> v63
     v62 --> v63
-    v63 --> v65
     v63 --> v64
+    v63 --> v74
+    v63 --> v77
+    v63 --> v66
+    v45 --> v65
     v65 --> v66
-    v66 --> v67
-    v67 --> v68
+    v70 --> v71
+    v66 --> v71
+    v71 --> v72
+    v72 --> v73
+    v12 --> v73
+    v73 --> v74
+    v74 --> v76
+    v74 --> v75
+    v77 --> v78
+    v78 --> v79
+    v79 --> v80
 
 </pre>
 <script type="module">
