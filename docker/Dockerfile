@@ -15,9 +15,9 @@ RUN apt-get update && apt-get install -y \
     zlib1g-dev
 
 # Install QCTOOL
-RUN wget -O qctool.tgz https://www.well.ox.ac.uk/~gav/resources/qctool_v2.2.5-CentOS_Linux7.9-x86_64.tgz 
-RUN tar -xvzf qctool.tgz
-RUN mv qctool_v2.2.5-Ce-x86_64/qctool /usr/local/bin
+RUN wget -O qctool.tgz https://www.well.ox.ac.uk/~gav/resources/qctool_v2.2.5-CentOS_Linux7.9-x86_64.tgz \
+    && tar -xvzf qctool.tgz \
+    && mv qctool_v2.2.5-Ce-x86_64/qctool /usr/local/bin
 
 # KING 2.3.2
 RUN wget https://www.kingrelatedness.com/KINGcode.tar.gz \
@@ -28,20 +28,15 @@ RUN wget https://www.kingrelatedness.com/KINGcode.tar.gz \
     && cp king /usr/local/bin/
 
 # Install GATK
-RUN mkdir /opt/gatk
-RUN wget https://github.com/broadinstitute/gatk/releases/download/4.6.1.0/gatk-4.6.1.0.zip
-RUN unzip gatk-4.6.1.0.zip -d /opt/
-ENV PATH=/opt/gatk-4.6.1.0/:${PATH}
+RUN mkdir /opt/gatk \
+    && wget https://github.com/broadinstitute/gatk/releases/download/4.6.1.0/gatk-4.6.1.0.zip \
+    && unzip gatk-4.6.1.0.zip -d /opt/
 
 # Install conda
 
-RUN wget -O Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-
-RUN bash Miniforge3.sh -b -p /opt/miniforge3
-
-RUN /opt/miniforge3/bin/mamba init
-
-ENV PATH=/opt/miniforge3/bin/:${PATH}
+RUN wget -O Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh" \
+    && bash Miniforge3.sh -b -p /opt/miniforge3 \
+    && /opt/miniforge3/bin/mamba init
 
 # Install bcftools & samtools
 
@@ -65,11 +60,13 @@ RUN mamba create -y -n liftover_env -c bioconda ucsc-liftover python=2.7
 
 # Install Admixture
 
-RUN wget https://dalexander.github.io/admixture/binaries/admixture_linux-1.3.0.tar.gz
+RUN wget https://dalexander.github.io/admixture/binaries/admixture_linux-1.3.0.tar.gz \
+    && tar -xvzf admixture_linux-1.3.0.tar.gz \
+    && mv dist/admixture_linux-1.3.0/admixture /usr/local/bin
 
-RUN tar -xvzf admixture_linux-1.3.0.tar.gz
+# Update Path
 
-RUN mv dist/admixture_linux-1.3.0/admixture /usr/local/bin
+ENV PATH=/opt/miniforge3/bin/:/opt/gatk-4.6.1.0/:${PATH}
 
 # Add Project code, install dependencies and build sysimage
 
