@@ -4,17 +4,20 @@ ENV JULIA_DEPOT_PATH=/opt/julia-depot
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y \
-    wget \
-    procps \
-    clang \
-    libblas-dev \
-    liblapack-dev \
-    libopenblas-dev \
-    tabix \
-    unzip \
-    openjdk-17-jdk \
-    zlib1g-dev
+RUN rm /var/lib/dpkg/info/libc-bin.* \
+    && apt-get clean \
+    && apt-get update \
+    && apt-get install -y \
+        wget \
+        procps \
+        clang \
+        libblas-dev \
+        liblapack-dev \
+        libopenblas-dev \
+        tabix \
+        unzip \
+        openjdk-17-jdk \
+        zlib1g-dev
 
 # Install QCTOOL
 RUN wget -O qctool.tgz https://www.well.ox.ac.uk/~gav/resources/qctool_v2.2.5-CentOS_Linux7.9-x86_64.tgz \
