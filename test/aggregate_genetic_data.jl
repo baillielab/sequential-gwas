@@ -4,6 +4,7 @@ using Test
 using SequentialGWAS
 using DataFrames
 using CSV
+using DelimitedFiles
 
 PKGDIR = pkgdir(SequentialGWAS)
 TESTDIR = joinpath(PKGDIR, "test")
@@ -136,6 +137,42 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     )
     @test nrow(qced_merged_fam) < nrow(merged_fam)
     @test issubset(qced_merged_fam.IID, unrelated_king.IID)
+
+    ## Check Ancestry
+    ancestry_dir = joinpath(RESULTS_DIR, "ancestry")
+    kgp_merged_fam = SequentialGWAS.read_fam(joinpath(ancestry_dir, "merged","genotypes_and_kgp.merged.fam"))
+    kgp_ancestries = CSV.read(
+        joinpath(TESTDIR, "assets", "kgp", "20130606_g1k_3202_samples_ped_population.txt"), 
+        DataFrame,
+        select=[:SampleID, :Superpopulation]
+    )
+    leftjoin!(kgp_merged_fam, kgp_ancestries, on=:IID => :SampleID)
+    pop_counts = combine(groupby(kgp_merged_fam, :Superpopulation), nrow)
+    @test nrow(pop_counts) == 6
+    Q = readdlm(joinpath(ancestry_dir, "ancestry", "genotypes_and_kgp.merged.ldpruned.5.Q"))
+    kgp_merged_fam.POP_IDX = [i.I[2] for i in argmax(Q, dims=2)[:, 1]]
+    kgp_fam = filter(x -> x.Superpopulation !== missing, kgp_merged_fam)
+    # Check the prediction is the same individuals with known superpopulation
+    @test length(groupby(kgp_fam, [:Superpopulation, :POP_IDX])) == 5
+    # Check predictions are consistent
+    ancestry_predictions = CSV.read(
+        joinpath(ancestry_dir, "ancestry", "genotypes_and_kgp.merged.ldpruned.ancestry.csv"), 
+        DataFrame, 
+        select=[:IID, :Superpopulation]
+    )
+    genomicc_with_pred = innerjoin(
+        kgp_merged_fam, 
+        select(ancestry_predictions, :IID, :Superpopulation => :SuperpopulationPred),
+        on=:IID
+    )
+    @test length(groupby(genomicc_with_pred, [:SuperpopulationPred, :POP_IDX])) == 5
+    
+    # Check PCA
+    pca_dir = joinpath(RESULTS_DIR, "pca")
+    @test isfile(joinpath(pca_dir, "pca_plots", "pca.1vs2.png"))
+    @test isfile(joinpath(pca_dir, "pca_plots", "pca.all.png"))
+    eigenvals = readdlm(joinpath(pca_dir, "pca", "genotypes.merged.qced.ldpruned.eigenval"))
+    @test length(eigenvals) == 10
 end
 
 end
