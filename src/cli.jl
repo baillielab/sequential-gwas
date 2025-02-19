@@ -123,22 +123,26 @@ function cli_settings()
             required = false
             default = "."
             help = "Output directory."
-        "--release-r8-bim"
+        "--release-r8"
             arg_type = String
             required = true
-            help = "Bim file corresponding to the release-r8."
-        "--release-2021-2023-bim"
+            help = "Prefix corresponding to the release-r8."
+        "--release-2021-2023"
             arg_type = String
             required = true
-            help = "Bim file corresponding to the release-2021-2023."
-        "--release-2024-now-bim"
+            help = "Prefix corresponding to the release-2021-2023."
+        "--release-2024-now"
             arg_type = String
             required = true
-            help = "Bim file corresponding to the release-2024-now."
-        "--kgp-bim"
+            help = "Prefix corresponding to the release-2024-now."
+        "--kgp"
             arg_type = String
             required = true
-            help = "Bim file corresponding to the KGP."
+            help = "Prefix corresponding to the KGP."
+        "--threshold"
+            arg_type = Float64
+            help = "Palyndromic variants non-matching the 1000 GP alleles and whose MAF is close to 0.5 are dropped"
+            default = 0.02
     end
 
     @add_arg_table! s["report-qc-effect"] begin
@@ -233,12 +237,12 @@ function julia_main()::Cint
         )
     elseif cmd == "qc-from-kgp"
         generate_qc_extraction_files_from_kgp(
-            cmd_settings["release-r8-bim"],
-            cmd_settings["release-2021-2023-bim"],
-            cmd_settings["release-2024-now-bim"],
-            cmd_settings["kgp-bim"],
+            cmd_settings["release-r8"],
+            cmd_settings["release-2021-2023"],
+            cmd_settings["release-2024-now"],
+            cmd_settings["kgp"],
             outdir=cmd_settings["outdir"],
-            
+            threshold=cmd_settings["threshold"]
         )
     elseif cmd == "complete-bim-with-ref"
         complete_bim_with_ref(

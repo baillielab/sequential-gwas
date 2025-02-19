@@ -9,6 +9,8 @@ include { AncestryEstimation } from '../subworkflows/ancestry.nf'
 workflow AggregateGeneticData {
     // Process 1000GP dataset
     kgp = KGP()
+    kgp_genotypes = kgp.genotypes.map{ it -> it[0..2] }
+    kgp_bim_afreq = kgp.genotypes.map{ it -> [it[1], it[3]] }
     kgp_bim = kgp.genotypes.map{ it -> it[1] }
     // Reference Genome
     reference_genome = DownloadOrAccessReferenceGenome()
@@ -45,7 +47,7 @@ workflow AggregateGeneticData {
         grc38_genotypes, 
         variants_to_flip, 
         chain_file,
-        kgp_bim
+        kgp_bim_afreq
     )
     // Genotyping of WGS data based on genotyping arrays variants
     wgs_shared_genotypes = GVCFGenotyping(
@@ -64,7 +66,7 @@ workflow AggregateGeneticData {
     ancestry = AncestryEstimation(
         merged_genotypes.genotypes,
         qced_genotypes.plink_shared_variants,
-        kgp.genotypes, 
+        kgp_genotypes, 
         kgp.pedigree
     )
     // PCA

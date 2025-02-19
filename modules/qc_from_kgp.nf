@@ -4,10 +4,10 @@ process QCFilesFromKGP {
     publishDir "${params.ARRAY_GENOTYPES_PUBLISH_DIR}/qc_files_from_kgp", mode: 'symlink'
 
     input:
-        tuple val(release_r8_id), path(release_r8_bim)
-        tuple val(release_2021_2023_id), path(release_2021_2023_bim)
-        tuple val(release_2024_now_id), path(release_2024_now_bim)
-        path kgp_bim
+        tuple val(release_r8_id), path(release_r8_bim), path(release_r8_afreq)
+        tuple val(release_2021_2023_id), path(release_2021_2023_bim), path(release_2021_2023_afreq)
+        tuple val(release_2024_now_id), path(release_2024_now_bim), path(release_2024_now_afreq)
+        tuple path(kgp_bim), path(kgp_afreq)
 
     output:
         tuple val(release_r8_id), path("${release_r8_prefix}.flip.txt"), path("${release_r8_prefix}.new.bim"), emit: release_r8
@@ -21,13 +21,14 @@ process QCFilesFromKGP {
         release_r8_prefix = get_prefix(release_r8_bim)
         release_2021_2023_prefix = get_prefix(release_2021_2023_bim)
         release_2024_now_prefix = get_prefix(release_2024_now_bim)
+        kgp_prefix = get_prefix(kgp_bim)
         """
         julia --project=/opt/sequential-gwas/ /opt/sequential-gwas/bin/seq-gwas.jl \
             qc-from-kgp \
-            --release-r8-bim ${release_r8_bim} \
-            --release-2021-2023-bim ${release_2021_2023_bim} \
-            --release-2024-now-bim ${release_2024_now_bim} \
-            --kgp-bim ${kgp_bim} \
+            --release-r8 ${release_r8_prefix} \
+            --release-2021-2023 ${release_2021_2023_prefix} \
+            --release-2024-now ${release_2024_now_prefix} \
+            --kgp ${kgp_prefix} \
             --outdir .
         """
 }

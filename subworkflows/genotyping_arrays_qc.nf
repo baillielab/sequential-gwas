@@ -10,7 +10,7 @@ workflow GenotypesQC {
         grc38_genotypes
         variants_to_flip
         chain_file
-        kgp_bim
+        kgp_bim_afreq
 
     main:
         // Lift over GRCh37 arrays
@@ -20,19 +20,19 @@ workflow GenotypesQC {
         // Perform basic QC for all files
         qced_genotypes = GenotypingArrayBasicQC(genotypes_bed, variants_to_flip)
         // Generates QC files for each array using the 1000 Genomes Project
-        qced_bim_files = qced_genotypes.genotypes.branch{ it ->
+        qced_bim_afreq_files = qced_genotypes.genotypes.branch{ it ->
             release_r8: it[0] == "release-r8"
-                            return [it[0], it[2]]
+                            return [it[0], it[2], it[4]]
             release_20212023: it[0] == "release-2021-2023"
-                            return [it[0], it[2]]
+                            return [it[0], it[2], it[4]]
             release_2024_now: it[0] == "release-2024-now"
-                            return [it[0], it[2]]
+                            return [it[0], it[2], it[4]]
         }
         kgp_qc_files = QCFilesFromKGP(
-            qced_bim_files.release_r8,
-            qced_bim_files.release_20212023,
-            qced_bim_files.release_2024_now,
-            kgp_bim
+            qced_bim_afreq_files.release_r8,
+            qced_bim_afreq_files.release_20212023,
+            qced_bim_afreq_files.release_2024_now,
+            kgp_bim_afreq
         )
         shared_variants_plink = kgp_qc_files.shared_variants_plink.first()
         kgp_qc_release_files = kgp_qc_files.release_r8
@@ -40,8 +40,9 @@ workflow GenotypesQC {
             .concat(kgp_qc_files.release_2024_now)
         
         qced_genotypes_with_new_bim_and_flip = qced_genotypes.genotypes
-            .join(kgp_qc_release_files)
-            .map{ release_id, bed, bim, fam, flip, new_bim -> [release_id, bed, new_bim, fam, flip]}
+            .map{ it -> it[0..3]} // drop afreq
+            .join(kgp_qc_release_files) // join with kgp bim and flip files
+            .map{ release_id, bed, bim, fam, flip, new_bim -> [release_id, bed, new_bim, fam, flip]} // replace bim with new_bim
         // Flip and extract shared variants
         qced_flipped_genotypes = FlipAndExtract(
             qced_genotypes_with_new_bim_and_flip,

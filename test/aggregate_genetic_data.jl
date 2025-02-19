@@ -29,10 +29,10 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
 
     # Check 1000 GP
     kgp_dir = joinpath(RESULTS_DIR, "kgp", "merged_unrelated")
-    bim = SequentialGWAS.read_bim(joinpath(kgp_dir, "genotypes.merged.unrelated.bim"))
+    bim = SequentialGWAS.read_bim(joinpath(kgp_dir, "kgp.merged.unrelated.bim"))
     @test unique(bim.CHR_CODE) == [string("chr", k) for k in 1:22]
     @test nrow(bim) > 100
-    fam = SequentialGWAS.read_fam(joinpath(kgp_dir, "genotypes.merged.unrelated.fam"))
+    fam = SequentialGWAS.read_fam(joinpath(kgp_dir, "kgp.merged.unrelated.fam"))
     unrelated = CSV.read(joinpath(kgp_dir, "kgp_unrelated_individuals.txt"), DataFrame, header=[:IID])
     @test issubset(fam.IID, unrelated.IID)
 

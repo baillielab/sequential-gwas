@@ -8,7 +8,7 @@ process GenotypingArrayBasicQC{
         path variants_to_flip
 
     output:
-        tuple val(id), path("${output_prefix}.bed"), path("${output_prefix}.bim"), path("${output_prefix}.fam"), emit: genotypes 
+        tuple val(id), path("${output_prefix}.bed"), path("${output_prefix}.bim"), path("${output_prefix}.fam"), path("${output_prefix}.afreq"), emit: genotypes 
         tuple path("${output_prefix}.filtered_samples.csv"), path("${output_prefix}.filtered_variants.csv"), emit: reports
 
     script:
@@ -21,6 +21,7 @@ process GenotypingArrayBasicQC{
             --hwe ${params.QC_HWE} \
             --set-all-var-ids @:# \
             --output-chr chr26 \
+            --freq \
             --make-bed \
             --out ${input_prefix}.qced
         julia --project=/opt/sequential-gwas/ /opt/sequential-gwas/bin/seq-gwas.jl \
