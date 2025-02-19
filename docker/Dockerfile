@@ -2,6 +2,8 @@ FROM julia:1.11-bullseye
 
 ENV JULIA_DEPOT_PATH=/opt/julia-depot
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update && apt-get install -y \
     wget \
     procps \
