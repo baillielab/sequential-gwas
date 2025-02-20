@@ -10,8 +10,7 @@ process PCAPlots {
 
     script:
         """
-        julia --project=/opt/sequential-gwas/ /opt/sequential-gwas/bin/seq-gwas.jl \
-            plot-pca \
+        seq-gwas plot-pca \
             ${eigenvec} \
             ${ancestry} \
             --outprefix pca

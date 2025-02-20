@@ -184,6 +184,10 @@ function cli_settings()
         "covariates"
             arg_type = String
             help = "Path to covariates file."
+        
+        "wgs-prefix"
+            arg_type = String
+            help = "Path prefix to WGS data."
 
         "--out-prefix"
             arg_type = String
@@ -199,10 +203,20 @@ function cli_settings()
             arg_type = Int
             help = "Number of distinct SNPs to keep."
             default = 10
-        
-        "--n-samples"
+
+        "--n-snps-wgs-not-genotyped"
             arg_type = Int
-            help = "Number of samples to keep."
+            help = "Number of SNPs in WGS data not genotyped in arrays."
+            default = 30
+        
+        "--n-wgs-individuals"
+            arg_type = Int
+            help = "Number of WGS individuals."
+            default = 10
+            
+        "--n-arrays-individuals"
+            arg_type = Int
+            help = "Number of arrays individuals."
             default = 1000
         
         "--rng"
@@ -272,11 +286,14 @@ function julia_main()::Cint
             cmd_settings["release-r8"],
             cmd_settings["release-2021-2023"], 
             cmd_settings["release-after-2024"],
-            cmd_settings["covariates"];
+            cmd_settings["covariates"],
+            cmd_settings["wgs-prefix"];
             outprefix=cmd_settings["out-prefix"],
             n_common_snps=cmd_settings["n-common-snps"], 
             n_distinct_snps=cmd_settings["n-distinct-snps"],
-            n_samples=cmd_settings["n-samples"],
+            n_snps_wgs_not_genotyped=cmd_settings["n-snps-wgs-not-genotyped"],
+            n_wgs_individuals=cmd_settings["n-wgs-individuals"],
+            n_arrays_individuals=cmd_settings["n-arrays-individuals"],
             rng=cmd_settings["rng"],
             verbosity=cmd_settings["verbosity"]
         )

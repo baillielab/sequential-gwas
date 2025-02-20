@@ -52,8 +52,7 @@ process GetChromosomes {
     script:
         input_prefix = get_prefix(genotypes[0])
         """
-        julia --project=/opt/sequential-gwas/ /opt/sequential-gwas/bin/seq-gwas.jl \
-            write-chromosomes ${input_prefix}
+        seq-gwas write-chromosomes ${input_prefix}
         """
 }
 

@@ -24,8 +24,8 @@ process GenotypingArrayBasicQC{
             --freq \
             --make-bed \
             --out ${input_prefix}.qced
-        julia --project=/opt/sequential-gwas/ /opt/sequential-gwas/bin/seq-gwas.jl \
-            report-qc-effect \
+        
+        seq-gwas report-qc-effect \
             ${input_prefix} ${output_prefix}
         """
 }

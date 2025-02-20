@@ -22,8 +22,8 @@ process QCMergedGenotypes {
             --keep ${unrelated_samples} \
             --make-bed \
             --out ${output_prefix}
-        julia --project=/opt/sequential-gwas/ /opt/sequential-gwas/bin/seq-gwas.jl \
-            report-qc-effect \
+        
+        seq-gwas report-qc-effect \
             ${input_prefix} ${output_prefix}
         """
 }
