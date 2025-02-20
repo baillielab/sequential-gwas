@@ -16,8 +16,7 @@ process KeepKGPUnrelated {
         input_prefix = get_prefix(bed_file)
         output_prefix = "${input_prefix}.unrelated"
         """
-        julia --project=/opt/sequential-gwas/ /opt/sequential-gwas/bin/seq-gwas.jl \
-            get-kgp-unrelated-individuals \
+        seq-gwas get-kgp-unrelated-individuals \
             ${pedigree_file} \
             --output kgp_unrelated_individuals.txt
 

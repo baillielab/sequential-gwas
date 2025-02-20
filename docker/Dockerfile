@@ -73,12 +73,12 @@ RUN wget https://dalexander.github.io/admixture/binaries/admixture_linux-1.3.0.t
 
 ENV PATH=/opt/miniforge3/bin/:/opt/gatk-4.6.1.0/:${PATH}
 
-# Add Project code, install dependencies and build sysimage
+# Create Julia App
 
 COPY . /opt/sequential-gwas
 
-RUN julia --project=/opt/sequential-gwas -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
+RUN cd /opt/sequential-gwas \
+    && julia --startup-file=no bin/make_app.jl \
+    && chmod +x build/bin/seq-gwas
 
-# RUN julia --project=/opt/sequential-gwas /opt/sequential-gwas/src/sysimage.jl
-
-# RUN echo 'alias juliasys="julia --project=/opt/sequential-gwas -J/opt/sequential-gwas/SequentialGWAS.so"' >> ~/.bashrc
+ENV PATH=/opt/sequential-gwas/build/bin/:${PATH}
