@@ -36,6 +36,8 @@ flowchart TB
     v65["output_prefix"]
     v75["publish_dir"]
     v76["output_prefix"]
+    v78["high_ld_regions"]
+    v82["high_ld_regions"]
     end
     subgraph AggregateGeneticData
     subgraph KGP
@@ -82,14 +84,14 @@ flowchart TB
     subgraph AncestryEstimation
     v70([ExtractSharedVariantsFromKGP])
     v77([MergeGenotypes])
-    v78([LDPruning])
-    v79([EstimateAncestry])
+    v79([LDPruning])
+    v80([EstimateAncestry])
     v71(( ))
     end
     subgraph PCA
-    v81([LDPruning])
-    v82([PlinkPCA])
-    v83([PCAPlots])
+    v83([LDPruning])
+    v84([PlinkPCA])
+    v85([PCAPlots])
     end
     end
     subgraph " "
@@ -98,8 +100,8 @@ flowchart TB
     v44[" "]
     v47[" "]
     v69["reports"]
-    v80[" "]
-    v84[" "]
+    v81[" "]
+    v86[" "]
     end
     v0 --> v1
     v3 --> v1
@@ -161,7 +163,7 @@ flowchart TB
     v66 --> v68
     v67 --> v68
     v68 --> v69
-    v68 --> v81
+    v68 --> v83
     v68 --> v71
     v25 --> v70
     v48 --> v70
@@ -169,14 +171,16 @@ flowchart TB
     v75 --> v77
     v76 --> v77
     v71 --> v77
-    v77 --> v78
+    v77 --> v79
     v78 --> v79
-    v12 --> v79
     v79 --> v80
-    v79 --> v83
-    v81 --> v82
+    v12 --> v80
+    v80 --> v81
+    v80 --> v85
     v82 --> v83
     v83 --> v84
+    v84 --> v85
+    v85 --> v86
 
 </pre>
 <script type="module">
