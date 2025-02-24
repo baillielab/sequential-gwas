@@ -2,11 +2,13 @@ include { get_prefix } from '../modules/utils.nf'
 include { MergeGenotypes } from '../modules/merge_plink_files.nf'
 include { KingRelationshipInference } from '../modules/king_relationship_inference.nf'
 include { QCMergedGenotypes } from '../modules/qc_merged_genotypes.nf'
+include { LDPruning } from '../modules/ld_pruning.nf'
 
 workflow MergeGenotypingArraysAndWGS {
     take:
         qced_array_genotypes
         qced_gws_genotypes
+        high_ld_regions
 
     main:
         all_genotypes = qced_array_genotypes
@@ -21,7 +23,8 @@ workflow MergeGenotypingArraysAndWGS {
             "${params.MERGED_PUBLISH_DIR}/merged",
             "genotypes.merged"
         )
-        unrelated_individuals = KingRelationshipInference(merged_genotypes)
+        ld_pruned_merged_genotypes = LDPruning(merged_genotypes, high_ld_regions)
+        unrelated_individuals = KingRelationshipInference(ld_pruned_merged_genotypes)
         qced_merged_genotypes = QCMergedGenotypes(merged_genotypes, unrelated_individuals)
 
     emit:

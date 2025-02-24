@@ -43,6 +43,8 @@ workflow AggregateGeneticData {
     chain_file = file(params.GRC37_TO_GRC38_CHAIN_FILE, checkIfExists: true)
     // Variants to be flipped: TODO (unused atm)
     variants_to_flip = file(params.VARIANTS_TO_FLIP_GRC38, checkIfExists: true)
+    // High LD regions
+    high_ld_regions = file(params.HIGH_LD_REGIONS, checkIfExists: true)
     // Basic QC for genotyping arrays
     qced_genotypes = GenotypesQC(
         grc37_genotypes, 
@@ -63,10 +65,10 @@ workflow AggregateGeneticData {
     // Merge All Genotypes
     merged_genotypes = MergeGenotypingArraysAndWGS(
         qced_genotypes.genotypes, 
-        wgs_shared_genotypes
+        wgs_shared_genotypes,
+        high_ld_regions
     )
     // Estimate Ancestry
-    high_ld_regions = file(params.HIGH_LD_REGIONS, checkIfExists: true)
     ancestry = AncestryEstimation(
         merged_genotypes.genotypes,
         qced_genotypes.plink_shared_variants,
