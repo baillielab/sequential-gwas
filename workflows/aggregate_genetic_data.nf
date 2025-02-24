@@ -65,8 +65,7 @@ workflow AggregateGeneticData {
     // Merge All Genotypes
     merged_genotypes = MergeGenotypingArraysAndWGS(
         qced_genotypes.genotypes, 
-        wgs_shared_genotypes,
-        high_ld_regions
+        wgs_shared_genotypes
     )
     // Estimate Ancestry
     ancestry = AncestryEstimation(

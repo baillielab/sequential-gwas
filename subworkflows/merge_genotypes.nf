@@ -8,7 +8,6 @@ workflow MergeGenotypingArraysAndWGS {
     take:
         qced_array_genotypes
         qced_gws_genotypes
-        high_ld_regions
 
     main:
         all_genotypes = qced_array_genotypes
@@ -23,8 +22,7 @@ workflow MergeGenotypingArraysAndWGS {
             "${params.MERGED_PUBLISH_DIR}/merged",
             "genotypes.merged"
         )
-        ld_pruned_merged_genotypes = LDPruning(merged_genotypes, high_ld_regions)
-        unrelated_individuals = KingRelationshipInference(ld_pruned_merged_genotypes)
+        unrelated_individuals = KingRelationshipInference(merged_genotypes)
         qced_merged_genotypes = QCMergedGenotypes(merged_genotypes, unrelated_individuals)
 
     emit:
