@@ -84,3 +84,8 @@ RUN cd /opt/sequential-gwas \
 
 ENV PATH=/opt/sequential-gwas/build/bin/:${PATH}
 
+# Update permission on /opt
+
+RUN chmod -R 777 /opt
+
+
