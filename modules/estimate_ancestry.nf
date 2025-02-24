@@ -15,7 +15,7 @@ process EstimateAncestry {
         input_prefix = get_prefix(bed_file)
         output = "${input_prefix}.ancestry.csv"
         """
-        seq-gwas estimate-ancestry \
+        ${params.JULIA_CMD} estimate-ancestry \
             ${input_prefix} \
             ${pedigree} \
             --output=${output}

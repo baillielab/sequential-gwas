@@ -16,7 +16,7 @@ process KeepKGPUnrelated {
         input_prefix = get_prefix(bed_file)
         output_prefix = "${input_prefix}.unrelated"
         """
-        seq-gwas get-kgp-unrelated-individuals \
+        ${params.JULIA_CMD} get-kgp-unrelated-individuals \
             ${pedigree_file} \
             --output kgp_unrelated_individuals.txt
 

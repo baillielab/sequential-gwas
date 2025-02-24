@@ -25,7 +25,7 @@ process GenotypingArrayBasicQC{
             --make-bed \
             --out ${input_prefix}.qced
         
-        seq-gwas report-qc-effect \
+        ${params.JULIA_CMD} report-qc-effect \
             ${input_prefix} ${output_prefix}
         """
 }

@@ -34,7 +34,7 @@ process GenotypeGVCFs{
             --out ${output_prefix}.temp
         
         # Fills in missing allele and update variant ids
-        seq-gwas complete-bim-with-ref \
+        ${params.JULIA_CMD} complete-bim-with-ref \
             ${output_prefix}.temp.bim \
             ${kgp_bim} \
             --output ${output_prefix}.temp.bim

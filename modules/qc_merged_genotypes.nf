@@ -23,7 +23,7 @@ process QCMergedGenotypes {
             --make-bed \
             --out ${output_prefix}
         
-        seq-gwas report-qc-effect \
+        ${params.JULIA_CMD} report-qc-effect \
             ${input_prefix} ${output_prefix}
         """
 }

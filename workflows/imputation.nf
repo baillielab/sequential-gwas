@@ -52,7 +52,7 @@ process GetChromosomes {
     script:
         input_prefix = get_prefix(genotypes[0])
         """
-        seq-gwas write-chromosomes ${input_prefix}
+        ${params.JULIA_CMD} write-chromosomes ${input_prefix}
         """
 }
 

@@ -23,7 +23,7 @@ process QCFilesFromKGP {
         release_2024_now_prefix = get_prefix(release_2024_now_bim)
         kgp_prefix = get_prefix(kgp_bim)
         """
-        seq-gwas qc-from-kgp \
+        ${params.JULIA_CMD} qc-from-kgp \
             --release-r8 ${release_r8_prefix} \
             --release-2021-2023 ${release_2021_2023_prefix} \
             --release-2024-now ${release_2024_now_prefix} \

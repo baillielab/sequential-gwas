@@ -10,7 +10,7 @@ process PCAPlots {
 
     script:
         """
-        seq-gwas plot-pca \
+        ${params.JULIA_CMD} plot-pca \
             ${eigenvec} \
             ${ancestry} \
             --outprefix pca
