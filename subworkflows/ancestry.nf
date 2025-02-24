@@ -11,6 +11,7 @@ workflow AncestryEstimation {
         shared_variants
         kgp_genotypes
         kgp_pedigree
+        high_ld_regions
 
     main:
         kgp_shared_genotypes = ExtractSharedVariantsFromKGP(
@@ -27,7 +28,7 @@ workflow AncestryEstimation {
             "${params.ANCESTRY_PUBLISH_DIR}/merged",
             "genotypes_and_kgp.merged"
             )
-        ld_pruned_genotypes = LDPruning(merged)
+        ld_pruned_genotypes = LDPruning(merged, high_ld_regions)
         ancestry = EstimateAncestry(ld_pruned_genotypes, kgp_pedigree)
 
     emit:

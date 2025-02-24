@@ -18,6 +18,7 @@ params.GATK_DIR = "${params.RESOURCES_DIR}/gatk"
 params.GRC37_TO_GRC38_CHAIN_FILE = "${projectDir}/assets/hg19ToHg38.over.chain.gz"
 params.VARIANTS_TO_FLIP_GRC38 = "${projectDir}/assets/GSA-48v4-0_20085471_D2-minus-strand.txt"
 params.VARIANTS_TO_FLIP_GRC37 = "${projectDir}/assets/GSA-24v3-0_A1-minus-strand.txt"
+params.HIGH_LD_REGIONS = "${projectDir}/assets/exclude_b38.txt" // Downloaded from https://github.com/GrindeLab/PCA/blob/main/data/highLD/exclude_b38.txt
 
 // QC params
 params.QC_GENOTYPE_MISSING_RATE = 0.1

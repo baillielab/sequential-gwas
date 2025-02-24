@@ -13,8 +13,7 @@ process MakePopFile {
     script:
         input_prefix = get_prefix(bed_file)
         """
-        julia --project=/opt/sequential-gwas/ /opt/sequential-gwas/bin/seq-gwas.jl \
-            make-pop-file \
+        ${params.JULIA_CMD} make-pop-file \
             ${fam_file} \
             ${pedigree_file} \
             --output ${input_prefix}.pop
