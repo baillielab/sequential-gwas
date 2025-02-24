@@ -63,13 +63,15 @@ workflow AggregateGeneticData {
         wgs_shared_genotypes
     )
     // Estimate Ancestry
+    high_ld_regions = file(params.HIGH_LD_REGIONS, checkIfExists: true)
     ancestry = AncestryEstimation(
         merged_genotypes.genotypes,
         qced_genotypes.plink_shared_variants,
         kgp_genotypes, 
-        kgp.pedigree
+        kgp.pedigree,
+        high_ld_regions
     )
     // PCA
-    PCA(merged_genotypes.genotypes, ancestry)
+    PCA(merged_genotypes.genotypes, ancestry, high_ld_regions)
     
 }

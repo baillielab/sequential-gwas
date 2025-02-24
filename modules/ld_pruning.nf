@@ -5,6 +5,7 @@ process LDPruning {
 
     input:
         tuple path(bed_file), path(bim_file), path(fam_file)
+        path high_ld_regions
 
     output:
         tuple path("${output_prefix}.bed"), path("${output_prefix}.bim"), path("${output_prefix}.fam")
@@ -17,6 +18,7 @@ process LDPruning {
             --bfile ${input_prefix} \
             --maf ${params.PCA_MAF} \
             --indep-pairwise ${params.IP_VALUES} \
+            --exclude range ${high_ld_regions} \
             --make-bed \
             --out ${output_prefix}
         """
