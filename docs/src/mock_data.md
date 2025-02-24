@@ -33,10 +33,7 @@ Then run
 JULIA_DEPOT_PATH=$JULIA_DEPOT_PATH:/root/.julia julia --project=/opt/sequential-gwas /opt/sequential-gwas/bin/seq-gwas.jl
 ```
 
-Some patterns currently in the data but which should be removed by Dominique in the future are:
-
-- One individual has been genotyped twice
-- Some sample ids have non-standard encoding
+I also manually added duplicate sample IDs to reproduce what is in the data.
 
 ## Thousands Genomes
 

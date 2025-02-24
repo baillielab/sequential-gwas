@@ -157,18 +157,34 @@ function load_variants_info(prefix)
     )
 end
 
+"""
+We drop duplicate individuals according to the following priority:
+
+WGS > More Recent Array > Older Array
+"""
+function write_release_samples_to_drop(prefixes_and_fams, wgs_samples_file)
+    all_sample_ids = DataFrame(IID = readlines(wgs_samples_file))
+    for (release_id, (release_prefix, fam_data)) in pairs(prefixes_and_fams)
+        matched_samples = innerjoin(all_sample_ids, fam_data, on=:IID)
+        CSV.write(
+            string(release_prefix, ".samples_to_drop.txt"),
+            select(matched_samples, [:FID, :IID]),
+            header=false,
+            delim="\t"
+        )
+        all_sample_ids = DataFrame(IID = union(all_sample_ids.IID, fam_data.IID))
+    end
+end
+
 function generate_qc_extraction_files_from_kgp(
     release_r8, 
     release_2021_2023, 
-    release_2024_now, 
-    kgp;
+    release_2024_now,
+    kgp,
+    wgs_samples_file;
     outdir=".",
     threshold=0.02
     )
-    # release_r8 = "/Users/olabayle/Dev/sequential-gwas/work/eb/971b840b81d27b11fd1fcd269d5263/mock.release_r8.liftedOver.qced"
-    # release_2021_2023 = "/Users/olabayle/Dev/sequential-gwas/work/eb/971b840b81d27b11fd1fcd269d5263/mock.release_2021_2023.liftedOver.qced"
-    # release_2024_now = "/Users/olabayle/Dev/sequential-gwas/work/eb/971b840b81d27b11fd1fcd269d5263/mock.release_2024_now.qced"
-    # kgp = "/Users/olabayle/Dev/sequential-gwas/work/eb/971b840b81d27b11fd1fcd269d5263/kgp.merged.unrelated"
     # Load the KGP dataset
     release_r8_info = SequentialGWAS.load_variants_info(release_r8)
     release_2021_2023_info = SequentialGWAS.load_variants_info(release_2021_2023)
@@ -185,11 +201,18 @@ function generate_qc_extraction_files_from_kgp(
     release_r8_info = set_action_column(release_r8_info, kgp_info; threshold=threshold)
     release_2021_2023_info = set_action_column(release_2021_2023_info, kgp_info; threshold=threshold)
     release_2024_now_info = set_action_column(release_2024_now_info, kgp_info; threshold=threshold)
-    # Write files to be used by plink
+    # Write variants related files to be used by plink:flip, drop
     prefixes_and_bims = Dict(
         :release_r8 => (basename(release_r8), release_r8_info),
         :release_2021_2023 => (basename(release_2021_2023), release_2021_2023_info),
         :release_2024_now => (basename(release_2024_now), release_2024_now_info)
     )
     generate_files_from_actions(outdir, prefixes_and_bims)
+    # Write samples to drop from each release, the order is important here, it indicates the priority of the release
+    prefixes_and_fams = (
+        release_2024_now = (basename(release_2024_now), SequentialGWAS.read_fam(string(release_2024_now, ".fam"))),
+        release_2021_2023 = (basename(release_2021_2023), SequentialGWAS.read_fam(string(release_2021_2023, ".fam"))),
+        release_r8 = (basename(release_r8), SequentialGWAS.read_fam(string(release_r8, ".fam"))),
+    )
+    write_release_samples_to_drop(prefixes_and_fams, wgs_samples_file)
 end

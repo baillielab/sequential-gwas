@@ -63,6 +63,7 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     flipped_shared_dir = joinpath(RESULTS_DIR, "array_genotypes", "flipped_and_shared")
     shared_variants = readlines(joinpath(kgp_qc_files_dir, "variants_intersection.txt"))
     @test length(shared_variants) > 10
+    ## New bim files
     flipped_bim_files = joinpath.(flipped_shared_dir, ["release-r8.flipped.shared.bim", "release-2021-2023.flipped.shared.bim", "release-2024-now.flipped.shared.bim"])
     flip_files = joinpath.(kgp_qc_files_dir, ["mock.release_r8.liftedOver.qced.flip.txt", "mock.release_2021_2023.liftedOver.qced.flip.txt", "mock.release_2024_now.qced.flip.txt"])
     unflipped_bim_files = joinpath.(kgp_qc_files_dir, ["mock.release_r8.liftedOver.qced.new.bim", "mock.release_2021_2023.liftedOver.qced.new.bim", "mock.release_2024_now.qced.new.bim"])
@@ -97,6 +98,18 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
             @test row.ALLELE_2 == complement[row.UNFLIPPED_ALLELE_2]
         end
     end
+    ## New fam files
+    release_2024_now_fam_before_extract = SequentialGWAS.read_fam(joinpath(qced_dir, "mock.release_2024_now.qced.fam"))
+    release_2024_now_fam_after_extract = SequentialGWAS.read_fam(joinpath(flipped_shared_dir, "release-2024-now.flipped.shared.fam"))
+    release_2024_now_samples_to_drop = CSV.read(joinpath(kgp_qc_files_dir, "mock.release_2024_now.qced.samples_to_drop.txt"), DataFrame, header=false)
+    dropped_samples_from_fam = setdiff(release_2024_now_fam_before_extract.IID, release_2024_now_fam_after_extract.IID)
+    @test dropped_samples_from_fam == release_2024_now_samples_to_drop[!, 2] == ["odap3001"]
+
+    release_r8_fam_before_extract = SequentialGWAS.read_fam(joinpath(qced_dir, "mock.release_r8.liftedOver.qced.fam"))
+    release_r8_fam_after_extract = SequentialGWAS.read_fam(joinpath(flipped_shared_dir, "release-r8.flipped.shared.fam"))
+    release_r8_samples_to_drop = CSV.read(joinpath(kgp_qc_files_dir, "mock.release_r8.liftedOver.qced.samples_to_drop.txt"), DataFrame, header=false)
+    dropped_samples_from_fam = setdiff(release_r8_fam_before_extract.IID, release_r8_fam_after_extract.IID)
+    @test sort(dropped_samples_from_fam) == sort(release_r8_samples_to_drop[!, 2]) == ["odap2002", "odap3001"]
 
     # Check WGS
     wgs_dir = joinpath(RESULTS_DIR, "wgs", "genotyped")

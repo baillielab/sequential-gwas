@@ -139,6 +139,10 @@ function cli_settings()
             arg_type = String
             required = true
             help = "Prefix corresponding to the KGP."
+        "--wgs-samples-file"
+            arg_type = String
+            required = true
+            help = "Path to WGS sample IDs."
         "--threshold"
             arg_type = Float64
             help = "Palyndromic variants non-matching the 1000 GP alleles and whose MAF is close to 0.5 are dropped"
@@ -255,6 +259,7 @@ function julia_main()::Cint
             cmd_settings["release-2021-2023"],
             cmd_settings["release-2024-now"],
             cmd_settings["kgp"],
+            cmd_settings["wgs-samples-file"];
             outdir=cmd_settings["outdir"],
             threshold=cmd_settings["threshold"]
         )

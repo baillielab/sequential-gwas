@@ -5,6 +5,7 @@ include { DownloadOrAccessReferenceGenome } from '../modules/download_reference_
 include { MergeGenotypingArraysAndWGS } from '../subworkflows/merge_genotypes.nf'
 include { PCA } from '../subworkflows/pca.nf'
 include { AncestryEstimation } from '../subworkflows/ancestry.nf'
+include { WGSIndividuals } from '../modules/wgs_individuals.nf'
 
 workflow AggregateGeneticData {
     // Process 1000GP dataset
@@ -16,6 +17,7 @@ workflow AggregateGeneticData {
     reference_genome = DownloadOrAccessReferenceGenome()
     // WGS GVCFs
     wgs_gvcfs = Channel.fromFilePairs("${params.WGS_GVCFS}*{.gvcf.gz,.gvcf.gz.tbi}", checkIfExists: true)
+    wgs_sample_ids = WGSIndividuals(wgs_gvcfs.map{it -> it[1]}.collect())
     // GRC37 Genotypes
     r8_array = Channel.of(
         "release-r8", 
@@ -47,7 +49,8 @@ workflow AggregateGeneticData {
         grc38_genotypes, 
         variants_to_flip, 
         chain_file,
-        kgp_bim_afreq
+        kgp_bim_afreq,
+        wgs_sample_ids
     )
     // Genotyping of WGS data based on genotyping arrays variants
     wgs_shared_genotypes = GVCFGenotyping(
