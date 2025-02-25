@@ -21,18 +21,19 @@ params.VARIANTS_TO_FLIP_GRC37 = "${projectDir}/assets/GSA-24v3-0_A1-minus-strand
 params.HIGH_LD_REGIONS = "${projectDir}/assets/exclude_b38.txt" // Downloaded from https://github.com/GrindeLab/PCA/blob/main/data/highLD/exclude_b38.txt
 
 // QC params
-params.QC_GENOTYPE_MISSING_RATE = 0.1
-params.QC_HWE = 1e-50
-params.QC_INDIVIDUAL_MISSING_RATE = 0.1
-
-// PCA Params
-params.IP_VALUES = "1000 80 0.1"
+params.QC_GENOTYPE_MISSING_RATE = 0.02
+params.QC_HWE_P = 1e-35
+params.QC_HWE_K = 0.001 // Unused at the moment, requires a more version of plink2, the above value takes it into account
+params.QC_INDIVIDUAL_MISSING_RATE = 0.02
+params.IP_VALUES = "1000 50 0.05"
 params.PCA_MAF = 0.01
-params.N_PCS = 10
 params.IQR_FACTOR = 3
 
 // Regenie params
 params.REGENIE_BSIZE = 1000
+
+// Other params
+params.N_PCS = 10
 
 include { AggregateGeneticData } from './workflows/aggregate_genetic_data.nf'
 include { ImputationWorkflow } from './workflows/imputation.nf'

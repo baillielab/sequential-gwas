@@ -95,6 +95,7 @@ function plink2_exclude(outliers, input_prefix, outprefix)
         "/opt/miniforge3/bin/mamba", "run", "-n", "plink2_env", "plink2",
         "--bfile", input_prefix,
         "--exclude", "variants_to_exclude.txt",
+        "--output-chr", "chr26",
         "--make-bed",
         "--out", outprefix
     ]))

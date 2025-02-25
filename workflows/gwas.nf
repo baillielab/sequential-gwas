@@ -55,7 +55,7 @@ process RegenieQC {
             --maf ${params.QC_MAF} \
             --mac ${params.QC_MAC} \
             --geno ${params.QC_GENOTYPE_MISSING_RATE} \
-            --hwe ${params.QC_HWE} \
+            --hwe ${params.QC_HWE_P} ${params.QC_HWE_K}\
             --mind ${params.QC_INDIVIDUAL_MISSING_RATE} \
             --write-snplist --write-samples --no-id-header \
             --out qc_pass

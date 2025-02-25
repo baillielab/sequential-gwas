@@ -18,7 +18,7 @@ process GenotypingArrayBasicQC{
         /opt/miniforge3/bin/mamba run -n plink2_env plink2 --bfile ${input_prefix} \
             --geno ${params.QC_GENOTYPE_MISSING_RATE} \
             --mind ${params.QC_INDIVIDUAL_MISSING_RATE} \
-            --hwe ${params.QC_HWE} \
+            --hwe ${params.QC_HWE_P} \
             --set-all-var-ids @:# \
             --output-chr chr26 \
             --freq \
