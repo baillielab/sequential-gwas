@@ -91,8 +91,7 @@ flowchart TB
     end
     subgraph PCA
     v86([LDPruning])
-    v87([PlinkPCA])
-    v88([PCAPlots])
+    v87([PCAQC])
     end
     v30(( ))
     end
@@ -103,7 +102,9 @@ flowchart TB
     v50[" "]
     v72["reports"]
     v84[" "]
+    v88[" "]
     v89[" "]
+    v90["$out0"]
     end
     v0 --> v1
     v3 --> v1
@@ -181,11 +182,12 @@ flowchart TB
     v82 --> v83
     v12 --> v83
     v83 --> v84
-    v83 --> v88
+    v83 --> v87
     v85 --> v86
     v86 --> v87
+    v87 --> v90
+    v87 --> v89
     v87 --> v88
-    v88 --> v89
 
 </pre>
 <script type="module">
