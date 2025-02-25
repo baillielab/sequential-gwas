@@ -38,7 +38,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: olivierlabayle/sequential-gwas
+          images: olivierlabayle/genomicc
           tags: |
             type=schedule
             type=ref,event=branch
