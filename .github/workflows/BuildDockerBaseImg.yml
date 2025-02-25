@@ -1,4 +1,4 @@
-name: Publish Docker Tools Image
+name: Publish Docker Base Image
 
 on:
   workflow_dispatch:
