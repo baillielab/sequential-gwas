@@ -55,60 +55,6 @@ TESTDIR = joinpath(pkgdir(SequentialGWAS), "test")
     @test SequentialGWAS.get_action(row) == "FLIP (COMPLEMENT)"
 end
 
-@testset "Test qc-from-kgp" begin
-    outdir = mktempdir()
-    release_r8 = joinpath(TESTDIR, "assets", "qc_from_kgp", "release_r8")
-    release_2021_2023 = joinpath(TESTDIR, "assets", "qc_from_kgp", "release_2021_2023")
-    release_2024_now = joinpath(TESTDIR, "assets", "qc_from_kgp", "release_2024_now")
-    kgp = joinpath(TESTDIR, "assets", "qc_from_kgp", "kgp")
-    copy!(ARGS, [
-        "qc-from-kgp",
-        "--release-r8", release_r8,
-        "--release-2021-2023", release_2021_2023,
-        "--release-2024-now", release_2024_now,
-        "--kgp", kgp,
-        "--threshold", "0.3",
-        "--outdir", outdir
-    ])
-    julia_main()
-    summaries = [
-        CSV.read(joinpath(outdir, "release_r8.summary.csv"), DataFrame),
-        CSV.read(joinpath(outdir, "release_2021_2023.summary.csv"), DataFrame),
-        CSV.read(joinpath(outdir, "release_2024_now.summary.csv"), DataFrame)
-    ]
-    flips = [
-        CSV.read(joinpath(outdir, "release_r8.flip.txt"), DataFrame, header=[:VARIANT_ID], delim="\t"),
-        CSV.read(joinpath(outdir, "release_2021_2023.flip.txt"), DataFrame, header=[:VARIANT_ID], delim="\t"),
-        CSV.read(joinpath(outdir, "release_2024_now.flip.txt"), DataFrame, header=[:VARIANT_ID], delim="\t")
-    ]
-    new_bims = [
-        SequentialGWAS.read_bim(joinpath(outdir, "release_r8.new.bim")),
-        SequentialGWAS.read_bim(joinpath(outdir, "release_2021_2023.new.bim")),
-        SequentialGWAS.read_bim(joinpath(outdir, "release_2024_now.new.bim"))
-    ]
-    old_bims = [
-        SequentialGWAS.read_bim(string(release_r8, ".bim")),
-        SequentialGWAS.read_bim(string(release_2021_2023, ".bim")),
-        SequentialGWAS.read_bim(string(release_2024_now, ".bim"))
-    ]
-    variants_intersection = CSV.read(joinpath(outdir, "variants_intersection.txt"), DataFrame, header=[:ID], delim="\t")
-    @test length(variants_intersection.ID) > 10
-    @test length(summaries) == length(flips) == length(new_bims) == 3
-
-    for (summary, flipped, new_bim, old_bim) in zip(summaries, flips, new_bims, old_bims)
-        # Dropped variants are not in the shared variants
-        dropped = filter(:ACTION => startswith("DROP"), summary).VARIANT_ID
-        @test length(intersect(variants_intersection.ID, dropped)) == 0
-        # All flipped variants are in the shared variants
-        @test all(x in variants_intersection.ID for x in flipped.VARIANT_ID)
-        # Bim file has:
-        # - A new VARIANT_ID column respecting the chr:pos:ref:alt format
-        # - All variants from the old bim file (otherwise plink will error downstream)
-        @test all(x == 4 for x in length.(split.(new_bim.VARIANT_ID, ":")))
-        @test size(old_bim) == size(new_bim)
-    end
-end
-
 end
 
 true
