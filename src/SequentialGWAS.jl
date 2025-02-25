@@ -13,6 +13,7 @@ using Downloads
 using PackageCompiler
 using Tables
 using CairoMakie
+using Statistics
 using Base.Threads
 
 include("resources.jl")
@@ -23,7 +24,7 @@ include("read_write.jl")
 include("report.jl")
 include("qc_from_kgp.jl")
 include("relatedness.jl")
-include("plots.jl")
+include("pca_qc.jl")
 include("ancestry.jl")
 
 export julia_main

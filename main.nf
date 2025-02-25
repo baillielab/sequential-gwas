@@ -29,6 +29,7 @@ params.QC_INDIVIDUAL_MISSING_RATE = 0.1
 params.IP_VALUES = "1000 80 0.1"
 params.PCA_MAF = 0.01
 params.N_PCS = 10
+params.IQR_FACTOR = 3
 
 // Regenie params
 params.REGENIE_BSIZE = 1000

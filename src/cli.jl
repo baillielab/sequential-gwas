@@ -7,6 +7,10 @@ function cli_settings()
     )
 
     @add_arg_table! s begin
+        "pca-qc"
+            action = :command
+            help = "Runs PCAb-ased QC on genotypes to exclude outlier variants."
+
         "estimate-ancestry"
             action = :command
             help = "Estimate ancestry using the admixture software."
@@ -42,6 +46,29 @@ function cli_settings()
         "write-chromosomes"
             action = :command
             help = "Write list of chromosomes present in genotypes to file."
+    end
+
+    @add_arg_table! s["pca-qc"] begin
+        "--input-prefix"
+            arg_type = String
+            required = true
+            help = "Prefix to plink genotypes."
+        "--output-prefix"
+            arg_type = String
+            required = true
+            help = "Prefix to output files."
+        "--ancestry-file"
+            arg_type = String
+            required = true
+            help = "Path to ancestry file."
+        "--npcs"
+            arg_type = Int
+            help = "Number of PCs to use."
+            default = 10
+        "--iqr-factor"
+            arg_type = Float64
+            help = "IQR factor to use for outlier detection."
+            default = 3
     end
 
     @add_arg_table! s["estimate-ancestry"] begin
@@ -301,6 +328,13 @@ function julia_main()::Cint
             n_arrays_individuals=cmd_settings["n-arrays-individuals"],
             rng=cmd_settings["rng"],
             verbosity=cmd_settings["verbosity"]
+        )
+    elseif cmd == "pca-qc"
+        pca_qc(cmd_settings["input-prefix"],
+            cmd_settings["ancestry-file"]; 
+            npcs=cmd_settings["npcs"], 
+            iqr_factor=cmd_settings["iqr-factor"],
+            output_prefix = cmd_settings["output-prefix"]
         )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))

@@ -1,8 +1,6 @@
 include { get_prefix } from './utils.nf'
 
 process LDPruning {
-    publishDir "${params.PCA_PUBLISH_DIR}/ld_pruned", mode: 'symlink'
-
     input:
         tuple path(bed_file), path(bim_file), path(fam_file)
         path high_ld_regions

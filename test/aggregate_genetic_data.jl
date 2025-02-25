@@ -180,12 +180,15 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     )
     @test length(groupby(genomicc_with_pred, [:SuperpopulationPred, :POP_IDX])) > 0
     
-    # Check PCA
-    pca_dir = joinpath(RESULTS_DIR, "pca")
-    @test isfile(joinpath(pca_dir, "pca_plots", "pca.1vs2.png"))
-    @test isfile(joinpath(pca_dir, "pca_plots", "pca.all.png"))
-    eigenvals = readdlm(joinpath(pca_dir, "pca", "genotypes.merged.qced.ldpruned.eigenval"))
-    @test length(eigenvals) == 10
+    # Check PCA-QC
+    pca_dir = joinpath(merge_dir, "pca_qced")
+    @test isfile(joinpath(pca_dir, "genotypes.merged.qced.ldpruned.after_pca_qc.1vs2.png"))
+    @test isfile(joinpath(pca_dir, "genotypes.merged.qced.ldpruned.after_pca_qc.all.png"))
+    @test isfile(joinpath(pca_dir, "genotypes.merged.qced.ldpruned.loadings.png"))
+    @test isfile(joinpath(pca_dir, "genotypes.merged.qced.ldpruned.after_pca_qc.loadings.png"))
+    bim_after_pca_qc = SequentialGWAS.read_bim(joinpath(pca_dir, "genotypes.merged.qced.ldpruned.after_pca_qc.bim"))
+    variants_removed_by_pca = readlines(joinpath(pca_dir, "variants_to_exclude.txt"))
+    @test intersect(bim_after_pca_qc.VARIANT_ID, variants_removed_by_pca) == []
 end
 
 end
