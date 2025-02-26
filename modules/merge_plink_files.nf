@@ -12,7 +12,7 @@ process MergeGenotypes {
 
     script:
         """
-        /opt/miniforge3/bin/mamba run -n plink_env plink \
+        plink \
             --output-chr chr26 \
             --merge-list ${merge_list} \
             --make-bed \

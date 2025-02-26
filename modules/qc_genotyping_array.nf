@@ -15,7 +15,7 @@ process GenotypingArrayBasicQC{
         input_prefix = get_prefix(bed_file)
         output_prefix = "${input_prefix}.qced"
         """
-        /opt/miniforge3/bin/mamba run -n plink2_env plink2 --bfile ${input_prefix} \
+        plink2 --bfile ${input_prefix} \
             --geno ${params.QC_GENOTYPE_MISSING_RATE} \
             --mind ${params.QC_INDIVIDUAL_MISSING_RATE} \
             --hwe ${params.QC_HWE_P} \

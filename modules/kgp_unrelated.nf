@@ -20,7 +20,7 @@ process KeepKGPUnrelated {
             ${pedigree_file} \
             --output kgp_unrelated_individuals.txt
 
-        /opt/miniforge3/bin/mamba run -n plink2_env plink2 \
+        plink2 \
             --bfile ${input_prefix} \
             --keep kgp_unrelated_individuals.txt \
             --output-chr chr26 \

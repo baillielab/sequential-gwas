@@ -11,7 +11,7 @@ process FlipAndExtract {
     script:
         output_prefix = "${release_id}.flipped.shared"
         """
-        /opt/miniforge3/bin/mamba run -n plink_env plink \
+        plink \
             --bed ${bed_file} \
             --bim ${bim_file} \
             --fam ${fam_file} \

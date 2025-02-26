@@ -12,7 +12,7 @@ process PedToBed {
     script:
         input_prefix = get_prefix(ped_file)
         """
-        /opt/miniforge3/bin/mamba run -n plink_env plink \
+        plink \
             --alleleACGT \
             --file ${input_prefix} \
             --make-bed \

@@ -12,7 +12,7 @@ process LDPruning {
         input_prefix = get_prefix(bed_file)
         output_prefix = "${input_prefix}.ldpruned"
         """
-        /opt/miniforge3/bin/mamba run -n plink2_env plink2 \
+        plink2 \
             --bfile ${input_prefix} \
             --maf ${params.PCA_MAF} \
             --indep-pairwise ${params.IP_VALUES} \

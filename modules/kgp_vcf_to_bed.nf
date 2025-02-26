@@ -12,7 +12,7 @@ process KGPVCFToBed {
     script:
         input_prefix = get_prefix(vcf_file)[0..-5]
         """
-        /opt/miniforge3/bin/mamba run -n plink2_env plink2 \
+        plink2 \
             --output-chr chr26 \
             --vcf ${vcf_file} \
             --make-bed \

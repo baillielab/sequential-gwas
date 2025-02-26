@@ -26,7 +26,7 @@ process GenotypeGVCFs{
             -O ${output_prefix}.vcf.gz
         
         # Converts to plink format
-        /opt/miniforge3/bin/mamba run -n plink2_env plink2 \
+        plink2 \
             --vcf ${prefix}.shared.vcf.gz \
             --output-chr chr26 \
             --set-all-var-ids @:# \
@@ -40,7 +40,7 @@ process GenotypeGVCFs{
             --output ${output_prefix}.temp.bim
 
         # Only keep variants that are in the shared list
-        /opt/miniforge3/bin/mamba run -n plink2_env plink2 \
+        plink2 \
             --bfile ${output_prefix}.temp \
             --output-chr chr26 \
             --extract ${shared_variants_plink} \

@@ -34,7 +34,7 @@ process MergeBEDs {
 
     script:
         """
-        /opt/miniforge3/bin/mamba run -n plink2_env plink2 --pmerge-list merge_list.txt --make-bed --out genotypesAllChr
+        plink2 --pmerge-list merge_list.txt --make-bed --out genotypesAllChr
         """
 }
 
@@ -50,7 +50,7 @@ process RegenieQC {
     script:
         genotypes_prefix = get_prefix(genotypes_bed)
         """
-        /opt/miniforge3/bin/mamba run -n plink2_env plink2 \
+        plink2 \
             --bfile ${genotypes_prefix} \
             --maf ${params.QC_MAF} \
             --mac ${params.QC_MAC} \

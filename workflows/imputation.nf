@@ -33,7 +33,7 @@ process BedToChrVCF {
         input_prefix = get_prefix(genotypes[0])
         output_prefix = "${input_prefix}.${chr}"
         """
-        /opt/miniforge3/bin/mamba run -n plink_env plink \
+        plink \
             --bfile ${input_prefix} \
             --chr ${chr} \
             --recode vcf \

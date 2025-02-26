@@ -12,7 +12,7 @@ process PlinkPCA {
     script:
         input_prefix = get_prefix(bed_file)
         """
-        /opt/miniforge3/bin/mamba run -n plink2_env plink2 \
+        plink2 \
             --bfile ${input_prefix} \
             --pca ${params.N_PCS} \
             --out ${input_prefix}

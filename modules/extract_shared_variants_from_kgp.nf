@@ -14,7 +14,7 @@ process ExtractSharedVariantsFromKGP {
         input_prefix = get_prefix(bed_file)
         output_prefix = "${input_prefix}.shared"
         """
-        /opt/miniforge3/bin/mamba run -n plink2_env plink2 \
+        plink2 \
             --bfile ${input_prefix} \
             --output-chr chr26 \
             --extract ${shared_variants} \
