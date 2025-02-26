@@ -28,7 +28,8 @@ RUN wget https://yanglab.westlake.edu.cn/software/gcta/bin/gcta-1.94.3-linux-ker
 # Install QCTOOL
 RUN wget -O qctool.tgz https://www.well.ox.ac.uk/~gav/resources/qctool_v2.2.5-CentOS_Linux7.9-x86_64.tgz \
     && tar -xvzf qctool.tgz \
-    && mv qctool_v2.2.5-Ce-x86_64/qctool /usr/local/bin
+    && mv qctool_v2.2.5-Ce-x86_64/qctool /usr/local/bin \
+    && chmod +x /usr/local/bin/qctool
 
 # KING 2.3.2
 RUN wget https://www.kingrelatedness.com/KINGcode.tar.gz \
@@ -36,42 +37,44 @@ RUN wget https://www.kingrelatedness.com/KINGcode.tar.gz \
     && tar -xzf KINGcode.tar.gz -C /opt/king \
     && cd /opt/king \
     && c++ -lm -lz -O2 -fopenmp -o king *.cpp \
-    && cp king /usr/local/bin/
+    && cp king /usr/local/bin/ \
+    && chmod +x /usr/local/bin/king
 
 # Install GATK
-RUN mkdir /opt/gatk \
-    && wget https://github.com/broadinstitute/gatk/releases/download/4.6.1.0/gatk-4.6.1.0.zip \
-    && unzip gatk-4.6.1.0.zip -d /opt/
+RUN wget https://github.com/broadinstitute/gatk/releases/download/4.6.1.0/gatk-4.6.1.0.zip \
+    && unzip gatk-4.6.1.0.zip -d /opt/ \
+    && chmod -R 755 /opt/gatk-4.6.1.0/
+
+# Install PLINK2
+RUN wget https://s3.amazonaws.com/plink2-assets/alpha6/plink2_linux_x86_64_20250129.zip \
+    && unzip plink2_linux_x86_64_20250129.zip \
+    && mv plink2 /usr/local/bin \
+    && chmod +x /usr/local/bin/plink2
+
+# Install PLINK
+RUN wget https://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20241022.zip \
+    && unzip plink_linux_x86_64_20241022.zip \
+    && mv plink /usr/local/bin \
+    && chmod +x /usr/local/bin/plink
 
 # Install conda
 RUN wget -O Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh" \
     && bash Miniforge3.sh -b -p /opt/miniforge3 \
-    && /opt/miniforge3/bin/mamba init
-
-# Install bcftools & samtools
-RUN /opt/miniforge3/bin/mamba create -n bcftools_env -c conda-forge -c bioconda bcftools samtools
-
-# Install regenie
-RUN /opt/miniforge3/bin/mamba create -y -n regenie_env -c conda-forge -c bioconda regenie==4.0
-
-# Install plink
-RUN /opt/miniforge3/bin/mamba create -y -n plink_env -c conda-forge -c bioconda plink
-
-# Install plink2
-RUN /opt/miniforge3/bin/mamba create -y -n plink2_env -c conda-forge -c bioconda plink2
-
-# Install UCSC liftover
-RUN /opt/miniforge3/bin/mamba create -y -n liftover_env -c bioconda ucsc-liftover python=2.7
+    && /opt/miniforge3/bin/mamba init \
+    && /opt/miniforge3/bin/mamba create -n bcftools_env -c conda-forge -c bioconda bcftools samtools \
+    && /opt/miniforge3/bin/mamba create -y -n regenie_env -c conda-forge -c bioconda regenie==4.0 \
+    && /opt/miniforge3/bin/mamba create -y -n liftover_env -c bioconda ucsc-liftover python=2.7 \
+    && /opt/miniforge3/bin/mamba clean -a -y \
+    && chmod -R 755 /opt/miniforge3/
 
 # Install Admixture
 RUN wget https://dalexander.github.io/admixture/binaries/admixture_linux-1.3.0.tar.gz \
     && tar -xvzf admixture_linux-1.3.0.tar.gz \
-    && mv dist/admixture_linux-1.3.0/admixture /usr/local/bin
+    && mv dist/admixture_linux-1.3.0/admixture /usr/local/bin \
+    && chmod +x /usr/local/bin/admixture
 
 # Update Path
 ENV PATH=/opt/miniforge3/bin/:/opt/gatk-4.6.1.0/:${PATH}
 
-# Update permission on /opt
-RUN chmod -R 755 /opt
 
 
