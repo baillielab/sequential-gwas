@@ -11,7 +11,7 @@ COPY . /opt/sequential-gwas
 
 RUN cd /opt/sequential-gwas \
     && julia --startup-file=no bin/make_app.jl \
-    && chmod +x build/bin/seq-gwas \
+    && chmod -R 777 build \
     && ./build/bin/seq-gwas --help
 
 ENV PATH=/opt/sequential-gwas/build/bin/:${PATH}
