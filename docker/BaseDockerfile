@@ -72,6 +72,6 @@ RUN wget https://dalexander.github.io/admixture/binaries/admixture_linux-1.3.0.t
 ENV PATH=/opt/miniforge3/bin/:/opt/gatk-4.6.1.0/:${PATH}
 
 # Update permission on /opt
-RUN chmod -R 777 /opt
+RUN chmod -R 755 /opt
 
 
