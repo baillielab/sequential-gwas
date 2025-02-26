@@ -69,7 +69,7 @@ function get_outliers_and_save_plots(loadings;
 end
 
 plink2_pca(input_prefix, output_prefix; npcs=10) = run(Cmd([
-    "/opt/miniforge3/bin/mamba", "run", "-n", "plink2_env", "plink2",
+    "plink2",
     "--bfile", input_prefix,
     "--pca", string(npcs),
     "--out", output_prefix])
@@ -92,7 +92,7 @@ function plink2_exclude(outliers, input_prefix, outprefix)
         end
     end
     run(Cmd([
-        "/opt/miniforge3/bin/mamba", "run", "-n", "plink2_env", "plink2",
+        "plink2",
         "--bfile", input_prefix,
         "--exclude", "variants_to_exclude.txt",
         "--output-chr", "chr26",
