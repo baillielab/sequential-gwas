@@ -26,18 +26,18 @@ flowchart TB
     v6["store_dir"]
     v19["publish_dir"]
     v20["output_prefix"]
-    v29["Channel.fromFilePairs"]
-    v33["Channel.of"]
-    v35["Channel.of"]
-    v38["Channel.of"]
-    v40["chain_file"]
-    v45["variants_to_flip"]
-    v67["publish_dir"]
-    v68["output_prefix"]
-    v78["publish_dir"]
-    v79["output_prefix"]
-    v81["high_ld_regions"]
-    v85["high_ld_regions"]
+    v30["Channel.fromFilePairs"]
+    v34["Channel.of"]
+    v36["Channel.of"]
+    v39["Channel.of"]
+    v41["chain_file"]
+    v46["variants_to_flip"]
+    v68["publish_dir"]
+    v69["output_prefix"]
+    v80["publish_dir"]
+    v81["output_prefix"]
+    v84["high_ld_regions"]
+    v88["high_ld_regions"]
     end
     subgraph AggregateGeneticData
     subgraph KGP
@@ -45,66 +45,69 @@ flowchart TB
     v14([CleanKGP])
     v15([KGPVCFToBed])
     v21([MergeKGPChromosomes])
-    v23([KeepKGPUnrelated])
+    v24([KeepKGPUnrelated])
     v1(( ))
     v8(( ))
     v12(( ))
     v16(( ))
     v18(( ))
-    v22(( ))
-    v25(( ))
+    v23(( ))
     v26(( ))
     v27(( ))
+    v28(( ))
     end
-    v28([DownloadOrAccessReferenceGenome])
-    v32([WGSIndividuals])
+    v29([DownloadOrAccessReferenceGenome])
+    v33([WGSIndividuals])
     subgraph GenotypesQC
-    v41([LiftOver])
-    v44([PedToBed])
-    v46([GenotypingArrayBasicQC])
-    v49([QCFilesFromKGP])
-    v57([FlipAndExtract])
-    v34(( ))
-    v39(( ))
-    v48(( ))
-    v51(( ))
+    v42([LiftOver])
+    v45([PedToBed])
+    v47([GenotypingArrayBasicQC])
+    v50([QCFilesFromKGP])
+    v58([FlipAndExtract])
+    v35(( ))
+    v40(( ))
+    v49(( ))
     v52(( ))
-    v58(( ))
+    v53(( ))
+    v59(( ))
     end
     subgraph GVCFGenotyping
-    v59([IndexReferenceGenome])
-    v60([CreateSequenceDictionary])
-    v61([GenotypeGVCFs])
+    v60([IndexReferenceGenome])
+    v61([CreateSequenceDictionary])
+    v62([GenotypeGVCFs])
     end
     subgraph MergeGenotypingArraysAndWGS
-    v69([MergeGenotypes])
-    v70([KingRelationshipInference])
-    v71([QCMergedGenotypes])
-    v62(( ))
+    v70([MergeGenotypes])
+    v72([KingRelationshipInference])
+    v73([QCMergedGenotypes])
+    v63(( ))
     end
     subgraph AncestryEstimation
-    v73([ExtractSharedVariantsFromKGP])
-    v80([MergeGenotypes])
-    v82([LDPruning])
-    v83([EstimateAncestry])
-    v74(( ))
+    v75([ExtractSharedVariantsFromKGP])
+    v82([MergeGenotypes])
+    v85([LDPruning])
+    v86([EstimateAncestry])
+    v76(( ))
     end
     subgraph PCA
-    v86([LDPruning])
-    v87([PCAQC])
+    v89([LDPruning])
+    v90([PCAQC])
     end
-    v30(( ))
+    v31(( ))
     end
     subgraph " "
-    v24[" "]
-    v42[" "]
-    v47[" "]
-    v50[" "]
-    v72["reports"]
-    v84[" "]
-    v88[" "]
-    v89[" "]
-    v90["$out0"]
+    v22[" "]
+    v25[" "]
+    v43[" "]
+    v48[" "]
+    v51[" "]
+    v71[" "]
+    v74["reports"]
+    v83[" "]
+    v87[" "]
+    v91[" "]
+    v92[" "]
+    v93["$out0"]
     end
     v0 --> v1
     v3 --> v1
@@ -121,73 +124,76 @@ flowchart TB
     v16 --> v21
     v18 --> v21
     v21 --> v22
-    v12 --> v23
-    v22 --> v23
+    v21 --> v23
+    v12 --> v24
     v23 --> v24
-    v23 --> v25
-    v23 --> v26
-    v23 --> v27
-    v28 --> v59
-    v28 --> v60
-    v28 --> v61
+    v24 --> v25
+    v24 --> v26
+    v24 --> v27
+    v24 --> v28
+    v29 --> v60
     v29 --> v61
-    v29 --> v30
-    v30 --> v32
-    v32 --> v49
-    v33 --> v34
-    v35 --> v34
-    v38 --> v39
-    v40 --> v41
-    v34 --> v41
+    v29 --> v62
+    v30 --> v62
+    v30 --> v31
+    v31 --> v33
+    v33 --> v50
+    v34 --> v35
+    v36 --> v35
+    v39 --> v40
     v41 --> v42
-    v41 --> v39
-    v39 --> v44
-    v44 --> v46
-    v45 --> v46
+    v35 --> v42
+    v42 --> v43
+    v42 --> v40
+    v40 --> v45
+    v45 --> v47
     v46 --> v47
-    v46 --> v48
-    v46 --> v52
-    v26 --> v49
-    v48 --> v49
+    v47 --> v48
+    v47 --> v49
+    v47 --> v53
+    v27 --> v50
     v49 --> v50
-    v49 --> v51
-    v49 --> v52
-    v49 --> v58
-    v51 --> v57
-    v52 --> v57
-    v57 --> v62
-    v59 --> v61
-    v60 --> v61
-    v27 --> v61
-    v51 --> v61
-    v58 --> v61
+    v50 --> v51
+    v50 --> v52
+    v50 --> v53
+    v50 --> v59
+    v52 --> v58
+    v53 --> v58
+    v58 --> v63
+    v60 --> v62
     v61 --> v62
-    v67 --> v69
-    v68 --> v69
-    v62 --> v69
+    v28 --> v62
+    v52 --> v62
+    v59 --> v62
+    v62 --> v63
+    v68 --> v70
     v69 --> v70
-    v69 --> v71
+    v63 --> v70
+    v70 --> v72
     v70 --> v71
-    v71 --> v72
-    v71 --> v86
-    v71 --> v74
-    v25 --> v73
-    v51 --> v73
+    v70 --> v73
+    v72 --> v73
     v73 --> v74
-    v78 --> v80
-    v79 --> v80
-    v74 --> v80
+    v73 --> v89
+    v73 --> v76
+    v26 --> v75
+    v52 --> v75
+    v75 --> v76
     v80 --> v82
     v81 --> v82
+    v76 --> v82
+    v82 --> v85
     v82 --> v83
-    v12 --> v83
-    v83 --> v84
-    v83 --> v87
+    v84 --> v85
     v85 --> v86
+    v12 --> v86
     v86 --> v87
-    v87 --> v90
-    v87 --> v89
-    v87 --> v88
+    v86 --> v90
+    v88 --> v89
+    v89 --> v90
+    v90 --> v93
+    v90 --> v92
+    v90 --> v91
 
 </pre>
 <script type="module">
