@@ -16,4 +16,6 @@ RUN cd /opt/sequential-gwas \
 
 ENV PATH=/opt/sequential-gwas/build/bin/:${PATH}
 
+ENV JULIA_DEPOT_PATH=/tmp:${PATH}
+
 
