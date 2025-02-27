@@ -6,14 +6,18 @@ RUN apt-get clean \
 # Create Julia App
 COPY . /opt/sequential-gwas
 
-RUN cd /opt/sequential-gwas \
-    && julia --project --startup-file=no -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
-
 # RUN cd /opt/sequential-gwas \
-#     && julia --startup-file=no bin/make_app.jl \
-#     && chmod +x build/bin/seq-gwas \
-#     && ./build/bin/seq-gwas --help
+#     && julia --project --startup-file=no -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
 
-# ENV PATH=/opt/sequential-gwas/build/bin/:${PATH}
+ENV JULIA_DEPOT_PATH=/tmp:${PATH}
+
+RUN cd /opt/sequential-gwas \
+    && julia --startup-file=no bin/make_app.jl \
+    && chmod -R 777 build \
+    && ./build/bin/seq-gwas --help
+
+ENV PATH=/opt/sequential-gwas/build/bin/:${PATH}
+
+
 
 
