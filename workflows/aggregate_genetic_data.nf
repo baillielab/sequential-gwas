@@ -6,8 +6,6 @@ include { MergeGenotypingArraysAndWGS } from '../subworkflows/merge_genotypes.nf
 include { PCA } from '../subworkflows/pca.nf'
 include { AncestryEstimation } from '../subworkflows/ancestry.nf'
 include { WGSIndividuals } from '../modules/wgs_individuals.nf'
-include { get_prefix } from '../modules/utils.nf'
-include { MergeGenotypes } from '../modules/merge_plink_files.nf'
 
 workflow AggregateGeneticData {
     // Process 1000GP dataset
@@ -57,26 +55,17 @@ workflow AggregateGeneticData {
         wgs_sample_ids
     )
     // Genotyping of WGS data based on genotyping arrays variants
-    wgs_shared_genotypes = GVCFGenotyping(
+    wgs_data = GVCFGenotyping(
         wgs_gvcfs, 
         qced_genotypes.gatk_shared_variants,
         qced_genotypes.plink_shared_variants,
         reference_genome,
         kgp_bim
     )
-    wgs_merge_list = wgs_shared_genotypes
-        .map { it -> get_prefix(it[0].getName()) }
-        .collectFile(name: "wgs_merge_list.txt", newLine: true)
-    merged_wgs = MergeGenotypes(
-        wgs_shared_genotypes.collect(), 
-        wgs_merge_list, 
-        "${params.WGS_PUBLISH_DIR}/merged",
-        "wgs.merged"
-    )
     // Merge All Genotypes
     merged_genotypes = MergeGenotypingArraysAndWGS(
         qced_genotypes.genotypes, 
-        merged_wgs.genotypes
+        wgs_data.genotypes
     )
     // Estimate Ancestry
     ancestry = AncestryEstimation(
