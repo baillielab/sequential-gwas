@@ -15,6 +15,7 @@ process KGPVCFToBed {
         plink2 \
             --output-chr chr26 \
             --vcf ${vcf_file} \
+            --max-alleles 2 \
             --make-bed \
             --out ${input_prefix}
         """

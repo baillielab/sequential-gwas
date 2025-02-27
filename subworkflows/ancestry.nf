@@ -28,7 +28,7 @@ workflow AncestryEstimation {
             "${params.ANCESTRY_PUBLISH_DIR}/merged",
             "genotypes_and_kgp.merged"
             )
-        ld_pruned_genotypes = LDPruning(merged, high_ld_regions)
+        ld_pruned_genotypes = LDPruning(merged.genotypes, high_ld_regions)
         ancestry = EstimateAncestry(ld_pruned_genotypes, kgp_pedigree)
 
     emit:

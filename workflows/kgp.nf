@@ -35,13 +35,13 @@ workflow KGP {
     merge_list = kgp_plink_files
         .map { it -> get_prefix(it[0].getName()) }
         .collectFile(name: "merge_list.txt", newLine: true)
-    kgp_plink_merged = MergeKGPChromosomes(
+    kgp_plink_merged_output = MergeKGPChromosomes(
         kgp_plink_files.collect(), 
         merge_list, 
         "${params.KGP_PUBLISH_DIR}/merged",
         "kgp.merged"
     )
-    kgp_unrelated = KeepKGPUnrelated(kgp_plink_merged.collect(), pedigree_file)
+    kgp_unrelated = KeepKGPUnrelated(kgp_plink_merged_output.genotypes.collect(), pedigree_file)
 
     emit:
         genotypes = kgp_unrelated.genotypes

@@ -16,14 +16,14 @@ workflow MergeGenotypingArraysAndWGS {
         merge_list = all_genotypes
             .map { it -> get_prefix(it[0].getName()) }
             .collectFile(name: "merge_list.txt", newLine: true)
-        merged_genotypes = MergeGenotypes(
+        merged_genotypes_output = MergeGenotypes(
             all_genotypes.collect(), 
             merge_list, 
             "${params.MERGED_PUBLISH_DIR}/merged",
             "genotypes.merged"
         )
-        unrelated_individuals = KingRelationshipInference(merged_genotypes)
-        qced_merged_genotypes = QCMergedGenotypes(merged_genotypes, unrelated_individuals)
+        unrelated_individuals = KingRelationshipInference(merged_genotypes_output.genotypes)
+        qced_merged_genotypes = QCMergedGenotypes(merged_genotypes_output.genotypes, unrelated_individuals)
 
     emit:
         genotypes = qced_merged_genotypes.genotypes

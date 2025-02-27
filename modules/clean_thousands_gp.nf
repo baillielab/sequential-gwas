@@ -18,7 +18,7 @@ process CleanKGP {
         source /opt/miniforge3/etc/profile.d/conda.sh
         conda activate bcftools_env
 
-        bcftools norm -m-any ${vcf_file} | \
+        bcftools norm -m +any ${vcf_file} | \
         bcftools annotate -x ID -I +'%CHROM:%POS:%REF:%ALT' | \
         bcftools norm -Oz --rm-dup both > ${output}
         
