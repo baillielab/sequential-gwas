@@ -138,6 +138,29 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     @test sort(merged_bim.VARIANT_ID) == sort(shared_variants)
     merged_fam = SequentialGWAS.read_fam(joinpath(merge_dir, "merged", "genotypes.merged.fam"))
 
+    ## Check plink resolves inconsistent alleles when Merging
+    ## Even though according to the following link this is the case, we make sure of this: https://wanggroup.org/compbio_tutorial/allele_qc.html
+    ## for instance this variant has REF == G on the r8_release/2021_2023_release and REF == A on the 2024_release
+    non_consistent_alleles_snp = "chr1:18100537:G:A"
+    release_r8_freqs = CSV.read(joinpath(flipped_shared_dir, "release-r8.flipped.shared.acount"), DataFrame)
+    release_2021_2023_freqs = CSV.read(joinpath(flipped_shared_dir, "release-2021-2023.flipped.shared.acount"), DataFrame)
+    release_2024_now_freqs = CSV.read(joinpath(flipped_shared_dir, "release-2024-now.flipped.shared.acount"), DataFrame)
+    wgs_freqs = readdlm(joinpath(RESULTS_DIR, "wgs", "merged", "wgs.merged.frq.counts"))
+    wgs_freqs = DataFrame(wgs_freqs[2:end, :], Symbol.(wgs_freqs[1, :]))
+    merged_freqs = readdlm(joinpath(merge_dir, "merged", "genotypes.merged.frq.counts"))
+    merged_freqs = DataFrame(merged_freqs[2:end, :], Symbol.(merged_freqs[1, :]))
+
+    release_r8_stats = only(filter(:ID => ==(non_consistent_alleles_snp), release_r8_freqs))
+    release_2021_2023_stats = only(filter(:ID => ==(non_consistent_alleles_snp), release_2021_2023_freqs))
+    release_2024_now_stats = only(filter(:ID => ==(non_consistent_alleles_snp), release_2024_now_freqs))
+    wgs_stats = only(filter(:SNP => ==(non_consistent_alleles_snp), wgs_freqs))
+    merged_stats = only(filter(:SNP => ==(non_consistent_alleles_snp), merged_freqs))
+
+    ## Let's count the sum of A before and after merging
+    @test release_r8_stats.REF == "G" == release_2021_2023_stats.REF !== release_2024_now_stats.REF == "A" == wgs_stats.A1
+    @test release_r8_stats.ALT_CTS + release_2021_2023_stats.ALT_CTS + (release_2024_now_stats.OBS_CT - release_2024_now_stats.ALT_CTS) + wgs_stats.C1 == merged_stats.C1
+
+
     # Check QC of merged genotypes
     ## Check filtered samples
     qced_merged_bim = SequentialGWAS.read_bim(joinpath(merge_dir, "qced", "genotypes.merged.qced.bim"))

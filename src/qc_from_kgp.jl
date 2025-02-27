@@ -149,7 +149,8 @@ end
 
 function load_variants_info(prefix)
     bim = SequentialGWAS.read_bim(string(prefix, ".bim"))
-    afreq = CSV.read(string(prefix, ".afreq"), DataFrame)
+    afreq = CSV.read(string(prefix, ".acount"), DataFrame)
+    afreq.ALT_FREQS .= afreq.ALT_CTS ./ afreq.OBS_CT
     return innerjoin(
         bim, 
         select(afreq, :ID =>:VARIANT_ID, :ALT_FREQS => :ALLELE_1_FREQ), 

@@ -6,7 +6,8 @@ process FlipAndExtract {
         path shared_variants
 
     output:
-        tuple val(release_id), path("${output_prefix}.bed"), path("${output_prefix}.bim"), path("${output_prefix}.fam")
+        tuple val(release_id), path("${output_prefix}.bed"), path("${output_prefix}.bim"), path("${output_prefix}.fam"), emit:genotypes
+        path("${output_prefix}.acount"), emit: afreq
 
     script:
         output_prefix = "${release_id}.flipped.shared"
@@ -20,6 +21,10 @@ process FlipAndExtract {
             --remove ${samples_to_drop} \
             --extract ${shared_variants} \
             --make-bed \
+            --out ${output_prefix}
+        plink2 \
+            --bfile ${output_prefix} \
+            --freq counts \
             --out ${output_prefix}
         """
 }

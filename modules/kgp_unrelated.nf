@@ -8,7 +8,7 @@ process KeepKGPUnrelated {
         path pedigree_file
 
     output:
-        tuple path("${output_prefix}.bed"), path("${output_prefix}.bim"), path("${output_prefix}.fam"), path("${output_prefix}.afreq"), emit: genotypes
+        tuple path("${output_prefix}.bed"), path("${output_prefix}.bim"), path("${output_prefix}.fam"), path("${output_prefix}.acount"), emit: genotypes
         path "kgp_unrelated_individuals.txt", emit: unrelated_individuals
 
     script:
@@ -24,7 +24,7 @@ process KeepKGPUnrelated {
             --bfile ${input_prefix} \
             --keep kgp_unrelated_individuals.txt \
             --output-chr chr26 \
-            --freq \
+            --freq counts \
             --make-bed \
             --out ${output_prefix}
         """
