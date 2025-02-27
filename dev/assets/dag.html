@@ -32,12 +32,14 @@ flowchart TB
     v39["Channel.of"]
     v41["chain_file"]
     v46["variants_to_flip"]
-    v68["publish_dir"]
-    v69["output_prefix"]
-    v80["publish_dir"]
-    v81["output_prefix"]
-    v84["high_ld_regions"]
-    v88["high_ld_regions"]
+    v67["publish_dir"]
+    v68["output_prefix"]
+    v76["publish_dir"]
+    v77["output_prefix"]
+    v88["publish_dir"]
+    v89["output_prefix"]
+    v92["high_ld_regions"]
+    v96["high_ld_regions"]
     end
     subgraph AggregateGeneticData
     subgraph KGP
@@ -69,29 +71,32 @@ flowchart TB
     v49(( ))
     v52(( ))
     v53(( ))
-    v59(( ))
+    v60(( ))
     end
     subgraph GVCFGenotyping
-    v60([IndexReferenceGenome])
-    v61([CreateSequenceDictionary])
-    v62([GenotypeGVCFs])
+    v61([IndexReferenceGenome])
+    v62([CreateSequenceDictionary])
+    v63([GenotypeGVCFs])
+    v64(( ))
+    v66(( ))
     end
+    v69([MergeGenotypes])
     subgraph MergeGenotypingArraysAndWGS
-    v70([MergeGenotypes])
-    v72([KingRelationshipInference])
-    v73([QCMergedGenotypes])
-    v63(( ))
+    v78([MergeGenotypes])
+    v80([KingRelationshipInference])
+    v81([QCMergedGenotypes])
+    v71(( ))
     end
     subgraph AncestryEstimation
-    v75([ExtractSharedVariantsFromKGP])
-    v82([MergeGenotypes])
-    v85([LDPruning])
-    v86([EstimateAncestry])
-    v76(( ))
+    v83([ExtractSharedVariantsFromKGP])
+    v90([MergeGenotypes])
+    v93([LDPruning])
+    v94([EstimateAncestry])
+    v84(( ))
     end
     subgraph PCA
-    v89([LDPruning])
-    v90([PCAQC])
+    v97([LDPruning])
+    v98([PCAQC])
     end
     v31(( ))
     end
@@ -101,13 +106,15 @@ flowchart TB
     v43[" "]
     v48[" "]
     v51[" "]
-    v71[" "]
-    v74["reports"]
-    v83[" "]
-    v87[" "]
+    v59[" "]
+    v70[" "]
+    v79[" "]
+    v82["reports"]
     v91[" "]
-    v92[" "]
-    v93["$out0"]
+    v95[" "]
+    v99[" "]
+    v100[" "]
+    v101["$out0"]
     end
     v0 --> v1
     v3 --> v1
@@ -131,10 +138,10 @@ flowchart TB
     v24 --> v26
     v24 --> v27
     v24 --> v28
-    v29 --> v60
     v29 --> v61
     v29 --> v62
-    v30 --> v62
+    v29 --> v63
+    v30 --> v63
     v30 --> v31
     v31 --> v33
     v33 --> v50
@@ -156,44 +163,52 @@ flowchart TB
     v50 --> v51
     v50 --> v52
     v50 --> v53
-    v50 --> v59
+    v50 --> v60
     v52 --> v58
     v53 --> v58
-    v58 --> v63
-    v60 --> v62
-    v61 --> v62
-    v28 --> v62
-    v52 --> v62
-    v59 --> v62
+    v58 --> v59
+    v58 --> v71
+    v61 --> v63
     v62 --> v63
-    v68 --> v70
+    v28 --> v63
+    v52 --> v63
+    v60 --> v63
+    v63 --> v64
+    v63 --> v66
+    v67 --> v69
+    v68 --> v69
+    v64 --> v69
+    v66 --> v69
     v69 --> v70
-    v63 --> v70
-    v70 --> v72
-    v70 --> v71
-    v70 --> v73
-    v72 --> v73
-    v73 --> v74
-    v73 --> v89
-    v73 --> v76
-    v26 --> v75
-    v52 --> v75
-    v75 --> v76
-    v80 --> v82
+    v69 --> v71
+    v76 --> v78
+    v77 --> v78
+    v71 --> v78
+    v78 --> v80
+    v78 --> v79
+    v78 --> v81
+    v80 --> v81
     v81 --> v82
-    v76 --> v82
-    v82 --> v85
-    v82 --> v83
-    v84 --> v85
-    v85 --> v86
-    v12 --> v86
-    v86 --> v87
-    v86 --> v90
-    v88 --> v89
+    v81 --> v97
+    v81 --> v84
+    v26 --> v83
+    v52 --> v83
+    v83 --> v84
+    v88 --> v90
     v89 --> v90
+    v84 --> v90
     v90 --> v93
-    v90 --> v92
     v90 --> v91
+    v92 --> v93
+    v93 --> v94
+    v12 --> v94
+    v94 --> v95
+    v94 --> v98
+    v96 --> v97
+    v97 --> v98
+    v98 --> v101
+    v98 --> v100
+    v98 --> v99
 
 </pre>
 <script type="module">
