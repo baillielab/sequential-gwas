@@ -15,6 +15,7 @@ process PedToBed {
         plink \
             --alleleACGT \
             --file ${input_prefix} \
+            --biallelic-only strict \
             --make-bed \
             --out ${input_prefix}
         """
