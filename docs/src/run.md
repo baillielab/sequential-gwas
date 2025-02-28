@@ -25,21 +25,6 @@ If the previous steps have been completed successfully you can run:
 nextflow run main.nf -profile odap -resume
 ```
 
-Assuming results are output in `results` and the Julia project is instantiated, one can also build a markdown report via:
-
-```bash
-julia --project --startup-file=no -e 'using Literate;Literate.markdown("bin/report.jl", ARGS[1], flavor = Literate.CommonMarkFlavor(), execute=true)' results
-```
-
-On ODAP, this can be done via singularity by mounting the `results` directory.
-
-```bash
-singularity exec --bind results:/mnt/results IMG_PATH julia --project=/opt/sequential-gwas --startup-file=no -e 'using Literate;Literate.markdown("/opt/sequential-gwas/bin/report.jl", ARGS[1], flavor = Literate.CommonMarkFlavor(), execute=true)' /mnt/results
-```
-
-!!! note "Be aware"
-    This will not work with Docker as Docker cannot resolve mounted symlinks which most files in `results` are.
-
 ## Pipeline parameters
 
 We now list all the pipeline parameters. In principle they don't need to be changed if the conventions in this documentation have been respected and are up to date. Otherwise, please feel free to run an issue.
