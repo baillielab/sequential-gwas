@@ -10,7 +10,7 @@ process PCAQC {
     output:
         tuple path("${output_prefix}.bed"), path("${output_prefix}.bim"), path("${output_prefix}.fam"), emit: genotypes
         path("*.png"), emit: plots
-        path "variants_to_exclude.txt", emit: excluded_variants
+        path "variants_to_exclude.txt", emit: high_loadings_variants
 
     script:
         input_prefix = get_prefix(bed_file)
