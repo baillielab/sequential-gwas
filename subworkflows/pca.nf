@@ -14,5 +14,7 @@ workflow PCA {
         final_genotypes = FilterHighLoadingsVariants(genotypes, pca_qc_output.high_loadings_variants)
 
     emit:
-        final_genotypes
+        genotypes = final_genotypes
+        plots = pca_qc_output.plots
+        high_loadings_variants = pca_qc_output.high_loadings_variants
 }

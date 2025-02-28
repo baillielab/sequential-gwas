@@ -1,6 +1,6 @@
 include { get_prefix} from './utils.nf'
 
-process GenotypingArrayBasicQC{
+process GenotypingArrayBasicQC {
     publishDir "${params.ARRAY_GENOTYPES_PUBLISH_DIR}/qced", mode: 'symlink'
 
     input:
@@ -9,7 +9,7 @@ process GenotypingArrayBasicQC{
 
     output:
         tuple val(id), path("${output_prefix}.bed"), path("${output_prefix}.bim"), path("${output_prefix}.fam"), path("${output_prefix}.acount"), emit: genotypes 
-        tuple path("${output_prefix}.filtered_samples.csv"), path("${output_prefix}.filtered_variants.csv"), emit: reports
+        tuple val(id), path("${output_prefix}.filtered_samples.csv"), path("${output_prefix}.filtered_variants.csv"), emit: reports
 
     script:
         input_prefix = get_prefix(bed_file)

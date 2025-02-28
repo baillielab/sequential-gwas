@@ -207,11 +207,18 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     pca_dir = joinpath(merge_dir, "pca_qced")
     @test isfile(joinpath(pca_dir, "genotypes.merged.qced.ldpruned.after_pca_qc.1vs2.png"))
     @test isfile(joinpath(pca_dir, "genotypes.merged.qced.ldpruned.after_pca_qc.all.png"))
-    @test isfile(joinpath(pca_dir, "genotypes.merged.qced.ldpruned.loadings.png"))
+    @test isfile(joinpath(pca_dir, "genotypes.merged.qced.ldpruned.before_pca_qc.loadings.png"))
     @test isfile(joinpath(pca_dir, "genotypes.merged.qced.ldpruned.after_pca_qc.loadings.png"))
-    bim_after_pca_qc = SequentialGWAS.read_bim(joinpath(pca_dir, "genotypes.merged.qced.ldpruned.after_pca_qc.bim"))
+
+    # Check report and final dataset
+    @test isfile(joinpath(RESULTS_DIR, "report.md"))
+    @test isfile(joinpath(RESULTS_DIR, "genotypes.arrays_wgs.aggregated.bed"))
+    @test isfile(joinpath(RESULTS_DIR, "genotypes.arrays_wgs.aggregated.bim"))
+    @test isfile(joinpath(RESULTS_DIR, "genotypes.arrays_wgs.aggregated.fam"))
+    final_bim = SequentialGWAS.read_bim(joinpath(RESULTS_DIR, "genotypes.arrays_wgs.aggregated.bim"))
     variants_removed_by_pca = readlines(joinpath(pca_dir, "variants_to_exclude.txt"))
-    @test intersect(bim_after_pca_qc.VARIANT_ID, variants_removed_by_pca) == []
+    @test intersect(final_bim.VARIANT_ID, variants_removed_by_pca) == []
+
 end
 
 end

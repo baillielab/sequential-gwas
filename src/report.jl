@@ -24,3 +24,20 @@ function report_qc_effect(input_prefix, output_prefix)
     CSV.write(string(output_prefix, ".filtered_variants.csv"), filtered_variants_info)
     CSV.write(string(output_prefix, ".filtered_samples.csv"), filtered_indiv_info)
 end
+
+
+
+function make_report(;kwargs...)
+    function prepend_args(script_string)
+        args_string = join((string(key, " = \"", arg, "\" #hide") for (key, arg) in kwargs), "\n")
+        return string(args_string, "\n", script_string)
+    end
+    Literate.markdown(
+        joinpath(pkgdir(SequentialGWAS), "src", "report_template.jl"), 
+        ".", 
+        name="report", 
+        flavor=Literate.CommonMarkFlavor(), 
+        execute=true,
+        preprocess=prepend_args
+    )
+end

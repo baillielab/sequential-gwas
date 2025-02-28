@@ -46,6 +46,107 @@ function cli_settings()
         "write-chromosomes"
             action = :command
             help = "Write list of chromosomes present in genotypes to file."
+
+        "make-report"
+            action = :command
+            help = "Generates a report after the pipeline execution."
+    end
+
+    @add_arg_table! s["make-report"] begin
+        "unlifted_r8"
+            arg_type = String
+            required = true
+            help = "Path to unlifted r8 file."
+
+        "unlifted_2021_2023"
+            arg_type = String
+            required = true
+            help = "Path to unlifted 2021_2023."
+
+        "initial_bed_prefix_r8"
+            arg_type = String
+            required = true
+            help = "Path to initial bed prefix r8."
+
+        "initial_bed_prefix_2021_2023"
+            arg_type = String
+            required = true
+            help = "Path to initial bed prefix 2021_2023."
+
+        "initial_bed_prefix_2024_now"
+            arg_type = String
+            required = true
+            help = "Path to initial bed prefix 2024_now."
+
+        "basic_qc_prefix_r8"
+            arg_type = String
+            required = true
+            help = "Path to basic qc prefix r8."
+
+        "basic_qc_prefix_2021_2023"
+            arg_type = String
+            required = true
+            help = "Path to basic qc prefix 2021_2023."
+
+        "basic_qc_prefix_2024_now"
+            arg_type = String
+            required = true
+            help = "Path to basic qc prefix 2024_now."
+
+        "dup_samples_r8"
+            arg_type = String
+            required = true
+            help = "Path to dup samples r8."
+
+        "dup_samples_2021_2023"
+            arg_type = String
+            required = true
+            help = "Path to dup samples 2021_2023."
+
+        "dup-samples_2024_now"
+            arg_type = String
+            required = true
+            help = "Path to dup samples 2024_now."
+
+        "shared_variants"
+            arg_type = String
+            required = true
+            help = "Path to shared variants file."
+
+        "wgs_prefix"
+            arg_type = String
+            required = true
+            help = "Path to WGS prefix."
+
+        "merged_genotypes_prefix"
+            arg_type = String
+            required = true
+            help = "Path to merged genotypes prefix."
+
+        "unrelated_individuals"
+            arg_type = String
+            required = true
+            help = "Path to unrelated individuals."
+
+        "merged_qced_genotypes_prefix"
+            arg_type = String
+            required = true
+            help = "Path to merged QCed genotypes prefix."
+
+        "pca_plots_prefix"
+            arg_type = String
+            required = true
+            help = "Path to PCA plots prefix."
+
+        "high_loadings_variants"
+            arg_type = String
+            required = true
+            help = "Path to high loadings variants."
+            
+        "final_genotypes_prefix"
+            arg_type = String
+            required = true
+            help = "Prefix to final genotypes."
     end
 
     @add_arg_table! s["pca-qc"] begin
@@ -335,6 +436,28 @@ function julia_main()::Cint
             npcs=cmd_settings["npcs"], 
             iqr_factor=cmd_settings["iqr-factor"],
             output_prefix = cmd_settings["output-prefix"]
+        )
+    elseif cmd == "make-report"
+        make_report(;
+            unlifted_r8 = cmd_settings["unlifted_r8"],
+            unlifted_2021_2023 = cmd_settings["unlifted_2021_2023"],
+            initial_bed_prefix_r8 = cmd_settings["initial_bed_prefix_r8"],
+            initial_bed_prefix_2021_2023 = cmd_settings["initial_bed_prefix_2021_2023"],
+            initial_bed_prefix_2024_now = cmd_settings["initial_bed_prefix_2024_now"],
+            basic_qc_prefix_r8 = cmd_settings["basic_qc_prefix_r8"],
+            basic_qc_prefix_2021_2023 = cmd_settings["basic_qc_prefix_2021_2023"],
+            basic_qc_prefix_2024_now = cmd_settings["basic_qc_prefix_2024_now"],
+            dup_samples_r8 = cmd_settings["dup_samples_r8"],
+            dup_samples_2021_2023 = cmd_settings["dup_samples_2021_2023"],
+            dup_samples_2024_now = cmd_settings["dup-samples_2024_now"],
+            shared_variants = cmd_settings["shared_variants"],
+            wgs_prefix = cmd_settings["wgs_prefix"],
+            merged_genotypes_prefix = cmd_settings["merged_genotypes_prefix"],
+            unrelated_individuals = cmd_settings["unrelated_individuals"],
+            merged_qced_genotypes_prefix = cmd_settings["merged_qced_genotypes_prefix"],
+            pca_plot_prefix = cmd_settings["pca_plots_prefix"],
+            high_loadings_variants = cmd_settings["high_loadings_variants"],
+            final_genotypes_prefix = cmd_settings["final_genotypes_prefix"]
         )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))

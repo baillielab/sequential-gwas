@@ -3,10 +3,8 @@ include { GenotypesQC } from '../subworkflows/genotyping_arrays_qc.nf'
 include { KGP } from './kgp.nf'
 include { DownloadOrAccessReferenceGenome } from '../modules/download_reference_genome.nf'
 include { MergeGenotypingArraysAndWGS } from '../subworkflows/merge_genotypes.nf'
-include { PCA } from '../subworkflows/pca.nf'
-include { AncestryEstimation } from '../subworkflows/ancestry.nf'
 include { WGSIndividuals } from '../modules/wgs_individuals.nf'
-
+include { Report } from '../subworkflows/report.nf'
 workflow AggregateGeneticData {
     // Process 1000GP dataset
     kgp = KGP()
@@ -63,19 +61,29 @@ workflow AggregateGeneticData {
         kgp_bim
     )
     // Merge All Genotypes
-    merged_genotypes = MergeGenotypingArraysAndWGS(
+    merge_output = MergeGenotypingArraysAndWGS(
         qced_genotypes.genotypes, 
-        wgs_data.genotypes
-    )
-    // Estimate Ancestry
-    ancestry = AncestryEstimation(
-        merged_genotypes.genotypes,
+        wgs_data.genotypes,
         qced_genotypes.plink_shared_variants,
-        kgp_genotypes, 
+        kgp_genotypes,
         kgp.pedigree,
         high_ld_regions
     )
-    // PCA
-    PCA(merged_genotypes.genotypes, ancestry, high_ld_regions)
-    
+    // Report
+    Report(
+        qced_genotypes.unlifted,
+        qced_genotypes.initial_bed_files,
+        qced_genotypes.basic_qc_reports,
+        qced_genotypes.kgp_qc_files_r8,
+        qced_genotypes.kgp_qc_files_2021_2023,
+        qced_genotypes.kgp_qc_files_2024_now,
+        qced_genotypes.plink_shared_variants,
+        wgs_data.genotypes,
+        merge_output.merged,
+        merge_output.unrelated_individuals,
+        merge_output.qced_merged,
+        merge_output.pca_plots,
+        merge_output.high_loadings_variants,
+        merge_output.final_merged
+    )
 }

@@ -9,7 +9,7 @@ process LiftOver {
         
     output:
         tuple val(id), path("${output_prefix}.ped"), path("${output_prefix}.map"), emit: genotypes
-        path("${output_prefix}.bed.unlifted"), emit: report
+        tuple val(id), path("${output_prefix}.bed.unlifted"), emit: unlifted
 
     script:
         input_prefix = get_prefix(map_file)

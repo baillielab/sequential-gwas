@@ -15,6 +15,7 @@ using Tables
 using CairoMakie
 using Statistics
 using Base.Threads
+using Literate
 
 include("resources.jl")
 include("one_time_checks.jl")

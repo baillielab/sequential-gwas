@@ -110,7 +110,7 @@ function pca_qc(input_prefix, ancestry_file;
     plink2_pca(input_prefix, input_prefix)
     loadings = gcta_loadings(input_prefix, input_prefix, input_prefix)
     outliers = get_outliers_and_save_plots(loadings; 
-        output_prefix=input_prefix, 
+        output_prefix=string(input_prefix, ".before_pca_qc"), 
         iqr_factor=iqr_factor, 
         npcs=npcs
     )
