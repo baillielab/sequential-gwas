@@ -16,6 +16,7 @@ using CairoMakie
 using Statistics
 using Base.Threads
 using Literate
+using MarkdownTables
 
 include("resources.jl")
 include("one_time_checks.jl")

@@ -2,9 +2,9 @@
 CurrentModule = SequentialGWAS
 ```
 
-# SequentialGWAS
+# GenOMICC
 
-This is the documentation for the SequentialGWAS pipeline within the Baillie lab, the [repository is here](https://github.com/baillielab/sequential-gwas).
+This [repository is here](https://github.com/baillielab/sequential-gwas) provides a set of Nextflow pipelines that can be used to process GenOMICC data.
 
 ## Workflow DAG
 

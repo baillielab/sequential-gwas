@@ -22,8 +22,8 @@ params.HIGH_LD_REGIONS = "${projectDir}/assets/exclude_b38.txt" // Downloaded fr
 
 // QC params
 params.QC_GENOTYPE_MISSING_RATE = 0.02
-params.QC_HWE_P = 1e-35
-params.QC_HWE_K = 0.001 // Unused at the moment, requires a more version of plink2, the above value takes it into account
+params.QC_HWE_P = 1e-5
+params.QC_HWE_K = 0.001
 params.QC_INDIVIDUAL_MISSING_RATE = 0.02
 params.IP_VALUES = "1000 50 0.05"
 params.PCA_MAF = 0.01

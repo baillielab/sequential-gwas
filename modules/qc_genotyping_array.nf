@@ -18,7 +18,7 @@ process GenotypingArrayBasicQC {
         plink2 --bfile ${input_prefix} \
             --geno ${params.QC_GENOTYPE_MISSING_RATE} \
             --mind ${params.QC_INDIVIDUAL_MISSING_RATE} \
-            --hwe ${params.QC_HWE_P} \
+            --hwe ${params.QC_HWE_P} ${params.QC_HWE_K} \
             --set-all-var-ids @:# \
             --output-chr chr26 \
             --freq counts \

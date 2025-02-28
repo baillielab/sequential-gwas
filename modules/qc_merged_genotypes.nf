@@ -15,10 +15,10 @@ process QCMergedGenotypes {
         input_prefix = get_prefix(bed_file)
         output_prefix = "${input_prefix}.qced"
         """
-        plink --bfile ${input_prefix} \
+        plink2 --bfile ${input_prefix} \
             --geno ${params.QC_GENOTYPE_MISSING_RATE} \
             --mind ${params.QC_INDIVIDUAL_MISSING_RATE} \
-            --hwe ${params.QC_HWE_P} \
+            --hwe ${params.QC_HWE_P} ${params.QC_HWE_K} \
             --output-chr chr26 \
             --keep ${unrelated_samples} \
             --make-bed \

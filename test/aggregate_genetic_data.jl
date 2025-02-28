@@ -164,7 +164,7 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     # Check QC of merged genotypes
     ## Check filtered samples
     qced_merged_bim = SequentialGWAS.read_bim(joinpath(merge_dir, "qced", "genotypes.merged.qced.bim"))
-    @test sort(qced_merged_bim.VARIANT_ID) == sort(shared_variants)
+    @test issubset(qced_merged_bim.VARIANT_ID, shared_variants)
     qced_merged_fam = SequentialGWAS.read_fam(joinpath(merge_dir, "qced", "genotypes.merged.qced.fam"))
     unrelated_king = CSV.read(
         joinpath(RESULTS_DIR, "merged/king_relatedness/kingunrelated.txt"),
