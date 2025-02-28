@@ -31,15 +31,15 @@ flowchart TB
     v36["Channel.of"]
     v39["Channel.of"]
     v41["chain_file"]
-    v46["variants_to_flip"]
-    v67["publish_dir"]
-    v68["output_prefix"]
-    v76["publish_dir"]
-    v77["output_prefix"]
-    v88["publish_dir"]
-    v89["output_prefix"]
-    v92["high_ld_regions"]
-    v96["high_ld_regions"]
+    v45["variants_to_flip"]
+    v65["publish_dir"]
+    v66["output_prefix"]
+    v74["publish_dir"]
+    v75["output_prefix"]
+    v86["publish_dir"]
+    v87["output_prefix"]
+    v90["high_ld_regions"]
+    v94["high_ld_regions"]
     end
     subgraph AggregateGeneticData
     subgraph KGP
@@ -62,59 +62,54 @@ flowchart TB
     v33([WGSIndividuals])
     subgraph GenotypesQC
     v42([LiftOver])
-    v45([PedToBed])
-    v47([GenotypingArrayBasicQC])
-    v50([QCFilesFromKGP])
-    v58([FlipAndExtract])
+    v44([PedToBed])
+    v46([GenotypingArrayBasicQC])
+    v48([QCFilesFromKGP])
+    v56([FlipAndExtract])
     v35(( ))
     v40(( ))
-    v49(( ))
-    v52(( ))
-    v53(( ))
-    v60(( ))
+    v47(( ))
+    v50(( ))
+    v51(( ))
+    v58(( ))
+    v99(( ))
+    v100(( ))
+    v101(( ))
     end
     subgraph GVCFGenotyping
-    v61([IndexReferenceGenome])
-    v62([CreateSequenceDictionary])
-    v63([GenotypeGVCFs])
+    v59([IndexReferenceGenome])
+    v60([CreateSequenceDictionary])
+    v61([GenotypeGVCFs])
+    v67([MergeGenotypes])
+    v62(( ))
     v64(( ))
-    v66(( ))
     end
-    v69([MergeGenotypes])
     subgraph MergeGenotypingArraysAndWGS
-    v78([MergeGenotypes])
-    v80([KingRelationshipInference])
-    v81([QCMergedGenotypes])
-    v71(( ))
+    v76([MergeGenotypes])
+    v78([KingRelationshipInference])
+    v79([QCMergedGenotypes])
+    v81([AncestryEstimation])
+    v95([PCA])
+    v69(( ))
     end
-    subgraph AncestryEstimation
-    v83([ExtractSharedVariantsFromKGP])
-    v90([MergeGenotypes])
-    v93([LDPruning])
-    v94([EstimateAncestry])
-    v84(( ))
-    end
-    subgraph PCA
-    v97([LDPruning])
-    v98([PCAQC])
+    subgraph Report
+    v102([MakeReport])
     end
     v31(( ))
     end
     subgraph " "
     v22[" "]
     v25[" "]
-    v43[" "]
-    v48[" "]
-    v51[" "]
-    v59[" "]
-    v70[" "]
-    v79[" "]
-    v82["reports"]
-    v91[" "]
-    v95[" "]
-    v99[" "]
-    v100[" "]
-    v101["$out0"]
+    v49[" "]
+    v57[" "]
+    v68["counts"]
+    v77[" "]
+    v80[" "]
+    v89[" "]
+    v93[" "]
+    v97[" "]
+    v103[" "]
+    v104[" "]
     end
     v0 --> v1
     v3 --> v1
@@ -138,77 +133,83 @@ flowchart TB
     v24 --> v26
     v24 --> v27
     v24 --> v28
+    v29 --> v59
+    v29 --> v60
     v29 --> v61
-    v29 --> v62
-    v29 --> v63
-    v30 --> v63
+    v30 --> v61
     v30 --> v31
     v31 --> v33
-    v33 --> v50
+    v33 --> v48
     v34 --> v35
     v36 --> v35
     v39 --> v40
     v41 --> v42
     v35 --> v42
-    v42 --> v43
     v42 --> v40
-    v40 --> v45
-    v45 --> v47
+    v42 --> v99
+    v40 --> v44
+    v44 --> v46
+    v44 --> v100
+    v45 --> v46
     v46 --> v47
+    v46 --> v51
+    v46 --> v101
+    v27 --> v48
     v47 --> v48
-    v47 --> v49
-    v47 --> v53
-    v27 --> v50
-    v49 --> v50
-    v50 --> v51
-    v50 --> v52
-    v50 --> v53
-    v50 --> v60
-    v52 --> v58
-    v53 --> v58
-    v58 --> v59
-    v58 --> v71
-    v61 --> v63
-    v62 --> v63
-    v28 --> v63
-    v52 --> v63
-    v60 --> v63
-    v63 --> v64
-    v63 --> v66
+    v48 --> v49
+    v48 --> v102
+    v48 --> v50
+    v48 --> v51
+    v48 --> v58
+    v50 --> v56
+    v51 --> v56
+    v56 --> v57
+    v56 --> v69
+    v59 --> v61
+    v60 --> v61
+    v28 --> v61
+    v50 --> v61
+    v58 --> v61
+    v61 --> v62
+    v61 --> v64
+    v65 --> v67
+    v66 --> v67
+    v62 --> v67
+    v64 --> v67
+    v67 --> v68
+    v67 --> v102
     v67 --> v69
-    v68 --> v69
-    v64 --> v69
-    v66 --> v69
-    v69 --> v70
-    v69 --> v71
+    v74 --> v76
+    v75 --> v76
+    v69 --> v76
     v76 --> v78
-    v77 --> v78
-    v71 --> v78
-    v78 --> v80
+    v76 --> v77
+    v76 --> v79
+    v76 --> v102
     v78 --> v79
-    v78 --> v81
-    v80 --> v81
-    v81 --> v82
-    v81 --> v97
-    v81 --> v84
-    v26 --> v83
-    v52 --> v83
-    v83 --> v84
-    v88 --> v90
-    v89 --> v90
-    v84 --> v90
-    v90 --> v93
-    v90 --> v91
-    v92 --> v93
-    v93 --> v94
-    v12 --> v94
+    v78 --> v102
+    v79 --> v80
+    v79 --> v102
+    v79 --> v81
+    v79 --> v95
+    v86 --> v81
+    v87 --> v81
+    v81 --> v89
+    v90 --> v81
+    v81 --> v93
     v94 --> v95
-    v94 --> v98
-    v96 --> v97
-    v97 --> v98
-    v98 --> v101
-    v98 --> v100
-    v98 --> v99
+    v95 --> v97
+    v50 --> v102
+    v99 --> v102
+    v100 --> v102
+    v101 --> v102
+    v95 --> v102
+    v102 --> v104
+    v102 --> v103
+    v12 --> v81
+    v26 --> v81
+    v50 --> v81
+    v81 --> v95
 
 </pre>
 <script type="module">
