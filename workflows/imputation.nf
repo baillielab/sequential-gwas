@@ -18,7 +18,7 @@ process ImputeGenotypes {
         -F "phasing=eagle" \
         -F "population=all" \
         -F "meta=yes"
-  """
+    """
 }
 
 process BedToChrVCF {

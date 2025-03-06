@@ -30,6 +30,8 @@ params.PCA_MAF = 0.01
 params.IQR_FACTOR = 3
 
 // Regenie params
+params.REGENIE_MAF = 0.01
+params.REGENIE_MAC = 10
 params.REGENIE_BSIZE = 1000
 
 // Other params
@@ -38,6 +40,18 @@ params.N_PCS = 10
 include { AggregateGeneticData } from './workflows/aggregate_genetic_data.nf'
 include { ImputationWorkflow } from './workflows/imputation.nf'
 include { KGP } from './workflows/kgp.nf'
+include { GWAS } from './workflows/gwas.nf'
+
+log.info """\
+         ${workflow.manifest.name} v${workflow.manifest.version}
+         ==========================
+         run as       : ${workflow.commandLine}
+         started at   : ${workflow.start}
+         config files : ${workflow.configFiles}
+         container    : ${workflow.containerEngine}
+         ==========================
+         """
+         .stripIndent()
 
 workflow {
     AggregateGeneticData()

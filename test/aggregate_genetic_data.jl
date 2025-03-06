@@ -213,10 +213,13 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     # Check covariates
     covariates = CSV.read(joinpath(RESULTS_DIR, "covariates", "covariates.merged.csv"), DataFrame)
     @test nrow(covariates) > 100
-    @test issubset(
-        ["IID", "sex", "age_years", "Superpopulation", ["PC$i" for i in 1:10]...], 
-        names(covariates)
-    )
+    @test eltype(covariates.AGE) <: Union{Missing, Int}
+    @test eltype(covariates.SEX) <: Union{Missing, Int}
+    @test eltype(covariates.ANCESTRY) <: AbstractString
+    @test all(eltype(covariates[!, "PC$pc"]) <: Float64 for pc in 1:10)
+    @test Set(covariates.COHORT) == Set(["genomicc", "mild", "isaric4c"])
+    @test eltype(covariates.DIAGNOSIS_IS_SEVERE) <: Union{Missing, Int}
+    @test Set(covariates.ISARIC_MAX_SEVERITY_SCORE) == Set([missing, 4, 5])
     
     # Check report and final dataset
     @test isfile(joinpath(RESULTS_DIR, "report.md"))
