@@ -17,4 +17,5 @@ workflow PCA {
         genotypes = final_genotypes
         plots = pca_qc_output.plots
         high_loadings_variants = pca_qc_output.high_loadings_variants
+        pcs = pca_qc_output.pcs
 }

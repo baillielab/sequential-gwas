@@ -210,6 +210,14 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     @test isfile(joinpath(pca_dir, "genotypes.merged.qced.ldpruned.before_pca_qc.loadings.png"))
     @test isfile(joinpath(pca_dir, "genotypes.merged.qced.ldpruned.after_pca_qc.loadings.png"))
 
+    # Check covariates
+    covariates = CSV.read(joinpath(RESULTS_DIR, "covariates", "covariates.merged.csv"), DataFrame)
+    @test nrow(covariates) > 100
+    @test issubset(
+        ["IID", "sex", "age_years", "Superpopulation", ["PC$i" for i in 1:10]...], 
+        names(covariates)
+    )
+    
     # Check report and final dataset
     @test isfile(joinpath(RESULTS_DIR, "report.md"))
     @test isfile(joinpath(RESULTS_DIR, "genotypes.arrays_wgs.aggregated.bed"))

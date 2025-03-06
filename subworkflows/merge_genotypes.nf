@@ -50,4 +50,6 @@ workflow MergeGenotypingArraysAndWGS {
         unrelated_individuals = unrelated_individuals
         pca_plots = pca_output.plots
         high_loadings_variants = pca_output.high_loadings_variants
+        pcs = pca_output.pcs
+        ancestries = ancestry
 }

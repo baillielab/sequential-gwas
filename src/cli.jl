@@ -50,6 +50,32 @@ function cli_settings()
         "make-report"
             action = :command
             help = "Generates a report after the pipeline execution."
+        
+        "combine-covariates"
+            action = :command
+            help = "Merges covariates, ancestry and PCs files."
+    end
+
+    @add_arg_table! s["combine-covariates"] begin
+        "covariates-file"
+            arg_type = String
+            required = true
+            help = "Path to covariates file."
+        
+        "ancestry-file"
+            arg_type = String
+            required = true
+            help = "Path to ancestry file."
+
+        "pcs-file"
+            arg_type = String
+            required = true
+            help = "Path to PCs file."
+
+        "--output"
+            arg_type = String
+            help = "Output file name."
+            default = "covariates.merged.csv"
     end
 
     @add_arg_table! s["make-report"] begin
@@ -458,6 +484,13 @@ function julia_main()::Cint
             pca_plot_prefix = cmd_settings["pca_plots_prefix"],
             high_loadings_variants = cmd_settings["high_loadings_variants"],
             final_genotypes_prefix = cmd_settings["final_genotypes_prefix"]
+        )
+    elseif cmd == "combine-covariates"
+        combine_covariates(
+            cmd_settings["covariates-file"],
+            cmd_settings["ancestry-file"],
+            cmd_settings["pcs-file"];
+            output=cmd_settings["output"]
         )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))

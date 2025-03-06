@@ -28,6 +28,7 @@ include("qc_from_kgp.jl")
 include("relatedness.jl")
 include("pca_qc.jl")
 include("ancestry.jl")
+include("covariates.jl")
 
 export julia_main
 

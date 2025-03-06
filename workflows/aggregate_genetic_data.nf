@@ -5,6 +5,8 @@ include { DownloadOrAccessReferenceGenome } from '../modules/download_reference_
 include { MergeGenotypingArraysAndWGS } from '../subworkflows/merge_genotypes.nf'
 include { WGSIndividuals } from '../modules/wgs_individuals.nf'
 include { Report } from '../subworkflows/report.nf'
+include { CombineCovariates } from '../modules/combine_covariates.nf'
+
 workflow AggregateGeneticData {
     // Process 1000GP dataset
     kgp = KGP()
@@ -68,6 +70,13 @@ workflow AggregateGeneticData {
         kgp_genotypes,
         kgp.pedigree,
         high_ld_regions
+    )
+    // Combine Covariates
+    covariates = file(params.COVARIATES, checkIfExists: true)
+    CombineCovariates(
+        covariates,
+        merge_output.ancestries,
+        merge_output.pcs
     )
     // Report
     Report(
