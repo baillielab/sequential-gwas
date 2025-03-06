@@ -29,7 +29,8 @@ params.IP_VALUES = "1000 50 0.05"
 params.PCA_MAF = 0.01
 params.IQR_FACTOR = 3
 
-// Regenie params
+// GWAS params
+params.VARIABLES_CONFIG = "${projectDir}/assets/variables.yaml"
 params.REGENIE_MAF = 0.01
 params.REGENIE_MAC = 10
 params.REGENIE_BSIZE = 1000

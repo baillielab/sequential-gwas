@@ -17,6 +17,7 @@ using Statistics
 using Base.Threads
 using Literate
 using MarkdownTables
+using YAML
 
 include("resources.jl")
 include("one_time_checks.jl")

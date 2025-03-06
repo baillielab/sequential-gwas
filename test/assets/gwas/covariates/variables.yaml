@@ -1,0 +1,4 @@
+group: ["ANCESTRY"]
+phenotype: "SEVERE_COVID_19"
+covariates: ["AGE", "SEX"]
+

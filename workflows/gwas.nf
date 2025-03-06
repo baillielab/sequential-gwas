@@ -1,63 +1,40 @@
-include { get_prefix } from './modules/utils.nf'
+include { get_prefix } from '../modules/utils.nf'
 
+process MakeGWASGroups {
+    publishDir "results/groups", mode: 'symlink'
 
-def write_chr_list(mergeList, genotypes) {
-    def bed_files_with_chr = []
-    for (bed_file in genotypes.findAll() { it.toString().endsWith(".bed") }) {
-        bed_file_str = bed_file.toString()
-        matcher = bed_file_str =~ /chr[0-9]{1,2}/
-        bed_files_with_chr.add([matcher[0][3..-1].toInteger(), bed_file_str.take(bed_file_str.lastIndexOf('.'))])
-    }
-    bed_files_with_chr.sort{ it[0] }
-    bed_files_with_chr.each { it -> mergeList << "${it[1]}.bed ${it[1]}.bim ${it[1]}.fam\n" }
-}
-
-process MakeMergeList {
-    publishDir "results/merged_genotypes", mode: 'symlink'
     input:
-        path genotypes
-    output:
-        path "merge_list.txt"
-    exec:
-        def mergeList = task.workDir.resolve("merge_list.txt")
-        write_chr_list(mergeList, genotypes)
-}
-
-process MergeBEDs {
-    publishDir "results/merged_genotypes", mode: 'symlink'
-    input:
-        path genotypes
-        path merge_list
+        path(covariates)
+        path(variables_config)
 
     output:
-        tuple path("genotypesAllChr.bed"), path("genotypesAllChr.bim"), path("genotypesAllChr.fam")
+        path("group*")
 
     script:
         """
-        plink2 --pmerge-list merge_list.txt --make-bed --out genotypesAllChr
+        ${params.JULIA_CMD} make-gwas-groups \
+            ${covariates} \
+            ${variables_config} \
+            --output-prefix group
         """
 }
 
-
-process RegenieQC {
+process RegenieMAFMACSNPs {
     publishDir "results/qced_genotypes", mode: 'symlink'
     input:
         tuple path(genotypes_bed), path(genotypes_bim), path(genotypes_fam)
 
     output:
-        tuple path("qc_pass.snplist"), path("qc_pass.id")
+        path("qc_pass.snplist")
 
     script:
         genotypes_prefix = get_prefix(genotypes_bed)
         """
         plink2 \
             --bfile ${genotypes_prefix} \
-            --maf ${params.QC_MAF} \
-            --mac ${params.QC_MAC} \
-            --geno ${params.QC_GENOTYPE_MISSING_RATE} \
-            --hwe ${params.QC_HWE_P} ${params.QC_HWE_K}\
-            --mind ${params.QC_INDIVIDUAL_MISSING_RATE} \
-            --write-snplist --write-samples --no-id-header \
+            --maf ${params.REGENIE_MAF} \
+            --mac ${params.REGENIE_MAC} \
+            --write-snplist --no-id-header \
             --out qc_pass
         """
 }
@@ -65,11 +42,9 @@ process RegenieQC {
 process RegenieStep1 {
     input:
         tuple path(genotypes_bed), path(genotypes_bim), path(genotypes_fam)
-        tuple path(qc_snplist), path(qc_individuals)
+        tuple path(variants)
         path phenotypes
         path covariates
-        path qc_snplist
-        path qc_individuals
         val phenotypes_type
 
     output:
@@ -81,8 +56,7 @@ process RegenieStep1 {
         regenie \
             --step 1 \
             --bed ${genotypes_prefix} \
-            --extract ${qc_snplist} \
-            --keep ${qc_individuals} \
+            --extract ${variants} \
             --phenoFile ${phenotypes} \
             --covarFile ${covariates} \
             --${phenotypes_type} \
@@ -90,4 +64,13 @@ process RegenieStep1 {
             --lowmem \
             --out regenie_step1_${phenotypes_type}
         """
+}
+
+workflow GWAS {
+    genotypes = Channel.fromPath("${params.GENOTYPES_PREFIX}*{bed,bim,fam}").collect()
+    covariates = file(params.COVARIATES, checkIfExists: true)
+    variables_config = file(params.VARIABLES_CONFIG, checkIfExists: true)
+    MakeGWASGroups(covariates, variables_config)
+    RegenieMAFMACSNPs(genotypes)
+    // RegenieStep1(genotypes, RegenieMAFMACSNPs.out, params.VARIANTS, params.PHENOTYPES, params.COVARIATES, "phenoFile", "phenoCol")
 }

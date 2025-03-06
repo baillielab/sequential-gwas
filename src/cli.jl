@@ -54,6 +54,27 @@ function cli_settings()
         "combine-covariates"
             action = :command
             help = "Merges covariates, ancestry and PCs files."
+
+        "make-gwas-groups"
+            action = :command
+            help = "Generates groups, phenotypes and covariates files."
+    end
+
+    @add_arg_table! s["make-gwas-groups"] begin
+        "covariates-file"
+            arg_type = String
+            required = true
+            help = "Path to covariates file."
+        
+        "variables-file"
+            arg_type = String
+            required = true
+            help = "Path to variables file."
+
+        "--output-prefix"
+            arg_type = String
+            help = "Prefix to output files."
+            default = "group"
     end
 
     @add_arg_table! s["combine-covariates"] begin
@@ -491,6 +512,12 @@ function julia_main()::Cint
             cmd_settings["ancestry-file"],
             cmd_settings["pcs-file"];
             output=cmd_settings["output"]
+        )
+    elseif cmd == "make-gwas-groups"
+        make_gwas_groups(
+            cmd_settings["covariates-file"],
+            cmd_settings["variables-file"];
+            output_prefix=cmd_settings["output-prefix"]
         )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))

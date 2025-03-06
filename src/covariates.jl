@@ -103,3 +103,74 @@ function combine_covariates(
     CSV.write(output, merged)
     return merged
 end
+
+function is_severe_covid_19(row)
+    if row.COHORT == "genomicc"
+        if row.GENOMICC_PRIMARY_DIAGNOSIS == "COVID-19"
+            return 1
+        else
+            return missing
+        end
+    elseif row.COHORT == "isaric4c"
+        if row.ISARIC_MAX_SEVERITY_SCORE >= 4
+            return 1
+        else
+            return missing
+        end
+    elseif row.COHORT == "mild"
+        return 0
+    elseif row.COHORT == "react"
+        return 0
+    elseif row.COHORT == "uk"
+        return 0
+    else
+        throw(ArgumentError("Unknown cohort"))
+    end
+end
+
+function define_phenotype!(covariates, phenotype)
+    if phenotype == "SEVERE_COVID_19"
+        covariates.SEVERE_COVID_19 = map(eachrow(covariates)) do row
+            is_severe_covid_19(row)
+        end
+    else
+        throw(ArgumentError("Unsupported phenotype"))
+    end
+end
+
+function process_covariates!(covariates, variables)
+    covariate_processing_fns = Dict(
+        "AGE" => coalesce.(v, mean(skipmissing(v))),
+        "SEX" => identity
+    )
+    if !issubset(variables, keys(covariate_processing_fns))
+        throw(ArgumentError("Can only process the following covariates: ", keys(covariate_processing_fns)...))
+    end
+    for variable in covariate_variables
+        covariates[!, variable] = covariate_processing_fns[variable]
+    end
+end
+
+function make_gwas_groups(covariates_file, variables_file; output_prefix="gwas")
+    covariates = CSV.read(covariates_file, DataFrame)
+    variables = YAML.load_file(variables_file)
+    define_phenotype!(covariates, variables["phenotype"])
+    process_covariates!(covariates, variables["covariates"])
+    for (groupkey, group) in pairs(groupby(covariates, variables["group"], skipmissing=true))
+        group_id = join(groupkey, "_")
+        # Only retain individuals with no missing values for all covariates and phenotypes
+        nomissing = dropmissing(select(group, "IID", variables["covariates"], variables["phenotype"]))
+        # Write group covariates
+        group_covariates = select(nomissing, "IID" => "FID", "IID", variables["covariates"])
+        CSV.write(string(output_prefix, ".covariates.", group_id, ".csv"), group_covariates)
+        # Write group phenotype
+        group_phenotype = select(nomissing, "IID" => "FID", "IID", variables["phenotype"])
+        CSV.write(string(output_prefix, ".phenotype.", group_id, ".csv"), group_phenotype)
+        # Write group individuals
+        open(string(output_prefix, ".individuals.", group_id, ".txt"), "w") do io
+            for iid in nomissing.IID
+                println(io, iid)
+            end
+        end
+    end
+end

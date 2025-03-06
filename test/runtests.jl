@@ -18,5 +18,7 @@ TESTDIR = joinpath(PKGDIR, "test")
 
     # Test Genetic Data Aggregation Workflow
     include(joinpath(TESTDIR, "aggregate_genetic_data.jl"))
+    # Test GWAS Workflow
+    include(joinpath(TESTDIR, "gwas.jl"))
 end
 
