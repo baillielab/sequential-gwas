@@ -75,6 +75,11 @@ function cli_settings()
             arg_type = String
             help = "Prefix to output files."
             default = "group"
+        
+        "--min-group-size"
+            arg_type = Int
+            help = "Minimum group size."
+            default = 100
     end
 
     @add_arg_table! s["combine-covariates"] begin
@@ -517,7 +522,8 @@ function julia_main()::Cint
         make_gwas_groups(
             cmd_settings["covariates-file"],
             cmd_settings["variables-file"];
-            output_prefix=cmd_settings["output-prefix"]
+            output_prefix=cmd_settings["output-prefix"],
+            min_group_size=cmd_settings["min-group-size"]
         )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))

@@ -74,7 +74,7 @@ end
 
 function read_and_process_ancestry(ancestry_file)
     ancestries = CSV.read(ancestry_file, DataFrame)
-    return select(ancestries, :IID, :Superpopulation => :ANCESTRY)
+    return select(ancestries, :FID, :IID, :Superpopulation => :ANCESTRY)
 end
 
 function read_and_process_pcs(pcs_file)
@@ -140,18 +140,18 @@ end
 
 function process_covariates!(covariates, variables)
     covariate_processing_fns = Dict(
-        "AGE" => coalesce.(v, mean(skipmissing(v))),
+        "AGE" => v -> coalesce.(v, mean(skipmissing(v))),
         "SEX" => identity
     )
     if !issubset(variables, keys(covariate_processing_fns))
         throw(ArgumentError("Can only process the following covariates: ", keys(covariate_processing_fns)...))
     end
-    for variable in covariate_variables
-        covariates[!, variable] = covariate_processing_fns[variable]
+    for variable in variables
+        covariates[!, variable] = covariate_processing_fns[variable](covariates[!, variable])
     end
 end
 
-function make_gwas_groups(covariates_file, variables_file; output_prefix="gwas")
+function make_gwas_groups(covariates_file, variables_file; output_prefix="gwas", min_group_size=100)
     covariates = CSV.read(covariates_file, DataFrame)
     variables = YAML.load_file(variables_file)
     define_phenotype!(covariates, variables["phenotype"])
@@ -159,18 +159,18 @@ function make_gwas_groups(covariates_file, variables_file; output_prefix="gwas")
     for (groupkey, group) in pairs(groupby(covariates, variables["group"], skipmissing=true))
         group_id = join(groupkey, "_")
         # Only retain individuals with no missing values for all covariates and phenotypes
-        nomissing = dropmissing(select(group, "IID", variables["covariates"], variables["phenotype"]))
+        nomissing = dropmissing(select(group, "FID", "IID", variables["covariates"], variables["phenotype"]))
+        if nrow(nomissing) < min_group_size
+            @info "Skipping group $group_id because it has fewer than $min_group_size individuals."
+            continue
+        end
         # Write group covariates
-        group_covariates = select(nomissing, "IID" => "FID", "IID", variables["covariates"])
+        group_covariates = select(nomissing, "FID", "IID", variables["covariates"])
         CSV.write(string(output_prefix, ".covariates.", group_id, ".csv"), group_covariates)
         # Write group phenotype
-        group_phenotype = select(nomissing, "IID" => "FID", "IID", variables["phenotype"])
+        group_phenotype = select(nomissing, "FID", "IID", variables["phenotype"])
         CSV.write(string(output_prefix, ".phenotype.", group_id, ".csv"), group_phenotype)
         # Write group individuals
-        open(string(output_prefix, ".individuals.", group_id, ".txt"), "w") do io
-            for iid in nomissing.IID
-                println(io, iid)
-            end
-        end
+        CSV.write(string(output_prefix, ".individuals.", group_id, ".txt"), select(nomissing, ["FID", "IID"]), header=false, delim="\t")
     end
 end

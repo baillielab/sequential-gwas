@@ -30,6 +30,7 @@ params.PCA_MAF = 0.01
 params.IQR_FACTOR = 3
 
 // GWAS params
+params.MIN_GROUP_SIZE = 100
 params.VARIABLES_CONFIG = "${projectDir}/assets/variables.yaml"
 params.REGENIE_MAF = 0.01
 params.REGENIE_MAC = 10

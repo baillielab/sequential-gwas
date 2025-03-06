@@ -1,7 +1,8 @@
 include { get_prefix } from '../modules/utils.nf'
+include { PlinkPCA } from '../modules/pca.nf'
 
-process MakeGWASGroups {
-    publishDir "results/groups", mode: 'symlink'
+process MakeCovariatesGroups {
+    publishDir "${params.PUBLISH_DIR}/gwas/groups", mode: 'symlink'
 
     input:
         path(covariates)
@@ -15,27 +16,54 @@ process MakeGWASGroups {
         ${params.JULIA_CMD} make-gwas-groups \
             ${covariates} \
             ${variables_config} \
-            --output-prefix group
+            --output-prefix group \
+            --min-group-size ${params.MIN_GROUP_SIZE}
         """
 }
 
-process RegenieMAFMACSNPs {
-    publishDir "results/qced_genotypes", mode: 'symlink'
+process MakeBEDGroupAndQC {
+    publishDir "${params.PUBLISH_DIR}/gwas/${group_name}/bed", mode: 'symlink'
+
     input:
         tuple path(genotypes_bed), path(genotypes_bim), path(genotypes_fam)
+        tuple val(group_name), path(sample_list)
 
     output:
-        path("qc_pass.snplist")
+        tuple val(group_name), path("${group_name}.bed"), path("${group_name}.bim"), path("${group_name}.fam")
 
     script:
         genotypes_prefix = get_prefix(genotypes_bed)
         """
         plink2 \
             --bfile ${genotypes_prefix} \
+            --keep ${sample_list} \
             --maf ${params.REGENIE_MAF} \
             --mac ${params.REGENIE_MAC} \
-            --write-snplist --no-id-header \
-            --out qc_pass
+            --make-bed \
+            --out ${group_name}
+        """
+}
+
+process MakeBGENGroupAndQC {
+    publishDir "${params.PUBLISH_DIR}/gwas/${group_name}/bgen", mode: 'symlink'
+
+    input:
+        tuple path(genotypes_bgen), path(genotypes_bgi), path(genotypes_sample)
+        tuple val(group_name), path(sample_list)
+
+    output:
+        tuple val(group_name), path("${group_name}.bgen"), path("${group_name}.bgi"), path("${group_name}.sample")
+
+    script:
+        """
+        qctool \
+            -g ${genotypes_bgen} \
+            -s i${genotypes_sample} \
+            -incl-samples ${sample_list} \
+            -maf ${params.REGENIE_MAF} \
+            -exclude-mac ${params.REGENIE_MAC} \
+            -og ${group_name}.bgen \
+            -os ${group_name}.sample
         """
 }
 
@@ -67,10 +95,21 @@ process RegenieStep1 {
 }
 
 workflow GWAS {
-    genotypes = Channel.fromPath("${params.GENOTYPES_PREFIX}*{bed,bim,fam}").collect()
+    genotypes = Channel.fromPath("${params.GENOTYPES_PREFIX}.{bed,bim,fam}").collect()
+    bgen_genotypes = Channel.fromPath("${params.BGEN_GENOTYPES_PREFIX}.{bgen,bgen.bgi,sample}").collect()
     covariates = file(params.COVARIATES, checkIfExists: true)
     variables_config = file(params.VARIABLES_CONFIG, checkIfExists: true)
-    MakeGWASGroups(covariates, variables_config)
-    RegenieMAFMACSNPs(genotypes)
+    MakeCovariatesGroups(covariates, variables_config)
+
+    group_files = MakeCovariatesGroups
+        .out
+        .flatten()
+        .map { it -> [it.getName().tokenize('.')[-2], it] }
+    group_samples = group_files
+        .filter { group, file -> file.getName().contains("individuals") }
+    group_beds = MakeBEDGroupAndQC(genotypes, group_samples)
+    // MakeBGENGroupAndQC(bgen_genotypes, group_samples)
+    PlinkPCA(group_beds)
+
     // RegenieStep1(genotypes, RegenieMAFMACSNPs.out, params.VARIANTS, params.PHENOTYPES, params.COVARIATES, "phenoFile", "phenoCol")
 }
