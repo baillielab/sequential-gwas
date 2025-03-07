@@ -141,14 +141,24 @@ end
 function process_covariates!(covariates, variables)
     covariate_processing_fns = Dict(
         "AGE" => v -> coalesce.(v, mean(skipmissing(v))),
-        "SEX" => identity
+        "SEX" => identity,
+        "x" => columns -> .*(columns...),
     )
-    if !issubset(variables, keys(covariate_processing_fns))
+    single_variables = filter(v -> !occursin("_x_", v), variables)
+    cross_variables = filter(v -> occursin("_x_", v), variables)
+    if !issubset(single_variables, keys(covariate_processing_fns))
         throw(ArgumentError("Can only process the following covariates: ", keys(covariate_processing_fns)...))
     end
-    for variable in variables
+    # Process single variables
+    for variable in single_variables
         covariates[!, variable] = covariate_processing_fns[variable](covariates[!, variable])
     end
+    # Process cross variables
+    for variable in cross_variables
+        columns = (covariates[!, v] for v in split(variable, "_x_"))
+        covariates[!, variable] = covariate_processing_fns["x"](columns)
+    end
+
 end
 
 function make_gwas_groups(covariates_file, variables_file; output_prefix="gwas", min_group_size=100)
