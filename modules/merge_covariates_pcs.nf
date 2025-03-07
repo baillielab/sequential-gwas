@@ -5,7 +5,7 @@ process MergeCovariatesPCs {
         tuple val(group), path(covariates), path(eigenvec), path(eigenval)
 
     output:
-        path "${output_file}"
+        tuple val(group), path("${output_file}")
 
     script:
         output_file = "${group}.covariates_pcs.csv"

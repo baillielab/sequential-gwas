@@ -70,28 +70,24 @@ process MakeBGENGroupAndQC {
 
 process RegenieStep1 {
     input:
-        tuple path(genotypes_bed), path(genotypes_bim), path(genotypes_fam)
-        tuple path(variants)
-        path phenotypes
-        path covariates
-        val phenotypes_type
+        tuple val(group), path(bed), path(bim), path(fam), path(phenotypes), path(covariates)
 
     output:
-        path "regenie_step1_${phenotypes_type}*"
+        path "${group}.step1*"
 
     script:
-        genotypes_prefix = get_prefix(genotypes_bed)
+        phenotypes_type = "bt"
+        genotypes_prefix = get_prefix(bed)
         """
-        regenie \
+        mamba run -n regenie_env regenie \
             --step 1 \
             --bed ${genotypes_prefix} \
-            --extract ${variants} \
             --phenoFile ${phenotypes} \
             --covarFile ${covariates} \
             --${phenotypes_type} \
             --bsize ${params.REGENIE_BSIZE} \
             --lowmem \
-            --out regenie_step1_${phenotypes_type}
+            --out ${group}.step1
         """
 }
 
@@ -117,8 +113,16 @@ workflow GWAS {
         .filter { group, file -> file.getName().contains("covariates") }
     covariates_and_pcs = group_covariates
         .join(group_pcs)
-    MergeCovariatesPCs(covariates_and_pcs)
-    // RegenieStep1(genotypes, RegenieMAFMACSNPs.out, params.VARIANTS, params.PHENOTYPES, params.COVARIATES, "phenoFile", "phenoCol")
+    group_covariates_and_pcs = MergeCovariatesPCs(covariates_and_pcs).view()
+    // Run Regenie Step 1
+    group_phenotypes = group_files
+        .filter { group, file -> file.getName().contains("phenotype") }.view()
+    group_beds.view()
+    group_files_step_1 = group_beds
+        .join(group_phenotypes)
+        .join(group_covariates_and_pcs)
+        .view()
+    RegenieStep1(group_files_step_1)
 
     // Association testing
     // MakeBGENGroupAndQC(bgen_genotypes, group_samples)

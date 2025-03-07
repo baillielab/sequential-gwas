@@ -179,7 +179,7 @@ function make_gwas_groups(covariates_file, variables_file; output_prefix="gwas",
         CSV.write(string(output_prefix, ".covariates.", group_id, ".csv"), group_covariates)
         # Write group phenotype
         group_phenotype = select(nomissing, "FID", "IID", variables["phenotype"])
-        CSV.write(string(output_prefix, ".phenotype.", group_id, ".csv"), group_phenotype)
+        CSV.write(string(output_prefix, ".phenotype.", group_id, ".csv"), group_phenotype, delim="\t")
         # Write group individuals
         CSV.write(string(output_prefix, ".individuals.", group_id, ".txt"), select(nomissing, ["FID", "IID"]), header=false, delim="\t")
     end
@@ -189,6 +189,6 @@ function merge_covariates_pcs(covariates_file, pcs_file; output="covariates_pcs.
     covariates = CSV.read(covariates_file, DataFrame)
     pcs = CSV.read(pcs_file, DataFrame, drop=["#FID"])
     merged = innerjoin(covariates, pcs, on=:IID)
-    CSV.write(output, merged)
+    CSV.write(output, merged, delim="\t")
     return merged
 end
