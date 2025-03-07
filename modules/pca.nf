@@ -1,6 +1,6 @@
 include { get_prefix } from './utils.nf'
 
-process PlinkPCA {
+process GroupPCA {
     publishDir "${params.PUBLISH_DIR}/gwas/${group}/pca", mode: 'symlink'
 
     input:

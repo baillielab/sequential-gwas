@@ -1,6 +1,7 @@
-include { LDPruning } from '../modules/ld_pruning.nf'
+include { LDPruning; GroupLDPruning } from '../modules/ld_pruning.nf'
 include { PCAFindHighLoadings } from '../modules/pca_qc.nf'
 include { FilterHighLoadingsVariants } from '../modules/filter_high_loadings_variants.nf'
+include { GroupPCA } from '../modules/pca.nf'
 
 workflow PCAQC {
     take:
@@ -17,4 +18,16 @@ workflow PCAQC {
         plots = pca_qc_output.plots
         high_loadings_variants = pca_qc_output.high_loadings_variants
         pcs = pca_qc_output.pcs
+}
+
+workflow PCA {
+    take:
+        genotypes
+        high_ld_regions
+    main:
+        ld_pruned_genotypes = GroupLDPruning(genotypes, high_ld_regions)
+        pcs = GroupPCA(ld_pruned_genotypes)
+
+    emit:
+        pcs
 }
