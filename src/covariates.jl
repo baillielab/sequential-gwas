@@ -184,3 +184,11 @@ function make_gwas_groups(covariates_file, variables_file; output_prefix="gwas",
         CSV.write(string(output_prefix, ".individuals.", group_id, ".txt"), select(nomissing, ["FID", "IID"]), header=false, delim="\t")
     end
 end
+
+function merge_covariates_pcs(covariates_file, pcs_file; output="covariates_pcs.csv")
+    covariates = CSV.read(covariates_file, DataFrame)
+    pcs = CSV.read(pcs_file, DataFrame, drop=["#FID"])
+    merged = innerjoin(covariates, pcs, on=:IID)
+    CSV.write(output, merged)
+    return merged
+end

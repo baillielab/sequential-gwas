@@ -1,7 +1,8 @@
 include { get_prefix } from '../modules/utils.nf'
-include { PlinkPCA } from '../modules/pca.nf'
+include { PCA } from '../subworkflows/pca.nf'
+include { MergeCovariatesPCs } from '../modules/merge_covariates_pcs.nf'
 
-process MakeCovariatesGroups {
+process MakeCovariatesAndGroups {
     publishDir "${params.PUBLISH_DIR}/gwas/groups", mode: 'symlink'
 
     input:
@@ -21,7 +22,7 @@ process MakeCovariatesGroups {
         """
 }
 
-process MakeBEDGroupAndQC {
+process BEDGroupsQCed {
     publishDir "${params.PUBLISH_DIR}/gwas/${group_name}/bed", mode: 'symlink'
 
     input:
@@ -95,21 +96,31 @@ process RegenieStep1 {
 }
 
 workflow GWAS {
+    // Inputs
     genotypes = Channel.fromPath("${params.GENOTYPES_PREFIX}.{bed,bim,fam}").collect()
     bgen_genotypes = Channel.fromPath("${params.BGEN_GENOTYPES_PREFIX}.{bgen,bgen.bgi,sample}").collect()
     covariates = file(params.COVARIATES, checkIfExists: true)
     variables_config = file(params.VARIABLES_CONFIG, checkIfExists: true)
-    MakeCovariatesGroups(covariates, variables_config)
-
-    group_files = MakeCovariatesGroups
+    high_ld_regions = file(params.HIGH_LD_REGIONS, checkIfExists: true)
+    // Define covariates, phenotypes and groups
+    MakeCovariatesAndGroups(covariates, variables_config)
+    group_files = MakeCovariatesAndGroups
         .out
         .flatten()
         .map { it -> [it.getName().tokenize('.')[-2], it] }
     group_samples = group_files
         .filter { group, file -> file.getName().contains("individuals") }
-    group_beds = MakeBEDGroupAndQC(genotypes, group_samples)
-    // MakeBGENGroupAndQC(bgen_genotypes, group_samples)
-    PlinkPCA(group_beds)
-
+    // Extract genotypes for each group
+    group_beds = BEDGroupsQCed(genotypes, group_samples)
+    group_pcs = PCA(group_beds, high_ld_regions)
+    group_covariates = group_files
+        .filter { group, file -> file.getName().contains("covariates") }
+    covariates_and_pcs = group_covariates
+        .join(group_pcs)
+    MergeCovariatesPCs(covariates_and_pcs)
     // RegenieStep1(genotypes, RegenieMAFMACSNPs.out, params.VARIANTS, params.PHENOTYPES, params.COVARIATES, "phenoFile", "phenoCol")
+
+    // Association testing
+    // MakeBGENGroupAndQC(bgen_genotypes, group_samples)
+
 }

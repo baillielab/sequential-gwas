@@ -58,6 +58,27 @@ function cli_settings()
         "make-gwas-groups"
             action = :command
             help = "Generates groups, phenotypes and covariates files."
+        
+        "merge-covariates-pcs"
+            action = :command
+            help = "Merges covariates and PCs files."
+    end
+
+    @add_arg_table! s["merge-covariates-pcs"] begin
+        "covariates-file"
+            arg_type = String
+            required = true
+            help = "Path to covariates file."
+        
+        "pcs-file"
+            arg_type = String
+            required = true
+            help = "Path to PCs file."
+
+        "--output"
+            arg_type = String
+            help = "Output file name."
+            default = "covariates_pcs.csv"
     end
 
     @add_arg_table! s["make-gwas-groups"] begin
@@ -524,6 +545,12 @@ function julia_main()::Cint
             cmd_settings["variables-file"];
             output_prefix=cmd_settings["output-prefix"],
             min_group_size=cmd_settings["min-group-size"]
+        )
+    elseif cmd == "merge-covariates-pcs"
+        merge_covariates_pcs(
+            cmd_settings["covariates-file"],
+            cmd_settings["pcs-file"];
+            output=cmd_settings["output"]
         )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))
