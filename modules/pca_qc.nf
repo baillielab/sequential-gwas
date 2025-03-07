@@ -1,6 +1,6 @@
 include { get_prefix } from './utils.nf'
 
-process PCAQC {
+process PCAFindHighLoadings {
     publishDir "${params.MERGED_PUBLISH_DIR}/pca_qced", mode: 'symlink'
     publishDir "${params.PUBLISH_DIR}/pca", mode: 'symlink', pattern: "*.{eigenval,eigenvec}"
 
