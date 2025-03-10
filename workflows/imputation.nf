@@ -1,4 +1,4 @@
-include { get_prefix } from '../modules/utils.nf'
+include { get_prefix; get_julia_cmd } from '../modules/utils.nf'
 
 process ImputeGenotypes {
     input:
@@ -52,7 +52,7 @@ process GetChromosomes {
     script:
         input_prefix = get_prefix(genotypes[0])
         """
-        ${params.JULIA_CMD} write-chromosomes ${input_prefix}
+        ${get_julia_cmd(task.cpus)} write-chromosomes ${input_prefix}
         """
 }
 

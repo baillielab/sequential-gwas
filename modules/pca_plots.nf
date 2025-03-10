@@ -1,3 +1,5 @@
+include { get_julia_cmd } from './utils.nf'
+
 process PCAPlots {
     publishDir "${params.PCA_PUBLISH_DIR}/pca_plots", mode: 'symlink'
 
@@ -10,7 +12,7 @@ process PCAPlots {
 
     script:
         """
-        ${params.JULIA_CMD} plot-pca \
+        ${get_julia_cmd(task.cpus)} plot-pca \
             ${eigenvec} \
             ${ancestry} \
             --outprefix pca

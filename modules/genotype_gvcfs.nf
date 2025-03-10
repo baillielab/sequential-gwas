@@ -1,3 +1,5 @@
+include { get_julia_cmd } from './utils.nf'
+
 process GenotypeGVCFs{
     label "multithreaded"
     publishDir "${params.WGS_PUBLISH_DIR}/genotyped", mode: 'symlink'
@@ -35,7 +37,7 @@ process GenotypeGVCFs{
             --out ${output_prefix}.temp
         
         # Fills in missing allele and update variant ids
-        ${params.JULIA_CMD} complete-bim-with-ref \
+        ${get_julia_cmd(task.cpus)} complete-bim-with-ref \
             ${output_prefix}.temp.bim \
             ${kgp_bim} \
             --output ${output_prefix}.temp.bim

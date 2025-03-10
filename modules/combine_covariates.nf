@@ -1,3 +1,5 @@
+include { get_julia_cmd } from './utils.nf'
+
 process CombineCovariates {
     publishDir "${params.PUBLISH_DIR}/covariates", mode: 'copy'
 
@@ -11,7 +13,7 @@ process CombineCovariates {
 
     script:
         """
-        ${params.JULIA_CMD} combine-covariates \
+        ${get_julia_cmd(task.cpus)} combine-covariates \
             ${covariates_file} \
             ${ancestry_file} \
             ${eigenvectors} \

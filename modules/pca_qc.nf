@@ -1,4 +1,4 @@
-include { get_prefix } from './utils.nf'
+include { get_prefix; get_julia_cmd } from './utils.nf'
 
 process PCAFindHighLoadings {
     publishDir "${params.MERGED_PUBLISH_DIR}/pca_qced", mode: 'symlink'
@@ -18,7 +18,7 @@ process PCAFindHighLoadings {
         input_prefix = get_prefix(bed_file)
         output_prefix = "${input_prefix}.after_pca_qc"
         """
-        ${params.JULIA_CMD} pca-qc \
+        ${get_julia_cmd(task.cpus)} pca-qc \
             --input-prefix ${input_prefix} \
             --output-prefix ${output_prefix} \
             --ancestry-file ${ancestry} \

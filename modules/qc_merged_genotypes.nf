@@ -1,4 +1,4 @@
-include { get_prefix } from './utils.nf'
+include { get_prefix; get_julia_cmd } from './utils.nf'
 
 process QCMergedGenotypes {
     label "multithreaded"
@@ -25,7 +25,7 @@ process QCMergedGenotypes {
             --make-bed \
             --out ${output_prefix}
         
-        ${params.JULIA_CMD} report-qc-effect \
+        ${get_julia_cmd(task.cpus)} report-qc-effect \
             ${input_prefix} ${output_prefix}
         """
 }

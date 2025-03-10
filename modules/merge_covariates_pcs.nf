@@ -1,3 +1,5 @@
+include { get_julia_cmd } from './utils.nf'
+
 process MergeCovariatesPCs {
     publishDir "${params.PUBLISH_DIR}/gwas/${group}", mode: 'symlink'
 
@@ -10,7 +12,7 @@ process MergeCovariatesPCs {
     script:
         output_file = "${group}.covariates_pcs.csv"
         """
-        ${params.JULIA_CMD} merge-covariates-pcs \
+        ${get_julia_cmd(task.cpus)} merge-covariates-pcs \
             ${covariates} \
             ${eigenvec} \
             --output=${output_file}

@@ -1,4 +1,4 @@
-include { get_prefix } from './utils.nf'
+include { get_prefix; get_julia_cmd } from './utils.nf'
 
 process MakeReport {
     publishDir "${params.PUBLISH_DIR}", mode: 'copy'
@@ -46,7 +46,7 @@ process MakeReport {
         pca_plots_prefix = get_prefix(get_prefix(get_prefix(pca_plots[0])))
         final_merged_genotypes_prefix = get_prefix(final_merged_genotypes[0])
         """
-        ${params.JULIA_CMD} make-report \
+        ${get_julia_cmd(task.cpus)} make-report \
             ${unlifted_r8} \
             ${unlifted_2021_2023} \
             ${initial_bed_r8_prefix} \

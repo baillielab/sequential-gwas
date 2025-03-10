@@ -1,4 +1,4 @@
-include { get_prefix } from '../modules/utils.nf'
+include { get_prefix; get_julia_cmd } from '../modules/utils.nf'
 include { PCA } from '../subworkflows/pca.nf'
 include { MergeCovariatesPCs } from '../modules/merge_covariates_pcs.nf'
 
@@ -14,7 +14,7 @@ process MakeCovariatesAndGroups {
 
     script:
         """
-        ${params.JULIA_CMD} make-gwas-groups \
+        ${get_julia_cmd(task.cpus)} make-gwas-groups \
             ${covariates} \
             ${variables_config} \
             --output-prefix group \

@@ -1,6 +1,8 @@
-include { get_prefix } from './utils.nf'
+include { get_prefix; get_julia_cmd } from './utils.nf'
 
 process EstimateAncestry {
+    label "multithreaded"
+
     publishDir "${params.ANCESTRY_PUBLISH_DIR}/ancestry", mode: 'symlink'
 
     input:
@@ -15,7 +17,7 @@ process EstimateAncestry {
         input_prefix = get_prefix(bed_file)
         output = "${input_prefix}.ancestry.csv"
         """
-        ${params.JULIA_CMD} estimate-ancestry \
+        ${get_julia_cmd(task.cpus)} estimate-ancestry \
             ${input_prefix} \
             ${pedigree} \
             --output=${output}

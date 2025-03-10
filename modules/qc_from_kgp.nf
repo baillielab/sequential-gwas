@@ -1,4 +1,4 @@
-include { get_prefix } from './utils.nf'
+include { get_prefix; get_julia_cmd } from './utils.nf'
 
 process QCFilesFromKGP {
     publishDir "${params.ARRAY_GENOTYPES_PUBLISH_DIR}/qc_files_from_kgp", mode: 'symlink'
@@ -25,7 +25,7 @@ process QCFilesFromKGP {
         kgp_prefix = get_prefix(kgp_bim)
         """
         
-        ${params.JULIA_CMD} qc-from-kgp \
+        ${get_julia_cmd(task.cpus)} qc-from-kgp \
             --release-r8 ${release_r8_prefix} \
             --release-2021-2023 ${release_2021_2023_prefix} \
             --release-2024-now ${release_2024_now_prefix} \

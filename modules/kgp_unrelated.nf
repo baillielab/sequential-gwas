@@ -1,4 +1,4 @@
-include { get_prefix } from './utils.nf'
+include { get_prefix; get_julia_cmd } from './utils.nf'
 
 process KeepKGPUnrelated {
     label "multithreaded"
@@ -17,7 +17,7 @@ process KeepKGPUnrelated {
         input_prefix = get_prefix(bed_file)
         output_prefix = "${input_prefix}.unrelated"
         """
-        ${params.JULIA_CMD} get-kgp-unrelated-individuals \
+        ${get_julia_cmd(task.cpus)} get-kgp-unrelated-individuals \
             ${pedigree_file} \
             --output kgp_unrelated_individuals.txt
 
