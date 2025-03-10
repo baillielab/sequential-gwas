@@ -1,6 +1,8 @@
 include { get_prefix } from './utils.nf'
 
 process CleanKGP {
+    label "multithreaded"
+    
     input:
         tuple path(vcf_file), path(vcf_index)
 
@@ -18,10 +20,10 @@ process CleanKGP {
         source /opt/miniforge3/etc/profile.d/conda.sh
         conda activate bcftools_env
 
-        bcftools norm -m +any ${vcf_file} | \
-        bcftools annotate -x ID -I +'%CHROM:%POS:%REF:%ALT' | \
-        bcftools norm -Oz --rm-dup both > ${output}
+        bcftools norm --threads ${task.cpus} -m +any ${vcf_file} | \
+        bcftools annotate --threads ${task.cpus} -x ID -I +'%CHROM:%POS:%REF:%ALT' | \
+        bcftools norm --threads ${task.cpus} -Oz --rm-dup both > ${output}
         
-        bcftools index --tbi ${output}
+        bcftools index --threads ${task.cpus} --tbi ${output}
         """
 }
