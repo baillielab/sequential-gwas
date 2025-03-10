@@ -22,7 +22,7 @@ In order to run the workflows in this repository only 2 software need to be inst
 If the previous steps have been completed successfully you can run:
 
 ```bash
-nextflow run main.nf -profile odap -resume
+taskset -c 998 /mnt/odap-beegfs/software/bin/nextflow run main.nf -profile -with-trace -with-report odap -resume
 ```
 
 ## Pipeline parameters
