@@ -1,6 +1,7 @@
 include { get_prefix } from './utils.nf'
 
 process GroupPCA {
+    label "multithreaded"
     publishDir "${params.PUBLISH_DIR}/gwas/${group}/pca", mode: 'symlink'
 
     input:

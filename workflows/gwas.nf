@@ -23,6 +23,7 @@ process MakeCovariatesAndGroups {
 }
 
 process BEDGroupsQCed {
+    label "multithreaded"
     publishDir "${params.PUBLISH_DIR}/gwas/${group_name}/bed", mode: 'symlink'
 
     input:
@@ -69,6 +70,8 @@ process MakeBGENGroupAndQC {
 }
 
 process RegenieStep1 {
+    publishDir "${params.PUBLISH_DIR}/gwas/${group}/regenie_step1", mode: 'symlink'
+
     input:
         tuple val(group), path(bed), path(bim), path(fam), path(phenotypes), path(covariates)
 
@@ -113,15 +116,13 @@ workflow GWAS {
         .filter { group, file -> file.getName().contains("covariates") }
     covariates_and_pcs = group_covariates
         .join(group_pcs)
-    group_covariates_and_pcs = MergeCovariatesPCs(covariates_and_pcs).view()
+    group_covariates_and_pcs = MergeCovariatesPCs(covariates_and_pcs)
     // Run Regenie Step 1
     group_phenotypes = group_files
-        .filter { group, file -> file.getName().contains("phenotype") }.view()
-    group_beds.view()
+        .filter { group, file -> file.getName().contains("phenotype") }
     group_files_step_1 = group_beds
         .join(group_phenotypes)
         .join(group_covariates_and_pcs)
-        .view()
     RegenieStep1(group_files_step_1)
 
     // Association testing

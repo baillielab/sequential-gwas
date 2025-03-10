@@ -1,4 +1,5 @@
 process GenotypeGVCFs{
+    label "multithreaded"
     publishDir "${params.WGS_PUBLISH_DIR}/genotyped", mode: 'symlink'
 
     input:

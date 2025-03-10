@@ -1,6 +1,7 @@
 include { get_prefix} from './utils.nf'
 
 process GenotypingArrayBasicQC {
+    label "multithreaded"
     publishDir "${params.ARRAY_GENOTYPES_PUBLISH_DIR}/qced", mode: 'symlink'
 
     input:

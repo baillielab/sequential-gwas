@@ -1,6 +1,7 @@
 include { get_prefix } from './utils.nf'
 
 process KeepKGPUnrelated {
+    label "multithreaded"
     publishDir "${params.KGP_PUBLISH_DIR}/merged_unrelated", mode: 'symlink'
 
     input:

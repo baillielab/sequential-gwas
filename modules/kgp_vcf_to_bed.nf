@@ -1,6 +1,7 @@
 include { get_prefix } from './utils.nf'
 
 process KGPVCFToBed {
+    label "multithreaded"
     publishDir "${params.KGP_PUBLISH_DIR}/bed", mode: 'symlink'
 
     input:

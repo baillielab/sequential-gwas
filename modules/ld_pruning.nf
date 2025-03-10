@@ -1,6 +1,8 @@
 include { get_prefix } from './utils.nf'
 
 process LDPruning {
+    label "multithreaded"
+    
     input:
         tuple path(bed_file), path(bim_file), path(fam_file)
         path high_ld_regions
@@ -23,6 +25,8 @@ process LDPruning {
 }
 
 process GroupLDPruning {
+    label "multithreaded"
+
     input:
         tuple val(group), path(bed_file), path(bim_file), path(fam_file)
         path high_ld_regions

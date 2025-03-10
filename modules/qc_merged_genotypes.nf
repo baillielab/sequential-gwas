@@ -1,6 +1,7 @@
 include { get_prefix } from './utils.nf'
 
 process QCMergedGenotypes {
+    label "multithreaded"
     publishDir "${params.MERGED_PUBLISH_DIR}/qced", mode: 'symlink'
 
     input:

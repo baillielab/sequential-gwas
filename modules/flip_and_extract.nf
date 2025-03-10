@@ -1,4 +1,5 @@
 process FlipAndExtract {
+    label "multithreaded"
     publishDir "${params.ARRAY_GENOTYPES_PUBLISH_DIR}/flipped_and_shared", mode: 'symlink'
 
     input:

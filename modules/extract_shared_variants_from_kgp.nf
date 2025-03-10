@@ -1,6 +1,7 @@
 include { get_prefix } from './utils.nf'
 
 process ExtractSharedVariantsFromKGP {
+    label "multithreaded"
     publishDir "${params.ANCESTRY_PUBLISH_DIR}/kgp_shared", mode: 'symlink'
 
     input:

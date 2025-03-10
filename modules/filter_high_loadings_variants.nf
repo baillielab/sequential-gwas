@@ -1,6 +1,7 @@
 include { get_prefix } from './utils.nf'
 
 process FilterHighLoadingsVariants {
+    label "multithreaded"
     publishDir "${params.PUBLISH_DIR}", mode: 'copy'
 
     input:
