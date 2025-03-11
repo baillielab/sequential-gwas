@@ -15,10 +15,11 @@ workflow GenotypesQC {
 
     main:
         // Lift over GRCh37 arrays
-        lifted_genotypes = LiftOver(grc37_genotypes, chain_file)
+        grc37_lifted_bed = LiftOver(grc37_genotypes, chain_file)
         // Convert all files to PLINK bed format
-        genotypes_bed = PedToBed(lifted_genotypes.genotypes.concat(grc38_genotypes))
+        grch38_bed = PedToBed(grc38_genotypes)
         // Perform basic QC for all files
+        genotypes_bed = grc37_lifted_bed.genotypes.concat(grch38_bed)
         qced_genotypes = GenotypingArrayBasicQC(genotypes_bed, variants_to_flip)
         // Generates QC files for each array using the 1000 Genomes Project
         qced_bim_afreq_files = qced_genotypes.genotypes.branch{ it ->
@@ -52,7 +53,7 @@ workflow GenotypesQC {
         genotypes = qced_flipped_genotypes.genotypes
         gatk_shared_variants = kgp_qc_files.shared_variants_gatk.first()
         plink_shared_variants = shared_variants_plink
-        unlifted = lifted_genotypes.unlifted
+        unlifted = grc37_lifted_bed.unlifted
         initial_bed_files = genotypes_bed
         basic_qc_reports = qced_genotypes.reports
         kgp_qc_files_r8 = kgp_qc_files.release_r8

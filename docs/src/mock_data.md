@@ -33,7 +33,10 @@ Then run
 JULIA_DEPOT_PATH=$JULIA_DEPOT_PATH:/root/.julia julia --project=/opt/sequential-gwas /opt/sequential-gwas/bin/seq-gwas.jl
 ```
 
-I also manually added duplicate sample IDs to reproduce what is in the data.
+I also manually:
+
+- Added duplicate sample IDs to reproduce what is in the data.
+- Changed the position of `GSA-rs114361133` in `test/assets/genomicc/genotyping_arrays/mock.release_2021_2023.map` to be unliftable.
 
 ## Thousands Genomes
 

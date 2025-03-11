@@ -1,153 +1,40 @@
-#!/usr/bin/python
-
-# This script has been copied from: https://github.com/sritchie73/liftOverPlink/blob/master/liftOverPlink.py
-# It is used to run liftOver on genotype data stored in
-# the plink format.
-# See: http://genome.sph.umich.edu/wiki/LiftOver
-# Downloaded from: http://genome.sph.umich.edu/wiki/LiftMap.py
-#
-# Modified by Scott Ritchie:
-#  - to work with user specified chain files, rather than
-#    the original developer's specific chain file.
-#  - to not rely the original developer's path to liftOver.
-#  - to provide helpful usage documentation.
-#  - to clean up the intermediary BED files to avoid confusion.
-#  - to generally be slightly more PEP compliant.
-# 
-
-import sys
-import os
+from pyliftover import LiftOver
+import pandas as pd
 import argparse
-import gzip
-from string import Template
+import sys
 
-
-def die(msg):
-    print msg
-    sys.exit(2)
-
-def myopen(fn):
-    try:
-        h = gzip.open(fn)
-        ln = h.read(2) # read arbitrary bytes so check if @param fn is a gzipped file
-    except:
-        # cannot read in gzip format
-        return open(fn)
-    h.close()
-    return gzip.open(fn)
-
-def map2bed(fin, fout):
-    print "Converting MAP file to UCSC BED file..."
-    fo = open(fout, 'w')
-    for ln in myopen(fin):
-        chrom, rs, mdist, pos = ln.split()
-        chrom = 'chr' + chrom
-        pos = int(pos)
-        fo.write('%s\t%d\t%d\t%s\n' % (chrom, pos-1, pos, rs))
-    fo.close()
-    return True
-
-# global var:
-LIFTED_SET = set()
-UNLIFTED_SET = set()
-def liftBed(fin, fout, funlifted, chainFile, liftOverPath):
-    print "Lifting BED file..."
-    params = dict()
-    params['LIFTOVER_BIN'] = liftOverPath
-    params['OLD'] = fin
-    params['CHAIN'] = chainFile
-    params['NEW'] = fout
-    params['UNLIFTED'] = fout + '.unlifted'
-    cmd = Template('$LIFTOVER_BIN $OLD $CHAIN $NEW $UNLIFTED')
-    cmd = cmd.substitute(params)
-    os.system(cmd)
-    #record lifted/unliftd rs
-    for ln in myopen(params['UNLIFTED']):
-        if len(ln) == 0 or ln[0] == '#':continue
-        UNLIFTED_SET.add(ln.strip().split()[-1])
-    for ln in myopen(params['NEW']):
-        if len(ln) == 0 or ln[0] == '#':continue
-        LIFTED_SET.add(ln.strip().split()[-1])
-
-    return True
-
-def bed2map(fin, fout):
-    print "Converting lifted BED file back to MAP..."
-    fo = open(fout, 'w')
-    for ln in myopen(fin):
-        chrom, pos0, pos1, rs = ln.split()
-        chrom = chrom.replace('chr', '')
-        fo.write('%s\t%s\t0.0\t%s\n' % (chrom, rs, pos1))
-    fo.close()
-    return True
-
-def liftDat(fin, fout):
-    fo = open(fout, 'w')
-    for ln in myopen(fin):
-        if len(ln) == 0 or ln[0] != 'M':
-            fo.write(ln)
+def main(map_file, chain_file, out_prefix):
+    map = pd.read_csv(map_file, sep='\t', header=None, names=["CHR", "SNP", "CM", "BP"])
+    lo = LiftOver(chain_file)
+    unmapped = []
+    new_map = []
+    for i, row in map.iterrows():
+        chr_str = row.CHR if str(row.CHR).startswith("chr") else f"chr{row.CHR}"
+        result = lo.convert_coordinate(chr_str, int(row.BP))
+        if result is None or len(result) != 1:
+            new_map.append([row.CHR, row.SNP, row.CM, row.BP])
+            unmapped.append(row.SNP)
         else:
-            t, rs = ln.strip().split()
-            if rs in LIFTED_SET:
-                fo.write(ln)
-    fo.close()
-    return True
+            new_map.append([result[0][0], row.SNP, row.CM, result[0][1]])
 
-def liftPed(fin, fout, fOldMap):
-    # two ways to do it:
-    # 1. write unlifted snp list
-    #    use PLINK to do this job using --exclude
-    # 2. alternatively, we can write our own method
-    # we will use method 2
-    marker = [i.strip().split()[1] for i in open(fOldMap)]
-    flag = map(lambda x: x not in UNLIFTED_SET, marker)
-    # print marker[:10]
-    # print flag[:10]
-    fo = open(fout, 'w')
-    print "Updating PED file..."
-    for ln in myopen(fin):
-        f = ln.strip().split()
-        l = len(f)
-        f = f[:6] + [ f[i*2] + ' '+f[i*2 +1] for i in xrange(3, l/2 )]
-        fo.write('\t'.join(f[:6]))
-        fo.write('\t')
-        if len(f[6:]) != len(flag):
-            die('Inconsistent length of ped and map files')
-        newMarker = [m for i, m in enumerate(f[6:]) if flag[i]]
-        fo.write('\t'.join(newMarker))
-        fo.write('\n')
-        #print marker[:10]
-        #die('test')
-    return True
+    new_map = pd.DataFrame(new_map, columns=["CHR", "SNP", "CM", "BP"])
+    # Write the new map file
+    new_map.to_csv(f"{out_prefix}.map", sep='\t', header=False, index=False)
+    # Write the unmapped SNPs
+    with open(f"{out_prefix}.unmapped", 'w') as f:
+        f.write("\n".join(unmapped))
 
-def makesure(result, succ_msg, fail_msg = "ERROR"):
-    if result:
-        print 'SUCC: ', succ_msg
-    else:
-        print 'FAIL: ', fail_msg
-        sys.exit(2)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="%(prog)s converts genotype data stored in plink's PED+MAP " +
-                    "format from one genome build to another, using liftOver."
+        description="%(prog)s converts bim file to another, using the provided chain file."
     )
     parser.add_argument('-m', "--map", dest='mapFile', required = True,
-                        help='The plink MAP file to `liftOver`.')
-    parser.add_argument('-p', "--ped", dest='pedFile',
-                        help='Optionally remove "unlifted SNPs" from the plink ' +
-                             'PED file after running `liftOver`.')
-    parser.add_argument('-d', "--dat", dest='datFile',
-                        help='Optionally remove "unlifted SNPs" from a data ' +
-                             'file containing a list of SNPs (e.g. for ' +
-                             ' --exclude or --include in `plink`)')
-    parser.add_argument('-o', "--out", dest='prefix', required = True,
+                        help='The plink MAP file to liftOver.')
+    parser.add_argument('-o', "--out", dest='outPrefix', required = True,
                         help='The prefix to give to the output files.')
     parser.add_argument('-c', "--chain", dest='chainFile', required = True,
-                        help='The location of the chain file to provide to ' +
-                             '`liftOver`.')
-    parser.add_argument('-e', "--bin", dest='liftOverExecutable',
-                        help='The location of the `liftOver` executable.')
+                        help='The location of the chain file')
 
     # Show usage message if user hasn't provided any arguments, rather
     # than giving a non-descript error message with the usage()
@@ -157,36 +44,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    oldBed = args.mapFile + '.bed'
-    makesure(map2bed(args.mapFile, oldBed),
-             'map->bed succ')
+    main(args.mapFile, args.chainFile, args.outPrefix)
 
-    # If a location is not specified for the liftOver executable.
-    # assume it is in the User's $PATH.
-    if args.liftOverExecutable:
-      liftOverPath = args.liftOverExecutable
-    else:
-      liftOverPath = "liftOver"
 
-    newBed = args.prefix + '.bed'
-    unlifted = args.prefix + '.unlifted'
-    makesure(liftBed(oldBed, newBed, unlifted, args.chainFile, liftOverPath),
-             'liftBed succ')
-
-    newMap = args.prefix + '.map'
-    makesure(bed2map(newBed, newMap),
-             'bed->map succ')
-
-    if args.datFile:
-        newDat = args.prefix + '.dat'
-        makesure(liftDat(args.datFile, newDat),
-                 'liftDat succ')
-
-    if args.pedFile:
-        newPed = args.prefix + '.ped'
-        makesure(liftPed(args.pedFile, newPed, args.mapFile),
-                 'liftPed succ')
-
-    print "cleaning up BED files..."
-    os.remove(newBed)
-    os.remove(oldBed)

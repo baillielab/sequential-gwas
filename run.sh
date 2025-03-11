@@ -1,0 +1,1 @@
+taskset -c 998 nextflow run main.nf -c run.config -profile odap -resume -with-report -with-trace

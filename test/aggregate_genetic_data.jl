@@ -38,8 +38,8 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     @test issubset(fam.IID, unrelated.IID)
 
     # Check liftover
-    @test read(joinpath(RESULTS_DIR, "array_genotypes", "lifted_over", "mock.release_2021_2023.liftedOver.bed.unlifted")) == []
-    @test read(joinpath(RESULTS_DIR, "array_genotypes", "lifted_over", "mock.release_r8.liftedOver.bed.unlifted")) == []
+    @test readlines(joinpath(RESULTS_DIR, "array_genotypes", "lifted_over", "mock.release_2021_2023.liftover_temp.unmapped")) == ["GSA-rs114361133"]
+    @test readlines(joinpath(RESULTS_DIR, "array_genotypes", "lifted_over", "mock.release_r8.liftover_temp.unmapped")) == []
 
     # Check qced arrays
     qced_dir = joinpath(RESULTS_DIR, "array_genotypes", "qced")
