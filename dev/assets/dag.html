@@ -63,18 +63,18 @@ flowchart TB
     v33([WGSIndividuals])
     subgraph GenotypesQC
     v42([LiftOver])
-    v44([PedToBed])
+    v43([PedToBed])
     v46([GenotypingArrayBasicQC])
     v48([QCFilesFromKGP])
     v56([FlipAndExtract])
     v35(( ))
     v40(( ))
+    v44(( ))
     v47(( ))
     v50(( ))
     v51(( ))
     v58(( ))
     v102(( ))
-    v103(( ))
     v104(( ))
     end
     subgraph GVCFGenotyping
@@ -148,12 +148,12 @@ flowchart TB
     v39 --> v40
     v41 --> v42
     v35 --> v42
-    v42 --> v40
+    v42 --> v44
     v42 --> v102
-    v40 --> v44
-    v44 --> v46
-    v44 --> v103
+    v40 --> v43
+    v43 --> v44
     v45 --> v46
+    v44 --> v46
     v46 --> v47
     v46 --> v51
     v46 --> v104
@@ -206,9 +206,9 @@ flowchart TB
     v81 --> v100
     v95 --> v100
     v100 --> v101
+    v44 --> v105
     v50 --> v105
     v102 --> v105
-    v103 --> v105
     v104 --> v105
     v95 --> v105
     v105 --> v107
