@@ -18,6 +18,7 @@ using Base.Threads
 using Literate
 using MarkdownTables
 using YAML
+using GeneticsMakie
 
 include("resources.jl")
 include("one_time_checks.jl")
@@ -30,6 +31,7 @@ include("relatedness.jl")
 include("pca_qc.jl")
 include("ancestry.jl")
 include("covariates.jl")
+include("gwas_plots.jl")
 
 export julia_main
 

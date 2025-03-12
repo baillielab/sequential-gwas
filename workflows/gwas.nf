@@ -82,7 +82,7 @@ process RegenieStep2 {
         tuple val(group), path(covariates), path(phenotypes), path(individuals), path(step1_loco), path(step1_pred)
 
     output:
-        path "*.regenie"
+        tuple val(group), path("*.regenie")
 
     script:
         outprefix = "${get_prefix(bgen)}.${group}.step2"
@@ -110,11 +110,15 @@ process MakeGWASPlots {
         tuple val(group), path(gwas_results)
 
     output:
-        path "*.png"
+        path "${group}.manhattan.png"
+        path "${group}.qq.png"
 
     script:
         """
-        ${get_julia_cmd(task.cpus)} make-gwas-plots ${gwas_results}
+        ${get_julia_cmd(task.cpus)} gwas-plots \
+            ${gwas_results} \
+            ${group} \
+            --output-prefix ${group}
         """
 }
 

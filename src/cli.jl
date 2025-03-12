@@ -7,6 +7,9 @@ function cli_settings()
     )
 
     @add_arg_table! s begin
+        "gwas-plots"
+            action = :command
+            help = "Generates GWAS plots."
         "pca-qc"
             action = :command
             help = "Runs PCAb-ased QC on genotypes to exclude outlier variants."
@@ -62,6 +65,23 @@ function cli_settings()
         "merge-covariates-pcs"
             action = :command
             help = "Merges covariates and PCs files."
+    end
+
+    @add_arg_table! s["gwas-plots"] begin
+        "results"
+            arg_type = String
+            required = true
+            help = "Path to GWAS results file."
+        
+        "group"
+            arg_type = String
+            required = true
+            help = "Group name."
+        
+        "--output-prefix"
+            arg_type = String
+            help = "Prefix to output files."
+            default = "gwas"
     end
 
     @add_arg_table! s["merge-covariates-pcs"] begin
@@ -551,6 +571,12 @@ function julia_main()::Cint
             cmd_settings["covariates-file"],
             cmd_settings["pcs-file"];
             output=cmd_settings["output"]
+        )
+    elseif cmd == "gwas-plots"
+        gwas_plots(
+            cmd_settings["results"],
+            cmd_settings["group"];
+            output_prefix=cmd_settings["output-prefix"]
         )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))
