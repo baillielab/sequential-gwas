@@ -13,7 +13,7 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
 @testset "Test Array Genotypes Merging" begin
     profile = if isinteractive()
         # The source code will be mounted in the container
-        "dev" 
+        "dev"
     else
         # The source code is taken from the image
         if ENV["CI_CONTAINER"] == "docker"
