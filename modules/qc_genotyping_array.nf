@@ -22,6 +22,7 @@ process GenotypingArrayBasicQC {
             --hwe ${params.QC_HWE_P} ${params.QC_HWE_K} \
             --set-all-var-ids @:# \
             --output-chr chr26 \
+            --rm-dup force-first \
             --freq counts \
             --make-bed \
             --out ${input_prefix}.qced
