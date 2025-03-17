@@ -1,0 +1,211 @@
+<!--
+  ~ Copyright 2013-2024, Seqera Labs
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<html>
+<head>
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+</head>
+<body>
+<pre class="mermaid" style="text-align: center;">
+flowchart TB
+    subgraph " "
+    v0["Channel.of"]
+    v3["Channel.of"]
+    v6["store_dir"]
+    v19["publish_dir"]
+    v20["output_prefix"]
+    v30["Channel.of"]
+    v32["Channel.of"]
+    v35["Channel.of"]
+    v37["Channel.fromFilePairs"]
+    v41["chain_file"]
+    v45["variants_to_flip"]
+    v65["publish_dir"]
+    v66["output_prefix"]
+    v74["publish_dir"]
+    v75["output_prefix"]
+    v86["publish_dir"]
+    v87["output_prefix"]
+    v90["high_ld_regions"]
+    v94["high_ld_regions"]
+    v99["covariates_file"]
+    end
+    subgraph CombineDatasets
+    subgraph KGP
+    v7([DownloadOrAccessStoredResource])
+    v14([CleanKGP])
+    v15([KGPVCFToBed])
+    v21([MergeKGPChromosomes])
+    v24([KeepKGPUnrelated])
+    v1(( ))
+    v8(( ))
+    v12(( ))
+    v16(( ))
+    v18(( ))
+    v23(( ))
+    v26(( ))
+    v27(( ))
+    v28(( ))
+    end
+    v29([DownloadOrAccessReferenceGenome])
+    v40([WGSIndividuals])
+    subgraph GenotypesQC
+    v42([LiftOver])
+    v43([PedToBed])
+    v46([GenotypingArrayBasicQC])
+    v48([QCFilesFromKGP])
+    v56([FlipAndExtract])
+    v31(( ))
+    v36(( ))
+    v44(( ))
+    v47(( ))
+    v50(( ))
+    v51(( ))
+    v58(( ))
+    v102(( ))
+    v104(( ))
+    end
+    subgraph GVCFGenotyping
+    v59([IndexReferenceGenome])
+    v60([CreateSequenceDictionary])
+    v61([GenotypeGVCFs])
+    v67([MergeGenotypes])
+    v62(( ))
+    v64(( ))
+    end
+    subgraph MergeGenotypingArraysAndWGS
+    v76([MergeGenotypesAndQC])
+    end
+    v100([CombineCovariates])
+    subgraph Report
+    v105([MakeReport])
+    end
+    v38(( ))
+    end
+    subgraph " "
+    v22[" "]
+    v25[" "]
+    v49[" "]
+    v57[" "]
+    v68["counts"]
+    v77[" "]
+    v80[" "]
+    v89[" "]
+    v93[" "]
+    v97[" "]
+    v101[" "]
+    v106[" "]
+    v107[" "]
+    end
+    v0 --> v1
+    v3 --> v1
+    v6 --> v7
+    v1 --> v7
+    v7 --> v8
+    v7 --> v12
+    v8 --> v14
+    v14 --> v15
+    v15 --> v16
+    v15 --> v18
+    v19 --> v21
+    v20 --> v21
+    v16 --> v21
+    v18 --> v21
+    v21 --> v22
+    v21 --> v23
+    v12 --> v24
+    v23 --> v24
+    v24 --> v25
+    v24 --> v26
+    v24 --> v27
+    v24 --> v28
+    v29 --> v59
+    v29 --> v60
+    v29 --> v61
+    v30 --> v31
+    v32 --> v31
+    v35 --> v36
+    v37 --> v61
+    v37 --> v38
+    v38 --> v40
+    v40 --> v48
+    v41 --> v42
+    v31 --> v42
+    v42 --> v44
+    v42 --> v102
+    v36 --> v43
+    v43 --> v44
+    v45 --> v46
+    v44 --> v46
+    v46 --> v47
+    v46 --> v51
+    v46 --> v104
+    v27 --> v48
+    v47 --> v48
+    v48 --> v49
+    v48 --> v105
+    v48 --> v50
+    v48 --> v51
+    v48 --> v58
+    v50 --> v56
+    v51 --> v56
+    v56 --> v57
+    v56 --> v76
+    v59 --> v61
+    v60 --> v61
+    v28 --> v61
+    v50 --> v61
+    v58 --> v61
+    v61 --> v62
+    v61 --> v64
+    v65 --> v67
+    v66 --> v67
+    v62 --> v67
+    v64 --> v67
+    v67 --> v68
+    v67 --> v105
+    v67 --> v76
+    v74 --> v76
+    v75 --> v76
+    v76 --> v77
+    v76 --> v80
+    v86 --> v76
+    v87 --> v76
+    v76 --> v89
+    v90 --> v76
+    v76 --> v93
+    v94 --> v76
+    v76 --> v97
+    v99 --> v100
+    v76 --> v100
+    v100 --> v101
+    v44 --> v105
+    v50 --> v105
+    v102 --> v105
+    v104 --> v105
+    v76 --> v105
+    v105 --> v107
+    v105 --> v106
+    v12 --> v76
+    v26 --> v76
+    v50 --> v76
+
+</pre>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, maxTextSize: Number.MAX_SAFE_INTEGER, maxEdges: Number.MAX_SAFE_INTEGER });
+</script>
+</body>
+</html>
