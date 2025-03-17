@@ -19,6 +19,34 @@ workflow MergeGenotypingArraysAndWGS {
         all_genotypes = qced_array_genotypes
             .map{ it -> it[1..3] }
             .concat(qced_gws_genotypes)
+        merge_outputs = MergeGenotypesAndQC(
+            all_genotypes,
+            plink_shared_variants,
+            kgp_genotypes,
+            kgp_pedigree,
+            high_ld_regions
+        )
+    
+    emit:
+        merged = merge_outputs.merged
+        qced_merged = merge_outputs.qced_merged
+        final_merged = merge_outputs.final_merged
+        unrelated_individuals = merge_outputs.unrelated_individuals
+        pca_plots = merge_outputs.pca_plots
+        high_loadings_variants = merge_outputs.high_loadings_variants
+        pcs = merge_outputs.pcs
+        ancestries = merge_outputs.ancestries    
+}
+
+workflow MergeGenotypesAndQC {
+    take:
+        all_genotypes
+        plink_shared_variants
+        kgp_genotypes
+        kgp_pedigree
+        high_ld_regions
+
+    main:
         merge_list = all_genotypes
             .map { it -> get_prefix(it[0].getName()) }
             .collectFile(name: "merge_list.txt", newLine: true)

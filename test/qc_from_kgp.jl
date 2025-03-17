@@ -7,6 +7,39 @@ using DataFrames
 
 TESTDIR = joinpath(pkgdir(SequentialGWAS), "test")
 
+@testset "Test write_release_samples_to_drop" begin
+    tmpdir = mktempdir()
+    prefixes_and_fams = (
+        release_2024_now = (
+            joinpath(tmpdir, "release_2024_now"),
+            DataFrame(FID = ["F1", "F2"], IID = ["I5", "I6"])
+        ),
+        release_2021_2023 = (
+            joinpath(tmpdir, "release_2021_2023"),
+            DataFrame(FID = ["F1", "F2"], IID = ["I3", "I5"])
+        ),
+        release_r8 = (
+            joinpath(tmpdir, "release_r8"),
+            DataFrame(FID = ["F1", "F2"], IID = ["I1", "I3"])
+        )
+    )
+    # No WGS samples
+    wgs_samples_file = joinpath(tmpdir, "wgs_samples.txt")
+    touch(wgs_samples_file)
+    SequentialGWAS.write_release_samples_to_drop(prefixes_and_fams, wgs_samples_file)
+    @test nrow(CSV.read(joinpath(tmpdir, "release_2024_now.samples_to_drop.txt"), DataFrame, header=[:FID, :IID])) == 0
+    @test CSV.read(joinpath(tmpdir, "release_2021_2023.samples_to_drop.txt"), DataFrame, header=[:FID, :IID]) == DataFrame(FID = ["F2"], IID=["I5"])
+    @test CSV.read(joinpath(tmpdir, "release_r8.samples_to_drop.txt"), DataFrame, header=[:FID, :IID]) == DataFrame(FID = ["F2"], IID=["I3"])
+    # WGS samples
+    write(wgs_samples_file, "I5\nI1")
+    SequentialGWAS.write_release_samples_to_drop(prefixes_and_fams, wgs_samples_file)
+    @test CSV.read(joinpath(tmpdir, "release_2024_now.samples_to_drop.txt"), DataFrame, header=[:FID, :IID]) == DataFrame(FID = ["F1"], IID=["I5"])
+    @test CSV.read(joinpath(tmpdir, "release_2021_2023.samples_to_drop.txt"), DataFrame, header=[:FID, :IID]) == DataFrame(FID = ["F2"], IID=["I5"])
+    @test CSV.read(joinpath(tmpdir, "release_r8.samples_to_drop.txt"), DataFrame, header=[:FID, :IID]) == DataFrame(FID = ["F1", "F2"], IID=["I1", "I3"])
+
+end
+
+
 @testset "Test get_action" begin
     kgp_info = Dict(
         ("chr1", 1) => nothing,

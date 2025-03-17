@@ -25,7 +25,7 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
         end
     end
     cd(PKGDIR)
-    cmd = Cmd(["nextflow", "run", "main.nf", "-c", "test/assets/workflow.config", "-profile", profile, "-resume"])
+    cmd = Cmd(["nextflow", "run", "main.nf", "-c", "test/assets/combine_datasets.wgs.config", "-profile", profile, "-resume"])
     run(cmd)
 
     # Check 1000 GP
@@ -211,7 +211,7 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     @test isfile(joinpath(pca_dir, "genotypes.merged.qced.ldpruned.after_pca_qc.loadings.png"))
 
     # Check covariates
-    covariates = CSV.read(joinpath(RESULTS_DIR, "covariates", "covariates.merged.csv"), DataFrame)
+    covariates = CSV.read(joinpath(RESULTS_DIR, "covariates.merged.csv"), DataFrame)
     @test nrow(covariates) > 100
     @test eltype(covariates.AGE) <: Union{Missing, Int}
     @test eltype(covariates.SEX) <: Union{Missing, Int}

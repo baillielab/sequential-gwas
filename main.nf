@@ -39,7 +39,7 @@ params.REGENIE_BSIZE = 1000
 // Other params
 params.N_PCS = 10
 
-include { AggregateGeneticData } from './workflows/aggregate_genetic_data.nf'
+include { CombineDatasets } from './workflows/combine_datasets.nf'
 include { ImputationWorkflow } from './workflows/imputation.nf'
 include { KGP } from './workflows/kgp.nf'
 include { GWAS } from './workflows/gwas.nf'
@@ -56,5 +56,5 @@ log.info """\
          .stripIndent()
 
 workflow {
-    AggregateGeneticData()
+    CombineDatasets()
 }

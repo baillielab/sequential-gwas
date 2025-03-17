@@ -26,7 +26,6 @@ function report_qc_effect(input_prefix, output_prefix)
 end
 
 
-
 function make_report(;kwargs...)
     function prepend_args(script_string)
         args_string = join((string(key, " = \"", arg, "\" #hide") for (key, arg) in kwargs), "\n")

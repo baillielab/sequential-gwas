@@ -97,23 +97,31 @@ println("2021 - 2023 release: ", countlines(dup_samples_2021_2023)) #hide
 println("2024 - now release: ", countlines(dup_samples_2024_now)) #hide
 
 #=
-## Whole Genome Sequencing
+## Whole Genome Sequencing (Optional)
 
 The whole-genome sequencing data is then genotyped to include the variants present in the genotyping arrays.
 
 Number of variants and individuals in filesets.
 =#
 
-table = DataFrame(Dict( #hide
-    "" => ["Variants", "Individuals"], #hide
-    "WGS" => count_variants_and_indv(wgs_prefix), #hide
-)) #hide
-table |> markdown_table() #hide
+function wgs_table(wgs_prefix) #hide
+    if wgs_prefix !== "NO_WGS_SAMPLES" #hide
+        table = DataFrame(Dict( #hide
+            "" => ["Variants", "Individuals"], #hide
+            "WGS" => count_variants_and_indv(wgs_prefix), #hide
+        )) #hide
+        return table |> markdown_table() #hide
+    else #hide
+        return nothing #hide
+    end #hide
+end #hide
+
+wgs_table(wgs_prefix) #hide
 
 #=
 ## Merged Datasets
 
-We then proceed to merging the geotyping array and WGS datasets.
+We then proceed to merging the genotyping arrays and optionally WGS datasets.
 
 ### After Merge
 
@@ -122,7 +130,7 @@ Number of variants and individuals in fileset after merge.
 
 table = DataFrame(Dict( #hide
     "" => ["Variants", "Individuals"], #hide
-    "WGS" => count_variants_and_indv(merged_genotypes_prefix), #hide
+    "Merged" => count_variants_and_indv(merged_genotypes_prefix), #hide
 )) #hide
 table |> markdown_table() #hide
 
@@ -146,7 +154,7 @@ Number of variants and individuals in merged fileset after QC.
 
 table = DataFrame(Dict( #hide
     "" => ["Variants", "Individuals"], #hide
-    "WGS" => count_variants_and_indv(merged_qced_genotypes_prefix), #hide
+    "MergedQCed" => count_variants_and_indv(merged_qced_genotypes_prefix), #hide
 )) #hide
 table |> markdown_table() #hide
 
@@ -181,7 +189,7 @@ These are the final number of variants and individuals in the merged dataset.
 
 table = DataFrame(Dict( #hide
     "" => ["Variants", "Individuals"], #hide
-    "WGS" => count_variants_and_indv(final_genotypes_prefix), #hide
+    "Final" => count_variants_and_indv(final_genotypes_prefix), #hide
 )) #hide
 table |> markdown_table() #hide
 

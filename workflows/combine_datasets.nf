@@ -2,12 +2,12 @@ include { GVCFGenotyping} from '../subworkflows/gvcf_genotyping.nf'
 include { GenotypesQC } from '../subworkflows/genotyping_arrays_qc.nf'
 include { KGP } from './kgp.nf'
 include { DownloadOrAccessReferenceGenome } from '../modules/download_reference_genome.nf'
-include { MergeGenotypingArraysAndWGS } from '../subworkflows/merge_genotypes.nf'
+include { MergeGenotypesAndQC; MergeGenotypingArraysAndWGS } from '../subworkflows/merge_genotypes.nf'
 include { WGSIndividuals } from '../modules/wgs_individuals.nf'
 include { Report } from '../subworkflows/report.nf'
 include { CombineCovariates } from '../modules/combine_covariates.nf'
 
-workflow AggregateGeneticData {
+workflow CombineDatasets {
     // Process 1000GP dataset
     kgp = KGP()
     kgp_genotypes = kgp.genotypes.map{ it -> it[0..2] }
@@ -15,9 +15,6 @@ workflow AggregateGeneticData {
     kgp_bim = kgp.genotypes.map{ it -> it[1] }
     // Reference Genome
     reference_genome = DownloadOrAccessReferenceGenome()
-    // WGS GVCFs
-    wgs_gvcfs = Channel.fromFilePairs("${params.WGS_GVCFS}*{.gvcf.gz,.gvcf.gz.tbi}", checkIfExists: true)
-    wgs_sample_ids = WGSIndividuals(wgs_gvcfs.map{it -> it[1]}.collect())
     // GRC37 Genotypes
     r8_array = Channel.of(
         "release-r8", 
@@ -45,32 +42,60 @@ workflow AggregateGeneticData {
     variants_to_flip = file(params.VARIANTS_TO_FLIP_GRC38, checkIfExists: true)
     // High LD regions
     high_ld_regions = file(params.HIGH_LD_REGIONS, checkIfExists: true)
-    // Basic QC for genotyping arrays
-    qced_genotypes = GenotypesQC(
-        grc37_genotypes, 
-        grc38_genotypes, 
-        variants_to_flip, 
-        chain_file,
-        kgp_bim_afreq,
-        wgs_sample_ids
-    )
-    // Genotyping of WGS data based on genotyping arrays variants
-    wgs_data = GVCFGenotyping(
-        wgs_gvcfs, 
-        qced_genotypes.gatk_shared_variants,
-        qced_genotypes.plink_shared_variants,
-        reference_genome,
-        kgp_bim
-    )
-    // Merge All Genotypes
-    merge_output = MergeGenotypingArraysAndWGS(
-        qced_genotypes.genotypes, 
-        wgs_data.genotypes,
-        qced_genotypes.plink_shared_variants,
-        kgp_genotypes,
-        kgp.pedigree,
-        high_ld_regions
-    )
+    
+    if (params.WGS_GVCFS != "") {
+        // WGS GVCFs
+        wgs_gvcfs = Channel.fromFilePairs("${params.WGS_GVCFS}*{.gvcf.gz,.gvcf.gz.tbi}", checkIfExists: true)
+        wgs_sample_ids = WGSIndividuals(wgs_gvcfs.map{it -> it[1]}.collect())
+        // Basic QC for genotyping arrays
+        qced_genotypes = GenotypesQC(
+            grc37_genotypes, 
+            grc38_genotypes, 
+            variants_to_flip, 
+            chain_file,
+            kgp_bim_afreq,
+            wgs_sample_ids
+        )
+        // Genotyping of WGS data based on genotyping arrays variants
+        wgs_data = GVCFGenotyping(
+            wgs_gvcfs, 
+            qced_genotypes.gatk_shared_variants,
+            qced_genotypes.plink_shared_variants,
+            reference_genome,
+            kgp_bim
+        )
+        wgs_genotypes = wgs_data.genotypes
+        // Merge All Genotypes
+        merge_output = MergeGenotypingArraysAndWGS(
+            qced_genotypes.genotypes, 
+            wgs_genotypes,
+            qced_genotypes.plink_shared_variants,
+            kgp_genotypes,
+            kgp.pedigree,
+            high_ld_regions
+        )
+    }
+    else {
+        wgs_sample_ids = file("${projectDir}/assets/NO_WGS_SAMPLES.txt")
+        wgs_genotypes = file("${projectDir}/assets/NO_WGS_SAMPLES.txt")
+        // Basic QC for genotyping arrays
+        qced_genotypes = GenotypesQC(
+            grc37_genotypes, 
+            grc38_genotypes, 
+            variants_to_flip, 
+            chain_file,
+            kgp_bim_afreq,
+            wgs_sample_ids
+        )
+        // Merge All Genotypes
+        merge_output = MergeGenotypesAndQC(
+            qced_genotypes.genotypes.map{ it -> it[1..3] }, 
+            qced_genotypes.plink_shared_variants,
+            kgp_genotypes,
+            kgp.pedigree,
+            high_ld_regions
+        )
+    }
     // Combine Covariates
     covariates = file(params.COVARIATES, checkIfExists: true)
     CombineCovariates(
@@ -87,7 +112,7 @@ workflow AggregateGeneticData {
         qced_genotypes.kgp_qc_files_2021_2023,
         qced_genotypes.kgp_qc_files_2024_now,
         qced_genotypes.plink_shared_variants,
-        wgs_data.genotypes,
+        wgs_genotypes,
         merge_output.merged,
         merge_output.unrelated_individuals,
         merge_output.qced_merged,

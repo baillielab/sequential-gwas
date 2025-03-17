@@ -1,7 +1,7 @@
 include { get_julia_cmd } from './utils.nf'
 
 process CombineCovariates {
-    publishDir "${params.PUBLISH_DIR}/covariates", mode: 'copy'
+    publishDir "${params.PUBLISH_DIR}", mode: 'copy'
 
     input:
         path covariates_file

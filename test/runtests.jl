@@ -16,8 +16,9 @@ TESTDIR = joinpath(PKGDIR, "test")
     @test include(joinpath(TESTDIR, "qc_from_kgp.jl"))
     @test include(joinpath(TESTDIR, "relatedness.jl"))
 
-    # Test Genetic Data Aggregation Workflow
-    include(joinpath(TESTDIR, "aggregate_genetic_data.jl"))
+    # Test Dataset Aggregation Workflow
+    include(joinpath(TESTDIR, "combine_datasets_wgs.jl"))
+    include(joinpath(TESTDIR, "combine_datasets_no_wgs.jl"))
     # Test Imputation Workflow
     include(joinpath(TESTDIR, "imputation.jl"))
     # Test UKB Merge Workflow
