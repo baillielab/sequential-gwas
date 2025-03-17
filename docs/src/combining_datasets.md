@@ -98,10 +98,10 @@ This is the list of all the pipeline's parameters. In principle they don't need 
 - `QC_GENOTYPE_MISSING_RATE` (default: 0.1): Maximum missing rate per variant across all individuals. Variants above the threshold are dropped.
 - `QC_INDIVIDUAL_MISSING_RATE` (default: 0.1): Maximum missing rate per individual across genotypes. Individuals above the threshold are dropped.
 - `QC_HWE_P` (default: 1e-5): Used to identify potential technical artifacts and drop variants.
-- `QC_HWE_K` (default: 0.001): Used together with QC_HWE_P
+- `QC_HWE_K` (default: 0.001): Used together with `QC_HWE_P`
 
 ## DAG
 
 ```@raw html
-<iframe src="./assets/combining_datasets_dag.html" width="100%" height="800px"></iframe>
+<iframe src="../assets/combining_datasets_dag.html" width="100%" height="2000px"></iframe>
 ```
