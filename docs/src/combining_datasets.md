@@ -100,6 +100,13 @@ This is the list of all the pipeline's parameters. In principle they don't need 
 - `QC_HWE_P` (default: 1e-5): Used to identify potential technical artifacts and drop variants.
 - `QC_HWE_K` (default: 0.001): Used together with `QC_HWE_P`
 
+## Current Limitations
+
+These are current limitations of the aggregation workflow:
+
+- Only chromosomes 1 to 22 are processed.
+- Only bi-allelic SNPs are used.
+
 ## DAG
 
 ```@raw html
