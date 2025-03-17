@@ -14,13 +14,18 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
-        "Cohorts Description" => "cohorts.md",
-        "Input Data" => "input_data.md",
-        "Run" => "run.md",
-        "Outputs" => "outputs.md",
-        "Development" => "development.md",
-        "Mock Data" => "mock_data.md",
-        "Index Of Julia Functions" => "julia_fns.md",
+        "Workflows" => [
+            "Prerequisites" => "prerequisites.md",
+            "Combining Datasets" => "combining_datasets.md",
+            "Genotypes Imputation" => "genotypes_imputation.md",
+            "Combining with UK Biobank" => "combining_with_ukb.md",
+            "GWAS" => "gwas.md",
+        ],
+        "For Developpers" => [
+            "Development" => "development.md",
+            "Mock Data" => "mock_data.md",
+            "Index Of Julia Functions" => "julia_fns.md"
+        ]
     ],
 )
 

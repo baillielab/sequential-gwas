@@ -117,8 +117,10 @@ jobs:
       - uses: nf-core/setup-nextflow@v1.2.0
       - name: Install graphviz
         run: sudo apt-get install -y graphviz
-      - name: Create DAG
-        run: nextflow run main.nf -with-dag docs/src/assets/dag.html -preview -c test/assets/workflow.config
+      - name: Create Combining Datasets DAG
+        run: nextflow run main.nf -with-dag docs/src/assets/combining_datasets_dag.html -preview -c test/assets/combine_datasets.wgs.config
+      - name: Create GWAS DAG
+        run: nextflow run main.nf -with-dag docs/src/assets/gwas_dag.html -preview -c test/assets/gwas.workflow.config
       - name: Configure doc environment
         shell: julia --project=docs --color=yes {0}
         run: |
