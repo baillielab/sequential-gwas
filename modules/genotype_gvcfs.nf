@@ -45,6 +45,7 @@ process GenotypeGVCFs{
         # Only keep variants that are in the shared list
         plink2 \
             --bfile ${output_prefix}.temp \
+            --max-alleles 2 \
             --output-chr chr26 \
             --extract ${shared_variants_plink} \
             --make-bed \
