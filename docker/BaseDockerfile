@@ -22,7 +22,7 @@ RUN rm /var/lib/dpkg/info/libc-bin.* \
 # Install GCTA
 RUN wget https://yanglab.westlake.edu.cn/software/gcta/bin/gcta-1.94.4-linux-kernel-3-x86_64.zip \
     && unzip gcta-1.94.4-linux-kernel-3-x86_64.zip \
-    && mv gcta-1.94.4-linux-kernel-3-x86_64/gcta64 /usr/local/bin \
+    && mv gcta-1.94.3-linux-kernel-3-x86_64/gcta64 /usr/local/bin \
     && chmod +x /usr/local/bin/gcta64
 
 # Install QCTOOL
