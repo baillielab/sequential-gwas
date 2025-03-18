@@ -18,7 +18,7 @@ process GroupPCA {
             --threads ${task.cpus} \
             --memory ${task.memory.toMega().toString()} \
             --bfile ${input_prefix} \
-            --pca ${params.N_PCS} \
+            --pca approx ${params.N_PCS} \
             --out ${group}
         """
 }
