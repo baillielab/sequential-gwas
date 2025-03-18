@@ -1,6 +1,7 @@
 include { get_julia_cmd } from './utils.nf'
 
 process CombineCovariates {
+    label "bigmem"
     publishDir "${params.PUBLISH_DIR}", mode: 'copy'
 
     input:

@@ -24,6 +24,8 @@ process FlipAndExtract {
             --make-bed \
             --out ${output_prefix}
         plink2 \
+            --threads ${task.cpus} \
+            --memory ${task.memory.toMega().toString()} \
             --bfile ${output_prefix} \
             --freq counts \
             --out ${output_prefix}

@@ -1,6 +1,7 @@
 include { get_julia_cmd } from './utils.nf'
 
 process MergeCovariatesPCs {
+    label "bigmem"
     publishDir "${params.PUBLISH_DIR}/gwas/${group}", mode: 'symlink'
 
     input:

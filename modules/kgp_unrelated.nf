@@ -2,6 +2,7 @@ include { get_prefix; get_julia_cmd } from './utils.nf'
 
 process KeepKGPUnrelated {
     label "multithreaded"
+    label "bigmem"
     publishDir "${params.KGP_PUBLISH_DIR}/merged_unrelated", mode: 'symlink'
 
     input:
@@ -22,6 +23,8 @@ process KeepKGPUnrelated {
             --output kgp_unrelated_individuals.txt
 
         plink2 \
+            --threads ${task.cpus} \
+            --memory ${task.memory.toMega().toString()} \
             --bfile ${input_prefix} \
             --keep kgp_unrelated_individuals.txt \
             --output-chr chr26 \

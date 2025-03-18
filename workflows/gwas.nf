@@ -37,6 +37,8 @@ process BEDGroupsQCed {
         genotypes_prefix = get_prefix(genotypes_bed)
         """
         plink2 \
+            --threads ${task.cpus} \
+            --memory ${task.memory.toMega().toString()} \
             --bfile ${genotypes_prefix} \
             --keep ${sample_list} \
             --maf ${params.REGENIE_MAF} \

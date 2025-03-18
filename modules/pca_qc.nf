@@ -1,6 +1,7 @@
 include { get_prefix; get_julia_cmd } from './utils.nf'
 
 process PCAFindHighLoadings {
+    label "bigmem"
     label "multithreaded"
     publishDir "${params.MERGED_PUBLISH_DIR}/pca_qced", mode: 'symlink'
     publishDir "${params.PUBLISH_DIR}/pca", mode: 'symlink', pattern: "*.{eigenval,eigenvec}"

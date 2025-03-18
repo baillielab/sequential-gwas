@@ -16,6 +16,8 @@ process FilterHighLoadingsVariants {
         output_prefix = "genotypes.arrays_wgs.aggregated"
         """
         plink2 \
+            --threads ${task.cpus} \
+            --memory ${task.memory.toMega().toString()} \
             --bfile ${input_prefix} \
             --output-chr chr26 \
             --exclude ${high_loadings_variants} \

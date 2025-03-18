@@ -16,6 +16,8 @@ process ExtractSharedVariantsFromKGP {
         output_prefix = "${input_prefix}.shared"
         """
         plink2 \
+            --threads ${task.cpus} \
+            --memory ${task.memory.toMega().toString()} \
             --bfile ${input_prefix} \
             --output-chr chr26 \
             --extract ${shared_variants} \

@@ -15,6 +15,8 @@ process LDPruning {
         output_prefix = "${input_prefix}.ldpruned"
         """
         plink2 \
+            --threads ${task.cpus} \
+            --memory ${task.memory.toMega().toString()} \
             --bfile ${input_prefix} \
             --maf ${params.PCA_MAF} \
             --indep-pairwise ${params.IP_VALUES} \
@@ -39,6 +41,8 @@ process GroupLDPruning {
         output_prefix = "${group}.pruned"
         """
         plink2 \
+            --threads ${task.cpus} \
+            --memory ${task.memory.toMega().toString()} \
             --bfile ${input_prefix} \
             --maf ${params.PCA_MAF} \
             --indep-pairwise ${params.IP_VALUES} \

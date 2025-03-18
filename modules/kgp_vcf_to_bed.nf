@@ -14,6 +14,8 @@ process KGPVCFToBed {
         input_prefix = get_prefix(vcf_file)[0..-5]
         """
         plink2 \
+            --threads ${task.cpus} \
+            --memory ${task.memory.toMega().toString()} \
             --output-chr chr26 \
             --vcf ${vcf_file} \
             --max-alleles 2 \

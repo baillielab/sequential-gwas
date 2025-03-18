@@ -30,6 +30,8 @@ process GenotypeGVCFs{
         
         # Converts to plink format
         plink2 \
+            --threads ${task.cpus} \
+            --memory ${task.memory.toMega().toString()} \
             --vcf ${prefix}.shared.vcf.gz \
             --output-chr chr26 \
             --set-all-var-ids @:# \
@@ -44,6 +46,8 @@ process GenotypeGVCFs{
 
         # Only keep variants that are in the shared list
         plink2 \
+            --threads ${task.cpus} \
+            --memory ${task.memory.toMega().toString()} \
             --bfile ${output_prefix}.temp \
             --max-alleles 2 \
             --output-chr chr26 \

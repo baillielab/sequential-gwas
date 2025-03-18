@@ -1,6 +1,7 @@
 include { get_prefix } from './utils.nf'
 
 process GroupPCA {
+    label "bigmem"
     label "multithreaded"
     publishDir "${params.PUBLISH_DIR}/gwas/${group}/pca", mode: 'symlink'
 
@@ -14,6 +15,8 @@ process GroupPCA {
         input_prefix = get_prefix(bed_file)
         """
         plink2 \
+            --threads ${task.cpus} \
+            --memory ${task.memory.toMega().toString()} \
             --bfile ${input_prefix} \
             --pca ${params.N_PCS} \
             --out ${group}

@@ -1,4 +1,5 @@
 process MergeGenotypes {
+    label "bigmem"
     label "multithreaded"
     publishDir "${publish_dir}", mode: 'symlink'
 
