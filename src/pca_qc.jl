@@ -71,7 +71,7 @@ end
 plink2_pca(input_prefix, output_prefix; npcs=10) = run(Cmd([
     "plink2",
     "--bfile", input_prefix,
-    "--pca approx", string(npcs),
+    "--pca", string(npcs), "approx",
     "--out", output_prefix])
 )
 
