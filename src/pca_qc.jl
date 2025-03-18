@@ -68,12 +68,15 @@ function get_outliers_and_save_plots(loadings;
     return outliers
 end
 
-plink2_pca(input_prefix, output_prefix; npcs=10) = run(Cmd([
-    "plink2",
-    "--bfile", input_prefix,
-    "--pca", string(npcs), "approx",
-    "--out", output_prefix])
-)
+function plink2_pca(input_prefix, output_prefix; npcs=10, approx=true)
+    pca_str = approx ? string("--pca ", npcs, " approx") : string("--pca ", npcs)
+    run(Cmd([
+        "plink2",
+        "--bfile", input_prefix,
+        pca_str,
+        "--out", output_prefix])
+    )
+end
 
 function gcta_loadings(bfile_prefix, pca_prefix, outprefix)
     run(Cmd([
@@ -104,10 +107,11 @@ end
 function pca_qc(input_prefix, ancestry_file; 
     npcs=10, 
     iqr_factor=3,
-    output_prefix = string(input_prefix, ".after_pca_qc")
+    output_prefix = string(input_prefix, ".after_pca_qc"),
+    pca_approx=true
     )
     # run PCA, compute PCA loadings and get outlier variants
-    plink2_pca(input_prefix, input_prefix)
+    plink2_pca(input_prefix, input_prefix; npcs=npcs, approx=pca_approx)
     loadings = gcta_loadings(input_prefix, input_prefix, input_prefix)
     outliers = get_outliers_and_save_plots(loadings; 
         output_prefix=string(input_prefix, ".before_pca_qc"), 
@@ -116,7 +120,7 @@ function pca_qc(input_prefix, ancestry_file;
     )
     # Exclude outliers, run PCA and loadings and plot again to verify the effect of the operation
     plink2_exclude(outliers, input_prefix, output_prefix)
-    plink2_pca(output_prefix, output_prefix)
+    plink2_pca(output_prefix, output_prefix; npcs=npcs, approx=pca_approx)
     loadings = gcta_loadings(output_prefix, output_prefix, output_prefix)
     get_outliers_and_save_plots(loadings; 
         output_prefix=output_prefix,

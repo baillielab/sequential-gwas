@@ -263,6 +263,9 @@ function cli_settings()
             arg_type = Float64
             help = "IQR factor to use for outlier detection."
             default = 3
+        "--pca-approx"
+            help = "Whether to use plink2 PCA approximation"
+            action = :store_true
     end
 
     @add_arg_table! s["estimate-ancestry"] begin
@@ -528,7 +531,8 @@ function julia_main()::Cint
             cmd_settings["ancestry-file"]; 
             npcs=cmd_settings["npcs"], 
             iqr_factor=cmd_settings["iqr-factor"],
-            output_prefix = cmd_settings["output-prefix"]
+            output_prefix = cmd_settings["output-prefix"],
+            pca_approx=cmd_settings["pca-approx"]
         )
     elseif cmd == "make-report"
         make_report(;

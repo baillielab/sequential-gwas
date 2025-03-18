@@ -19,12 +19,13 @@ process PCAFindHighLoadings {
     script:
         input_prefix = get_prefix(bed_file)
         output_prefix = "${input_prefix}.after_pca_qc"
+        pca_approx = params.PCA_APPROX == true ? "--pca-approx" : ""
         """
         ${get_julia_cmd(task.cpus)} pca-qc \
             --input-prefix ${input_prefix} \
             --output-prefix ${output_prefix} \
             --ancestry-file ${ancestry} \
             --npcs ${params.N_PCS} \
-            --iqr-factor ${params.IQR_FACTOR}
+            --iqr-factor ${params.IQR_FACTOR} ${pca_approx}
         """
 }

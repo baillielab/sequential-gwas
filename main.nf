@@ -27,6 +27,7 @@ params.QC_HWE_K = 0.001
 params.QC_INDIVIDUAL_MISSING_RATE = 0.02
 params.IP_VALUES = "1000 50 0.05"
 params.PCA_MAF = 0.01
+params.PCA_APPROX = true
 params.IQR_FACTOR = 10
 
 // GWAS params

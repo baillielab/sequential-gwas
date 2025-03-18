@@ -13,12 +13,13 @@ process GroupPCA {
     
     script:
         input_prefix = get_prefix(bed_file)
+        approx = params.PCA_APPROX == true ? " approx" : ""
         """
         plink2 \
             --threads ${task.cpus} \
             --memory ${task.memory.toMega().toString()} \
             --bfile ${input_prefix} \
-            --pca ${params.N_PCS} approx \
+            --pca ${params.N_PCS}${approx} \
             --out ${group}
         """
 }
