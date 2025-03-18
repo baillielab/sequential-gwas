@@ -1,0 +1,7 @@
+test/*
+docs/*
+.github/*
+build/*
+.nextflow/*
+work/*
+results/*
