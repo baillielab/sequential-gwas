@@ -19,6 +19,7 @@ using Literate
 using MarkdownTables
 using YAML
 using GeneticsMakie
+using JSON
 
 include("resources.jl")
 include("one_time_checks.jl")
