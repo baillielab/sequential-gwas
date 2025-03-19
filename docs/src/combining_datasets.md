@@ -70,8 +70,16 @@ The covariate file is a CSV file in the `pre-qc` directory and named `covariates
 If the previous steps have been completed successfully you can run:
 
 ```bash
-bash run.sh
+./run.sh CombineDatasets
 ```
+
+## Outputs
+
+All outputs are produced in `PUBLISH_DIR`, the main outputs of the workflow are:
+
+- `report.md`: A report of the pipeline execution
+- `genotypes.arrays_wgs.aggregated.{bed,bim,fam}`: The aggregated genotypes
+- `covariates.merged.csv`: Covariate file combined with principal components and ancestry estimates.
 
 ## Pipeline parameters
 
@@ -99,6 +107,7 @@ This is the list of all the pipeline's parameters. In principle they don't need 
 - `QC_INDIVIDUAL_MISSING_RATE` (default: 0.1): Maximum missing rate per individual across genotypes. Individuals above the threshold are dropped.
 - `QC_HWE_P` (default: 1e-5): Used to identify potential technical artifacts and drop variants.
 - `QC_HWE_K` (default: 0.001): Used together with `QC_HWE_P`
+- `PCA_APPROX` (default: true): Whether PCA is performed via approximation [see](https://www.cog-genomics.org/plink/2.0/strat)
 
 ## Current Limitations
 
