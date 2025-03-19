@@ -169,6 +169,10 @@ Some variants may have high PCA loadings, we remove them.
 cp(string(pca_plot_prefix, ".before_pca_qc.loadings.png"), "loadings_before_pca.png") #hide
 MD(string("[loadings-before](loadings_before_pca.png)")) #hide
 
+# - PCA / Ancestry estimates before Removal
+cp(string(pca_plot_prefix, ".before_pca_qc.all.png"), "pca_ancestry_before.png") #hide
+MD(string("[pca-ancestry-before](pca_ancestry_before.png)")) #hide
+
 # - Number of variants excluded by PCA QC (high loadings)
 
 countlines(high_loadings_variants) #hide
@@ -178,8 +182,8 @@ cp(string(pca_plot_prefix, ".after_pca_qc.loadings.png"), "loadings_after_pca.pn
 MD(string("[loadings-after](loadings_after_pca.png)")) #hide
 
 # - PCA / Ancestry estimates
-cp(string(pca_plot_prefix, ".after_pca_qc.all.png"), "pca_ancestry.png") #hide
-MD(string("[pca-ancestry](pca_ancestry.png)")) #hide
+cp(string(pca_plot_prefix, ".after_pca_qc.all.png"), "pca_ancestry_after.png") #hide
+MD(string("[pca-ancestry-after](pca_ancestry_after.png)")) #hide
 
 #=
 - Number of variants and individuals in final fileset
