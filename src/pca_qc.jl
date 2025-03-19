@@ -69,11 +69,11 @@ function get_outliers_and_save_plots(loadings;
 end
 
 function plink2_pca(input_prefix, output_prefix; npcs=10, approx=true)
-    pca_str = approx ? string("--pca ", npcs, " approx") : string("--pca ", npcs)
+    pca_args = approx ? ["--pca", string(npcs), "approx"] : ["--pca", string(npcs)]
     run(Cmd([
         "plink2",
         "--bfile", input_prefix,
-        pca_str,
+        pca_args...,
         "--out", output_prefix])
     )
 end
