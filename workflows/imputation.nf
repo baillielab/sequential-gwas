@@ -22,7 +22,7 @@ process ImputeGenotypes {
     """
 }
 
-process BedToChrVCF {
+process SplitByChromosome {
     input:
         path genotypes
         val chr
@@ -40,7 +40,6 @@ process BedToChrVCF {
             --chr ${chr} \
             --recode vcf \
             --out ${output_prefix}
-        bgzip ${output_prefix}.vcf
         """
 }
 
@@ -63,6 +62,6 @@ workflow Imputation {
     bed_genotypes = Channel.fromPath("${params.GENOTYPES_PREFIX}.{bed,bim,fam}").collect()
     // chrs = GetChromosomes(bed_genotypes).splitText() { it.trim() }
     chrs = Channel.of(1..22).map {it -> "chr$it"}
-    vcf_genotypes = BedToChrVCF(bed_genotypes, chrs)
+    vcf_genotypes = SplitByChromosome(bed_genotypes, chrs)
     ImputeGenotypes(topmed_api_token, vcf_genotypes)
 }

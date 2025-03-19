@@ -20,7 +20,7 @@ In order to upload the current state of the code, or a specific version of FlowO
 The following assumes a specific git tag corresponding to a release for which a matching docker image exists, but the steps can be adapted to any need.
 
 ```bash
-export FLOWOMICC_TAG="sha-9fd03f5"
+export FLOWOMICC_TAG="main"
 ```
 
 In the shared folder.
@@ -36,7 +36,7 @@ git checkout $FLOWOMICC_TAG
    
 ```bash
 docker pull olivierlabayle/genomicc:$FLOWOMICC_TAG
-docker save olivierlabayle/genomicc:$FLOWOMICC_TAG | gzip > genomicc.tar.gz
+docker save olivierlabayle/genomicc:$FLOWOMICC_TAG | gzip > sequential-gwas/genomicc.tar.gz
 ```
 
 Then ask Dominique to uplaod the folder to ODAP.
@@ -46,7 +46,7 @@ Then ask Dominique to uplaod the folder to ODAP.
 In the uploaded repository, build the singularity image:
 
 ```bash
-singularity build genomicc.sif docker-archive:genomicc.tar.gz
+gunzip genomicc.tar.gz && singularity build genomicc.sif docker-archive:genomicc.tar
 ```
 
 
