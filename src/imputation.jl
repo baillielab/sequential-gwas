@@ -1,4 +1,4 @@
-function make_sample_batches(prefix)
+function make_sample_batches(prefix; samples_per_file=5_000)
     fam = SequentialGWAS.read_fam(string(prefix, ".fam"))
     return map(Iterators.partition(1:nrow(fam), samples_per_file)) do indices
         filename = string(prefix, ".samples_", indices[1], "_", indices[end], ".keep")
@@ -12,8 +12,8 @@ function get_chromosomes(prefix)
     return unique(bim.CHR_CODE)
 end
 
-function split_bed_file_to_vcf(prefix)
-    sample_batches = make_sample_batches(prefix)
+function split_bed_file_to_vcf(prefix; samples_per_file=5_000)
+    sample_batches = make_sample_batches(prefix; samples_per_file=samples_per_file)
     chromosomes = get_chromosomes(prefix)
     Threads.@threads for chr in chromosomes
         for samples_batch in sample_batches
@@ -44,16 +44,15 @@ function impute(prefix, token_file;
     r2_filter=0.8, 
     submission_batchsize=3,
     refresh_rate=60, 
-    samples_per_file=10_000
+    samples_per_file=5_000
     )
     prefix = "/Users/olabayle/Dev/sequential-gwas/test/assets/gwas/genotypes/genotypes.arrays_wgs.aggregated"
-    split_bed_file_to_vcf(prefix)
     token_file = "assets/topmed-api-token"
-    token = read(token_file, String)
-    dir, _prefix = splitdir(prefix)
+
+    split_bed_file_to_vcf(prefix; samples_per_file=samples_per_file)
     vcf_files = filter(x -> endswith(x, ".vcf.gz"), readdir(dir, join=true))
-    (batchid, batch) = first(enumerate(Iterators.partition(vcf_files, batchsize)))
-    for (batchid, batch) in enumerate(Iterators.partition(vcf_files, batchsize))
+    token = read(token_file, String)
+    for (batchid, batch) in enumerate(Iterators.partition(vcf_files, submission_batchsize))
         # Submit
         cmd = Cmd([
                 "curl", 
