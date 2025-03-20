@@ -138,6 +138,26 @@ function cli_settings()
             arg_type = String
             required = true
             help = "Path to PCs file."
+        
+        "wgs-samples"
+            arg_type = String
+            required = true
+            help = "Path to WGS samples file."
+        
+        "release-r8-fam"
+            arg_type = String
+            required = true
+            help = "Path to r8 fam file."
+
+        "release-2021-2023-fam"
+            arg_type = String
+            required = true
+            help = "Path to release 2021-2023 fam file."
+        
+        "release-2024-now-fam"
+            arg_type = String
+            required = true
+            help = "Path to release 2024-now fam file."
 
         "--output"
             arg_type = String
@@ -240,6 +260,11 @@ function cli_settings()
             arg_type = String
             required = true
             help = "Prefix to final genotypes."
+        
+        "covariates"
+            arg_type = String
+            required = true
+            help = "Path to covariates file."
     end
 
     @add_arg_table! s["pca-qc"] begin
@@ -554,13 +579,18 @@ function julia_main()::Cint
             merged_qced_genotypes_prefix = cmd_settings["merged_qced_genotypes_prefix"],
             pca_plot_prefix = cmd_settings["pca_plots_prefix"],
             high_loadings_variants = cmd_settings["high_loadings_variants"],
-            final_genotypes_prefix = cmd_settings["final_genotypes_prefix"]
+            final_genotypes_prefix = cmd_settings["final_genotypes_prefix"],
+            covariates_file = cmd_settings["covariates"]
         )
     elseif cmd == "combine-covariates"
         combine_covariates(
             cmd_settings["covariates-file"],
             cmd_settings["ancestry-file"],
-            cmd_settings["pcs-file"];
+            cmd_settings["pcs-file"],
+            cmd_settings["wgs-samples"],
+            cmd_settings["release-r8-fam"],
+            cmd_settings["release-2021-2023-fam"],
+            cmd_settings["release-2024-now-fam"];
             output=cmd_settings["output"]
         )
     elseif cmd == "make-gwas-groups"

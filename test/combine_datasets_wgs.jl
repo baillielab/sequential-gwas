@@ -78,7 +78,7 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
         unflipped_bim = SequentialGWAS.read_bim(unflipped_bim_file)
         select!(unflipped_bim, 
             :VARIANT_ID, 
-            :ALLELE_1 => :UNFLIPPED_ALLELE_1, 
+            :ALLELE_1 => :UNFLIPPED_ALLELE_1,
             :ALLELE_2 => :UNFLIPPED_ALLELE_2
         )
         flipped_variants_list = readlines(flip_file)
@@ -220,6 +220,8 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     @test Set(covariates.COHORT) == Set(["genomicc", "mild", "isaric4c"])
     @test eltype(covariates.DIAGNOSIS_IS_SEVERE) <: Union{Missing, Int}
     @test Set(covariates.ISARIC_MAX_SEVERITY_SCORE) == Set([missing, 4, 5])
+    @test Set(covariates.PLATFORM) == Set(["GSA-MD-24v3-0_A1", "GSA-MD-48v4-0_A1", "WGS"])
+    @test filter(x -> x.IID == "odap3001", covariates).PLATFORM == ["WGS"] # Check the sample is assigned WGS and not 2024 release
     
     # Check report and final dataset
     @test isfile(joinpath(RESULTS_DIR, "report.md"))

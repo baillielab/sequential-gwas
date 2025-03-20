@@ -18,11 +18,17 @@ process LDPruning {
             --threads ${task.cpus} \
             --memory ${task.memory.toMega().toString()} \
             --bfile ${input_prefix} \
+            --indep-pairwise ${params.IP_VALUES}
+        
+        plink2 \
+            --threads ${task.cpus} \
+            --memory ${task.memory.toMega().toString()} \
+            --bfile ${input_prefix} \
+            --extract plink2.prune.in \
             --maf ${params.PCA_MAF} \
-            --indep-pairwise ${params.IP_VALUES} \
-            --exclude range ${high_ld_regions} \
             --make-bed \
-            --out ${output_prefix}
+            --exclude range ${high_ld_regions} \
+            --out ${output_prefix} \
         """
 }
 
@@ -44,10 +50,16 @@ process GroupLDPruning {
             --threads ${task.cpus} \
             --memory ${task.memory.toMega().toString()} \
             --bfile ${input_prefix} \
+            --indep-pairwise ${params.IP_VALUES}
+        
+        plink2 \
+            --threads ${task.cpus} \
+            --memory ${task.memory.toMega().toString()} \
+            --bfile ${input_prefix} \
+            --extract plink2.prune.in \
             --maf ${params.PCA_MAF} \
-            --indep-pairwise ${params.IP_VALUES} \
-            --exclude range ${high_ld_regions} \
             --make-bed \
-            --out ${output_prefix}
+            --exclude range ${high_ld_regions} \
+            --out ${output_prefix} \
         """
 }

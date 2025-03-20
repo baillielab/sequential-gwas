@@ -25,7 +25,7 @@ function plot_pca(eigenvectors_file, ancestry_file; outprefix="pca")
     save(string(outprefix, ".1vs2.png"), fig)
     # All PCs plots
     n_pcs = size(eigenvectors, 2) - 3
-    fig = Figure(size=(1000, 1000))
+    fig = Figure(size=(800, 800))
     ax_row = 1
     ax_col = 1
     local ax
@@ -50,7 +50,7 @@ function get_outliers_and_save_plots(loadings;
     npcs=10
     )
     outliers = Set([])  
-    fig = Figure(size=(1000, 1000))
+    fig = Figure(size=(800, 800))
     ax_row = 1
     ax_col = 1
     for pc in 1:npcs

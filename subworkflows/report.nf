@@ -16,6 +16,7 @@ workflow Report {
         pca_plots
         high_loading_variants
         final_merged_genotypes
+        covariates
 
     main:
         unlifted_variants = unlifted_variants_all_releases.branch{ it ->
@@ -53,7 +54,8 @@ workflow Report {
             merged_qced_genotypes,
             pca_plots,
             high_loading_variants,
-            final_merged_genotypes
+            final_merged_genotypes,
+            covariates
         )
 
 }

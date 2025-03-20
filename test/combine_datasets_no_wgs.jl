@@ -33,7 +33,9 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     @test nindividuals > 1000
     @test nrow(SequentialGWAS.read_bim(joinpath(RESULTS_DIR, "genotypes.arrays_wgs.aggregated.bim"))) > 100
     @test isfile(joinpath(RESULTS_DIR, "genotypes.arrays_wgs.aggregated.bed"))
-    @test nrow(CSV.read(joinpath(RESULTS_DIR, "covariates.merged.csv"), DataFrame)) == nindividuals
+    covariates = CSV.read(joinpath(RESULTS_DIR, "covariates.merged.csv"), DataFrame)
+    @test Set(covariates.PLATFORM) == Set(["GSA-MD-24v3-0_A1", "GSA-MD-48v4-0_A1"])
+    @test nrow(covariates) == nindividuals
     @test isfile(joinpath(RESULTS_DIR, "report.md"))
 end
 

@@ -28,6 +28,7 @@ process MakeReport {
         path(pca_plots)
         path(high_loading_variants)
         path(final_merged_genotypes)
+        path(covariates)
     
     output:
         path("report.md")
@@ -65,6 +66,7 @@ process MakeReport {
             ${merged_qced_genotypes_prefix} \
             ${pca_plots_prefix} \
             ${high_loading_variants} \
-            ${final_merged_genotypes_prefix}
+            ${final_merged_genotypes_prefix} \
+            ${covariates}
         """
 }

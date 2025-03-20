@@ -98,10 +98,14 @@ workflow CombineDatasets {
     }
     // Combine Covariates
     covariates = file(params.COVARIATES, checkIfExists: true)
-    CombineCovariates(
+    combined_covariates = CombineCovariates(
         covariates,
         merge_output.ancestries,
-        merge_output.pcs
+        merge_output.pcs,
+        wgs_sample_ids,
+        qced_genotypes.genotypes.filter { it -> it[0] == "release-r8" }.map{ it -> it[3] }.first(),
+        qced_genotypes.genotypes.filter { it -> it[0] == "release-2021-2023" }.map{ it -> it[3] }.first(),
+        qced_genotypes.genotypes.filter { it -> it[0] == "release-2024-now" }.map{ it -> it[3] }.first()
     )
     // Report
     Report(
@@ -118,6 +122,7 @@ workflow CombineDatasets {
         merge_output.qced_merged,
         merge_output.pca_plots,
         merge_output.high_loadings_variants,
-        merge_output.final_merged
+        merge_output.final_merged,
+        combined_covariates
     )
 }

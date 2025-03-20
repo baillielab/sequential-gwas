@@ -1,9 +1,9 @@
-
 using SequentialGWAS #hide
 using CSV #hide
 using DataFrames #hide
 using MarkdownTables #hide
 using Markdown #hide
+using CairoMakie #hide
 #hide
 struct MD str end                                                      #hide
 Base.show(io::IO, ::MIME"text/markdown", md::MD) = print(io, md.str)   #hide
@@ -89,7 +89,7 @@ countlines(shared_variants) #hide
 
 Some individuals may be present in multiple releases (and have whole-genome sequencing). We give priority to data sources in the following order: WGS, 2024 - now, 2021 - 2023, r8 release.
 
-Variants dropped from each release due to overlap with a higher priority release.
+Samples dropped from each release due to overlap with a higher priority release.
 =#
 
 println("r8 release: ", countlines(dup_samples_r8)) #hide
@@ -159,7 +159,7 @@ table = DataFrame(Dict( #hide
 table |> markdown_table() #hide
 
 #=
-### After PCA QC
+### After PCA QC (Final Step)
 
 Some variants may have high PCA loadings, we remove them.
 
@@ -186,6 +186,8 @@ cp(string(pca_plot_prefix, ".after_pca_qc.all.png"), "pca_ancestry_after.png") #
 MD(string("[pca-ancestry-after](pca_ancestry_after.png)")) #hide
 
 #=
+## Some Statistics
+
 - Number of variants and individuals in final fileset
 
 These are the final number of variants and individuals in the merged dataset.
@@ -198,3 +200,49 @@ table = DataFrame(Dict( #hide
 table |> markdown_table() #hide
 
 
+#=
+- Estimated Ancestries
+
+Number of individuals per estimated ancestry group
+=#
+
+covariates = CSV.read(covariates_file, DataFrame) #hide
+ancestries = combine(groupby(covariates, :ANCESTRY), nrow => :N) #hide
+ancestries |> markdown_table() #hide
+
+#=
+- Samples per cohort
+
+Number of individuals per cohort
+=#
+
+cohorts = combine(groupby(covariates, :COHORT), nrow => :N) #hide
+cohorts |> markdown_table() #hide
+
+#=
+- Samples per platform
+
+Number of individuals per genetic measurement platform
+=#
+
+platforms = combine(groupby(covariates, :PLATFORM), nrow => :N) #hide
+platforms |> markdown_table() #hide
+
+#=
+- Samples per Sex
+
+Number of individuals per sex
+=#
+
+sex = combine(groupby(covariates, :SEX), nrow => :N) #hide
+cohorts |> markdown_table() #hide
+
+#=
+- Age Distribution
+=#
+
+fig = Figure(resolution = (800, 400)) #hide
+ax = Axis(fig[1, 1], xlabel = "Age", ylabel = "Number") #hide
+hist!(ax, collect(skipmissing(covariates.AGE)), bins = 50) #hide
+save("age_distribution.png", fig) #hide
+MD(string("![age-distribution](age_distribution.png)")) #hide
