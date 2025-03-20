@@ -40,7 +40,7 @@ flowchart TB
     v87["output_prefix"]
     v90["high_ld_regions"]
     v94["high_ld_regions"]
-    v99["covariates_file"]
+    v108["covariates_file"]
     end
     subgraph CombineDatasets
     subgraph KGP
@@ -74,8 +74,11 @@ flowchart TB
     v50(( ))
     v51(( ))
     v58(( ))
+    v99(( ))
     v102(( ))
-    v104(( ))
+    v105(( ))
+    v110(( ))
+    v112(( ))
     end
     subgraph GVCFGenotyping
     v59([IndexReferenceGenome])
@@ -88,9 +91,9 @@ flowchart TB
     subgraph MergeGenotypingArraysAndWGS
     v76([MergeGenotypesAndQC])
     end
-    v100([CombineCovariates])
+    v109([CombineCovariates])
     subgraph Report
-    v105([MakeReport])
+    v113([MakeReport])
     end
     v38(( ))
     end
@@ -105,9 +108,8 @@ flowchart TB
     v89[" "]
     v93[" "]
     v97[" "]
-    v101[" "]
-    v106[" "]
-    v107[" "]
+    v114[" "]
+    v115[" "]
     end
     v0 --> v1
     v3 --> v1
@@ -141,27 +143,31 @@ flowchart TB
     v37 --> v38
     v38 --> v40
     v40 --> v48
+    v40 --> v109
     v41 --> v42
     v31 --> v42
     v42 --> v44
-    v42 --> v102
+    v42 --> v110
     v36 --> v43
     v43 --> v44
     v45 --> v46
     v44 --> v46
     v46 --> v47
     v46 --> v51
-    v46 --> v104
+    v46 --> v112
     v27 --> v48
     v47 --> v48
     v48 --> v49
-    v48 --> v105
+    v48 --> v113
     v48 --> v50
     v48 --> v51
     v48 --> v58
     v50 --> v56
     v51 --> v56
     v56 --> v57
+    v56 --> v99
+    v56 --> v102
+    v56 --> v105
     v56 --> v76
     v59 --> v61
     v60 --> v61
@@ -175,7 +181,7 @@ flowchart TB
     v62 --> v67
     v64 --> v67
     v67 --> v68
-    v67 --> v105
+    v67 --> v113
     v67 --> v76
     v74 --> v76
     v75 --> v76
@@ -188,16 +194,19 @@ flowchart TB
     v76 --> v93
     v94 --> v76
     v76 --> v97
-    v99 --> v100
-    v76 --> v100
-    v100 --> v101
-    v44 --> v105
-    v50 --> v105
-    v102 --> v105
-    v104 --> v105
-    v76 --> v105
-    v105 --> v107
-    v105 --> v106
+    v108 --> v109
+    v99 --> v109
+    v102 --> v109
+    v105 --> v109
+    v76 --> v109
+    v109 --> v113
+    v44 --> v113
+    v50 --> v113
+    v110 --> v113
+    v112 --> v113
+    v76 --> v113
+    v113 --> v115
+    v113 --> v114
     v12 --> v76
     v26 --> v76
     v50 --> v76
