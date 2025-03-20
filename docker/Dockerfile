@@ -3,17 +3,15 @@ FROM olivierlabayle/genomicc-base:main
 RUN apt-get clean \
     && apt-get update 
 
-# Create Julia App
+# Create Julia Sysimage
+
 COPY . /opt/sequential-gwas
 
 RUN cd /opt/sequential-gwas \
     && julia --project --startup-file=no -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
 
-# RUN cd /opt/sequential-gwas \
-#     && julia --startup-file=no bin/make_app.jl \
-#     && chmod +x build/bin/seq-gwas \
-#     && ./build/bin/seq-gwas --help
+RUN cd /opt/sequential-gwas \
+    && julia --project --startup-file=no --threads=auto bin/make_sysimage.jl
 
-# ENV PATH=/opt/sequential-gwas/build/bin/:${PATH}
 
 

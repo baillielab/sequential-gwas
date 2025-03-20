@@ -3,5 +3,7 @@ def get_prefix(file){
 }
 
 def get_julia_cmd(cpus){
-    return "JULIA_DEPOT_PATH=/tmp:\$JULIA_DEPOT_PATH julia --project=/opt/sequential-gwas --startup-file=no --threads ${cpus} /opt/sequential-gwas/bin/seq-gwas.jl"
+    def sysimageFile = new File("/opt/sequential-gwas/FlowOMMIC.so")
+    def opts = sysimageFile.exists() ? "--sysimage=${sysimageFile} --threads=${cpus}" : "--threads=${cpus}"
+    return "JULIA_DEPOT_PATH=/tmp:\$JULIA_DEPOT_PATH julia --project=/opt/sequential-gwas --startup-file=no ${opts} /opt/sequential-gwas/bin/seq-gwas.jl"
 }
