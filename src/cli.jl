@@ -330,9 +330,9 @@ function cli_settings()
             arg_type = String
             help = "Path to bim file."
 
-        "ref-bim"
+        "shared-variants"
             arg_type = String
-            help = "Path to KGP bim file."
+            help = "Path to shared variants list in chr:pos:ref:alt format."
         
         "--output"
             arg_type = String
@@ -515,7 +515,7 @@ function julia_main()::Cint
     elseif cmd == "complete-bim-with-ref"
         complete_bim_with_ref(
             cmd_settings["bim"],
-            cmd_settings["ref-bim"],
+            cmd_settings["shared-variants"],
             output=cmd_settings["output"]
         )
     elseif cmd == "get-kgp-unrelated-individuals"

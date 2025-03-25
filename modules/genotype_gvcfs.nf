@@ -11,7 +11,6 @@ process GenotypeGVCFs{
         path reference_genome
         path reference_genome_index
         path reference_genome_dict
-        path kgp_bim
 
     output:
         tuple path("${output_prefix}.bed"), path("${output_prefix}.bim"), path("${output_prefix}.fam")
@@ -42,7 +41,7 @@ process GenotypeGVCFs{
         # Fills in missing allele and update variant ids
         ${get_julia_cmd(task.cpus)} complete-bim-with-ref \
             ${output_prefix}.temp.bim \
-            ${kgp_bim} \
+            ${shared_variants_plink} \
             --output ${output_prefix}.temp.bim
 
         # Only keep variants that are in the shared list

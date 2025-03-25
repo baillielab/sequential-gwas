@@ -10,7 +10,6 @@ workflow GVCFGenotyping {
         shared_variants_gatk
         shared_variants_plink
         reference_genome
-        kgp_bim
         
     main:
         reference_genome_index = IndexReferenceGenome(reference_genome)
@@ -21,8 +20,7 @@ workflow GVCFGenotyping {
             shared_variants_plink,
             reference_genome, 
             reference_genome_index, 
-            reference_genome_dict,
-            kgp_bim
+            reference_genome_dict
         )
         merge_list = genotypes
             .map { it -> get_prefix(it[0].getName()) }

@@ -12,7 +12,6 @@ workflow CombineDatasets {
     kgp = KGP()
     kgp_genotypes = kgp.genotypes.map{ it -> it[0..2] }
     kgp_bim_afreq = kgp.genotypes.map{ it -> [it[1], it[3]] }
-    kgp_bim = kgp.genotypes.map{ it -> it[1] }
     // Reference Genome
     reference_genome = DownloadOrAccessReferenceGenome()
     // GRC37 Genotypes
@@ -62,7 +61,6 @@ workflow CombineDatasets {
             qced_genotypes.gatk_shared_variants,
             qced_genotypes.plink_shared_variants,
             reference_genome,
-            kgp_bim
         )
         wgs_genotypes = wgs_data.genotypes
         // Merge All Genotypes
