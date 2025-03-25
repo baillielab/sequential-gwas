@@ -1,7 +1,7 @@
 include { get_prefix; get_julia_cmd } from './utils.nf'
 
 process EstimateAncestry {
-    label "multithreaded"
+    label "hyperthreaded"
 
     publishDir "${params.ANCESTRY_PUBLISH_DIR}/ancestry", mode: 'symlink'
 

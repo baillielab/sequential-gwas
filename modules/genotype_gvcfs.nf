@@ -34,6 +34,7 @@ process GenotypeGVCFs{
             --memory ${task.memory.toMega().toString()} \
             --vcf ${prefix}.shared.vcf.gz \
             --output-chr chr26 \
+            --max-alleles 2 \
             --set-all-var-ids @:# \
             --make-bed \
             --out ${output_prefix}.temp

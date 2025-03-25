@@ -235,7 +235,7 @@ Number of individuals per sex
 =#
 
 sex = combine(groupby(covariates, :SEX), nrow => :N) #hide
-cohorts |> markdown_table() #hide
+sex |> markdown_table() #hide
 
 #=
 - Age Distribution
