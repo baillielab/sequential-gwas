@@ -74,7 +74,7 @@ function plink2_pca(input_prefix, output_prefix; npcs=10, approx=true)
         "plink2",
         "--bfile", input_prefix,
         pca_args...,
-        "--threads", string(Threads.nthreads()),
+        "--threads", string(nthreads()),
         "--out", output_prefix])
     )
 end
@@ -84,7 +84,7 @@ function gcta_loadings(bfile_prefix, pca_prefix, outprefix)
     "gcta64", 
     "--bfile", bfile_prefix, 
     "--pc-loading", pca_prefix,
-    "--threads", string(Threads.nthreads()),
+    "--threads", string(nthreads()),
     "--out", outprefix
     ]))
     return CSV.read(string(outprefix, ".pcl"), DataFrame)
@@ -100,7 +100,7 @@ function plink2_exclude(outliers, input_prefix, outprefix)
         "plink2",
         "--bfile", input_prefix,
         "--exclude", "variants_to_exclude.txt",
-        "--threads", string(Threads.nthreads()),
+        "--threads", string(nthreads()),
         "--make-bed",
         "--out", outprefix
     ]))

@@ -38,7 +38,7 @@ function cli_settings()
             action = :command
             help = "Generates shared variants file and for each input, variants to flip, a new bim file and a summary of the suggested actions."
         
-        "complete-bim-with-ref"
+        "genotype-gvcf"
             action = :command
             help = "Completes a bim file with the KGP."
         
@@ -325,19 +325,27 @@ function cli_settings()
             default = "pca"
     end
 
-    @add_arg_table! s["complete-bim-with-ref"] begin
-        "bim"
+    @add_arg_table! s["genotype-gvcf"] begin
+        "gvcf-file"
             arg_type = String
-            help = "Path to bim file."
+            help = "Path to GVCF file."
 
-        "shared-variants"
+        "shared-variants-plink"
             arg_type = String
-            help = "Path to shared variants list in chr:pos:ref:alt format."
+            help = "Path to shared variants output by plink."
+
+        "shared-variants-gatk"
+            arg_type = String
+            help = "Path to shared variants output for GATK (bed format)."
+
+        "reference-genome"
+            arg_type = String
+            help = "Path to reference genome."
         
-        "--output"
+        "--output-prefix"
             arg_type = String
-            help = "Output bim file."
-            default = "complete.bim"
+            help = "Output preix."
+            default = "output"
     end
 
     @add_arg_table! s["get-kgp-unrelated-individuals"] begin
@@ -512,11 +520,13 @@ function julia_main()::Cint
             outdir=cmd_settings["outdir"],
             threshold=cmd_settings["threshold"]
         )
-    elseif cmd == "complete-bim-with-ref"
-        complete_bim_with_ref(
-            cmd_settings["bim"],
-            cmd_settings["shared-variants"],
-            output=cmd_settings["output"]
+    elseif cmd == "genotype-gvcf"
+        genotype_gvcf(
+            cmd_settings["gvcf-file"],
+            cmd_settings["shared-variants-plink"],
+            cmd_settings["shared-variants-gatk"],
+            cmd_settings["reference-genome"];
+            output_prefix=cmd_settings["output-prefix"]
         )
     elseif cmd == "get-kgp-unrelated-individuals"
         kgp_unrelated_individuals(

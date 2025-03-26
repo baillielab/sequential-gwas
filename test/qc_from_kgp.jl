@@ -36,7 +36,6 @@ TESTDIR = joinpath(pkgdir(SequentialGWAS), "test")
     @test CSV.read(joinpath(tmpdir, "release_2024_now.samples_to_drop.txt"), DataFrame, header=[:FID, :IID]) == DataFrame(FID = ["F1"], IID=["I5"])
     @test CSV.read(joinpath(tmpdir, "release_2021_2023.samples_to_drop.txt"), DataFrame, header=[:FID, :IID]) == DataFrame(FID = ["F2"], IID=["I5"])
     @test CSV.read(joinpath(tmpdir, "release_r8.samples_to_drop.txt"), DataFrame, header=[:FID, :IID]) == DataFrame(FID = ["F1", "F2"], IID=["I1", "I3"])
-
 end
 
 

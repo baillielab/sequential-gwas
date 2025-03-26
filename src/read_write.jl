@@ -80,29 +80,3 @@ function write_chromosomes(input_prefix; output="chromosomes.txt")
         end
     end
 end
-
-function complete_bim_with_ref(bim_file, shared_variants_file; output=bim_file)
-    # Make the allele mapping for each variant
-    variants_map = Dict()
-    for line in readlines(shared_variants_file)
-        chr, pos, ref, alt = split(line, ":")
-        variants_map[string(chr, ":", pos)] = (
-            variant_id = line,
-            allele_map = Dict(ref => alt, alt => ref)
-        )
-    end
-    # Fill the missing allele and update the variant id
-    bim = SequentialGWAS.read_bim(bim_file)
-    bim.VARIANT_ID = convert(Vector{String}, bim.VARIANT_ID)
-    bim.ALLELE_1 = convert(Vector{String}, bim.ALLELE_1)
-    for row in eachrow(bim)
-        if haskey(variants_map, row.VARIANT_ID)
-            info = variants_map[row.VARIANT_ID]
-            row.VARIANT_ID = info.variant_id
-            if row.ALLELE_1 == "."
-                row.ALLELE_1 = info.allele_map[row.ALLELE_2]
-            end
-        end
-    end
-    CSV.write(output, bim, header=false, delim="\t")
-end

@@ -125,6 +125,9 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     odap_bim_files = joinpath.(wgs_dir, string.("mock.odap", 3001:3010, ".shared.bim"))
     for bim_file in odap_bim_files
         bim = SequentialGWAS.read_bim(bim_file)
+        # Check no unknwon ALLELE_1/2
+        @test all(bim.ALLELE_1 .!= ".")
+        @test all(bim.ALLELE_2 .!= ".")
         # Check chr:pos:ref:alt format
         @test all(length.(split.(bim.VARIANT_ID, ":")) .== 4)
         # Check exactly required variants were genotyped

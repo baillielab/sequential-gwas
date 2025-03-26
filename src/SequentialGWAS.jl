@@ -20,6 +20,7 @@ using MarkdownTables
 using YAML
 using GeneticsMakie
 using JSON
+using Base.Threads
 
 include("resources.jl")
 include("one_time_checks.jl")
@@ -33,6 +34,7 @@ include("pca_qc.jl")
 include("ancestry.jl")
 include("covariates.jl")
 include("gwas_plots.jl")
+include("gvcf_genotyping.jl")
 
 export julia_main
 
