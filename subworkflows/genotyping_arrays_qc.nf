@@ -8,7 +8,6 @@ workflow GenotypesQC {
     take: 
         grc37_genotypes
         grc38_genotypes
-        variants_to_flip
         chain_file
         kgp_bim_afreq
         wgs_sample_ids
@@ -20,7 +19,7 @@ workflow GenotypesQC {
         grch38_bed = PedToBed(grc38_genotypes)
         // Perform basic QC for all files
         genotypes_bed = grc37_lifted_bed.genotypes.concat(grch38_bed)
-        qced_genotypes = GenotypingArrayBasicQC(genotypes_bed, variants_to_flip)
+        qced_genotypes = GenotypingArrayBasicQC(genotypes_bed)
         // Generates QC files for each array using the 1000 Genomes Project
         qced_bim_afreq_files = qced_genotypes.genotypes.branch{ it ->
             release_r8: it[0] == "release-r8"

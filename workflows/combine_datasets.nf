@@ -38,7 +38,6 @@ workflow CombineDatasets {
     // Chain file for GRCh37 genotypes
     chain_file = file(params.GRC37_TO_GRC38_CHAIN_FILE, checkIfExists: true)
     // Variants to be flipped: TODO (unused atm)
-    variants_to_flip = file(params.VARIANTS_TO_FLIP_GRC38, checkIfExists: true)
     // High LD regions
     high_ld_regions = file(params.HIGH_LD_REGIONS, checkIfExists: true)
     
@@ -50,7 +49,6 @@ workflow CombineDatasets {
         qced_genotypes = GenotypesQC(
             grc37_genotypes, 
             grc38_genotypes, 
-            variants_to_flip, 
             chain_file,
             kgp_bim_afreq,
             wgs_sample_ids
@@ -80,7 +78,6 @@ workflow CombineDatasets {
         qced_genotypes = GenotypesQC(
             grc37_genotypes, 
             grc38_genotypes, 
-            variants_to_flip, 
             chain_file,
             kgp_bim_afreq,
             wgs_sample_ids

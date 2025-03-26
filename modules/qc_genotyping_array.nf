@@ -6,8 +6,7 @@ process GenotypingArrayBasicQC {
 
     input:
         tuple val(id), path(bed_file), path(bim_file), path(fam_file)
-        path variants_to_flip
-
+    
     output:
         tuple val(id), path("${output_prefix}.bed"), path("${output_prefix}.bim"), path("${output_prefix}.fam"), path("${output_prefix}.acount"), emit: genotypes 
         tuple val(id), path("${output_prefix}.log"), emit: logs
