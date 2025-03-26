@@ -25,8 +25,12 @@ jobs:
         uses: pierotofy/set-swap-space@master
         with:
           swap-size-gb: 10
-      - name: Delete huge unnecessary tools folder
-        run: sudo rm -rf /opt/hostedtoolcache && sudo rm -rf /usr/local/share/boost && sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+      # - name: Delete huge unnecessary tools folder
+      #   run: sudo rm -rf /opt/hostedtoolcache && sudo rm -rf /usr/local/share/boost && sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
