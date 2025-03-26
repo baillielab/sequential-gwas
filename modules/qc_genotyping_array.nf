@@ -10,7 +10,7 @@ process GenotypingArrayBasicQC {
 
     output:
         tuple val(id), path("${output_prefix}.bed"), path("${output_prefix}.bim"), path("${output_prefix}.fam"), path("${output_prefix}.acount"), emit: genotypes 
-        tuple val(id), path("${output_prefix}.filtered_samples.csv"), path("${output_prefix}.filtered_variants.csv"), emit: reports
+        tuple val(id), path("${output_prefix}.log"), emit: logs
 
     script:
         input_prefix = get_prefix(bed_file)
@@ -29,8 +29,5 @@ process GenotypingArrayBasicQC {
             --freq counts \
             --make-bed \
             --out ${input_prefix}.qced
-        
-        ${get_julia_cmd(task.cpus)} report-qc-effect \
-            ${input_prefix} ${output_prefix}
         """
 }

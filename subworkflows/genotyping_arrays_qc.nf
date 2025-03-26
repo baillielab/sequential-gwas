@@ -55,7 +55,7 @@ workflow GenotypesQC {
         plink_shared_variants = shared_variants_plink
         unlifted = grc37_lifted_bed.unlifted
         initial_bed_files = genotypes_bed
-        basic_qc_reports = qced_genotypes.reports
+        basic_qc_logs = qced_genotypes.logs
         kgp_qc_files_r8 = kgp_qc_files.release_r8
         kgp_qc_files_2021_2023 = kgp_qc_files.release_2021_2023
         kgp_qc_files_2024_now = kgp_qc_files.release_2024_now

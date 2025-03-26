@@ -17,6 +17,21 @@ function count_dropped_variants_and_indiv(file_prefix) #hide
     individuals = CSV.read(string(file_prefix, ".filtered_samples.csv"), DataFrame) #hide
     return [nrow(variants), nrow(individuals)] #hide
 end #hide
+function qc_report(log_file) #hide
+    filtered = Dict() #hide
+    for line in readlines(log_file) #hide
+        if startswith(line, "--geno") && occursin("removed due to missing genotype data", line) #hide
+            filtered["--geno"] = parse(Int, split(line, " ")[2]) #hide
+        elseif startswith(line, "--hwe") && occursin("removed due to Hardy-Weinberg exact test", line) #hide
+            filtered["--hwe"] = parse(Int, split(line, " ")[2]) #hide
+        elseif startswith(line, "--rm-dup") && occursin("duplicated", line) #hide
+            filtered["--rm-dup"] = parse(Int, split(line, " ")[2]) #hide
+        elseif occursin("removed due to missing genotype data (--mind)", line) #hide
+            filtered["--mind"] = parse(Int, split(line, " ")[1]) #hide
+        end #hide
+    end #hide
+    return [get(filtered, "--geno", 0), get(filtered, "--hwe", 0), get(filtered, "--rm-dup", 0), get(filtered, "--mind", 0)] #hide
+end #hide
 #hide
 nothing #hide
 #=
@@ -67,10 +82,10 @@ Variants and individuals dropped by basic QC (plink2 --mind --geno --hwe).
 =#
 
 table = DataFrame(Dict( #hide
-    "" => ["Variants", "Individuals"], #hide
-    "r8 release" => count_dropped_variants_and_indiv(basic_qc_prefix_r8), #hide
-    "2021 - 2023 release" => count_dropped_variants_and_indiv(basic_qc_prefix_2021_2023), #hide
-    "2024 - now release " => count_dropped_variants_and_indiv(basic_qc_prefix_2024_now) #hide
+    "" => ["--geno", "--hwe", "--rm-dup", "--mind"], #hide
+    "r8 release" => qc_report(release_r8_qc_logs), #hide
+    "2021 - 2023 release" => qc_report(release_2021_2023_qc_logs), #hide
+    "2024 - now release " => qc_report(release_2024_qc_logs) #hide
 )) #hide
 table |> markdown_table() #hide
 

@@ -191,17 +191,17 @@ function cli_settings()
             required = true
             help = "Path to initial bed prefix 2024_now."
 
-        "basic_qc_prefix_r8"
+        "release_r8_qc_logs"
             arg_type = String
             required = true
             help = "Path to basic qc prefix r8."
 
-        "basic_qc_prefix_2021_2023"
+        "release_2021_2023_qc_logs"
             arg_type = String
             required = true
             help = "Path to basic qc prefix 2021_2023."
 
-        "basic_qc_prefix_2024_now"
+        "release_2024_qc_logs"
             arg_type = String
             required = true
             help = "Path to basic qc prefix 2024_now."
@@ -576,9 +576,9 @@ function julia_main()::Cint
             initial_bed_prefix_r8 = cmd_settings["initial_bed_prefix_r8"],
             initial_bed_prefix_2021_2023 = cmd_settings["initial_bed_prefix_2021_2023"],
             initial_bed_prefix_2024_now = cmd_settings["initial_bed_prefix_2024_now"],
-            basic_qc_prefix_r8 = cmd_settings["basic_qc_prefix_r8"],
-            basic_qc_prefix_2021_2023 = cmd_settings["basic_qc_prefix_2021_2023"],
-            basic_qc_prefix_2024_now = cmd_settings["basic_qc_prefix_2024_now"],
+            release_r8_qc_logs = cmd_settings["release_r8_qc_logs"],
+            release_2021_2023_qc_logs = cmd_settings["release_2021_2023_qc_logs"],
+            release_2024_qc_logs = cmd_settings["release_2024_qc_logs"],
             dup_samples_r8 = cmd_settings["dup_samples_r8"],
             dup_samples_2021_2023 = cmd_settings["dup_samples_2021_2023"],
             dup_samples_2024_now = cmd_settings["dup-samples_2024_now"],

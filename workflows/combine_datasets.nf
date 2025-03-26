@@ -109,7 +109,7 @@ workflow CombineDatasets {
     Report(
         qced_genotypes.unlifted,
         qced_genotypes.initial_bed_files,
-        qced_genotypes.basic_qc_reports,
+        qced_genotypes.basic_qc_logs,
         qced_genotypes.kgp_qc_files_r8,
         qced_genotypes.kgp_qc_files_2021_2023,
         qced_genotypes.kgp_qc_files_2024_now,
