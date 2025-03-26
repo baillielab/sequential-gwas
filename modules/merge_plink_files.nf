@@ -12,6 +12,7 @@ process MergeGenotypes {
     output:
         tuple path("${output_prefix}.bed"), path("${output_prefix}.bim"), path("${output_prefix}.fam"), emit: genotypes
         path("${output_prefix}.frq.counts"), emit: stats
+        path("${output_prefix}.log"), emit: log
 
     script:
         """

@@ -10,9 +10,9 @@ workflow Report {
         kgp_qc_files_2024_now
         shared_variants
         wgs
-        merged_genotypes
+        merge_log
         unrelated_individuals
-        merged_qced_genotypes
+        qc_merge_log
         pca_plots
         high_loading_variants
         final_merged_genotypes
@@ -49,9 +49,9 @@ workflow Report {
             kgp_qc_files_2024_now,
             shared_variants,
             wgs,
-            merged_genotypes,
+            merge_log,
             unrelated_individuals,
-            merged_qced_genotypes,
+            qc_merge_log,
             pca_plots,
             high_loading_variants,
             final_merged_genotypes,

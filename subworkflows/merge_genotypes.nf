@@ -28,6 +28,8 @@ workflow MergeGenotypingArraysAndWGS {
         )
     
     emit:
+        merge_log = merge_outputs.merge_log
+        qc_merge_log = merge_outputs.qc_merge_log
         merged = merge_outputs.merged
         qced_merged = merge_outputs.qced_merged
         final_merged = merge_outputs.final_merged
@@ -72,6 +74,8 @@ workflow MergeGenotypesAndQC {
         pca_output = PCAQC(qced_merged_genotypes.genotypes, ancestry, high_ld_regions)
 
     emit:
+        merge_log = merged_genotypes_output.log
+        qc_merge_log = qced_merged_genotypes.log
         merged = merged_genotypes_output.genotypes
         qced_merged = qced_merged_genotypes.genotypes
         final_merged = pca_output.genotypes

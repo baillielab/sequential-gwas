@@ -27,6 +27,7 @@ params.IP_VALUES = "1000 50 0.05"
 params.PCA_MAF = 0.01
 params.PCA_APPROX = true
 params.IQR_FACTOR = 10
+params.FILTER_HIGH_LOADINGS_VARIANTS = false
 
 // GWAS params
 params.MIN_GROUP_SIZE = 100
@@ -48,6 +49,7 @@ log.info """\
          ==========================
          run as       : ${workflow.commandLine}
          started at   : ${workflow.start}
+         profile      : ${workflow.profile}
          config files : ${workflow.configFiles}
          container    : ${workflow.containerEngine}
          ==========================

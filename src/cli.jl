@@ -226,20 +226,20 @@ function cli_settings()
             required = true
             help = "Path to WGS prefix."
 
-        "merged_genotypes_prefix"
+        "merge_log"
             arg_type = String
             required = true
-            help = "Path to merged genotypes prefix."
+            help = "Path to merged log file."
 
         "unrelated_individuals"
             arg_type = String
             required = true
             help = "Path to unrelated individuals."
 
-        "merged_qced_genotypes_prefix"
+        "qc_merge_log"
             arg_type = String
             required = true
-            help = "Path to merged QCed genotypes prefix."
+            help = "Path to merged QCed log file."
 
         "pca_plots_prefix"
             arg_type = String
@@ -579,9 +579,9 @@ function julia_main()::Cint
             dup_samples_2024_now = cmd_settings["dup-samples_2024_now"],
             shared_variants = cmd_settings["shared_variants"],
             wgs_prefix = cmd_settings["wgs_prefix"],
-            merged_genotypes_prefix = cmd_settings["merged_genotypes_prefix"],
+            merge_log = cmd_settings["merge_log"],
             unrelated_individuals = cmd_settings["unrelated_individuals"],
-            merged_qced_genotypes_prefix = cmd_settings["merged_qced_genotypes_prefix"],
+            qc_merge_log = cmd_settings["qc_merge_log"],
             pca_plot_prefix = cmd_settings["pca_plots_prefix"],
             high_loadings_variants = cmd_settings["high_loadings_variants"],
             final_genotypes_prefix = cmd_settings["final_genotypes_prefix"],

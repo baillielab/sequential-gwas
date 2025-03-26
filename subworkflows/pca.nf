@@ -8,6 +8,7 @@ workflow PCAQC {
         genotypes
         ancestry
         high_ld_regions
+
     main:
         ld_pruned_genotypes = LDPruning(genotypes, high_ld_regions)
         pca_qc_output = PCAFindHighLoadings(ld_pruned_genotypes, ancestry)
@@ -24,6 +25,7 @@ workflow PCA {
     take:
         genotypes
         high_ld_regions
+
     main:
         ld_pruned_genotypes = GroupLDPruning(genotypes, high_ld_regions)
         pcs = GroupPCA(ld_pruned_genotypes)

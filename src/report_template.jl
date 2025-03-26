@@ -32,6 +32,28 @@ function qc_report(log_file) #hide
     end #hide
     return [get(filtered, "--geno", 0), get(filtered, "--hwe", 0), get(filtered, "--rm-dup", 0), get(filtered, "--mind", 0)] #hide
 end #hide
+function merge_qc_report(log_file) #hide
+    filtered = Dict() #hide
+    for line in readlines(log_file) #hide
+        if startswith(line, "--geno") && occursin("removed due to missing genotype data", line) #hide
+            filtered["--geno"] = parse(Int, split(line, " ")[2]) #hide
+        elseif startswith(line, "--hwe") && occursin("removed due to Hardy-Weinberg exact test", line) #hide
+            filtered["--hwe"] = parse(Int, split(line, " ")[2]) #hide
+        elseif occursin("removed due to missing genotype data (--mind)", line) #hide
+            filtered["--mind"] = parse(Int, split(line, " ")[1]) #hide
+        end #hide
+    end #hide
+    return [get(filtered, "--geno", 0), get(filtered, "--hwe", 0), get(filtered, "--mind", 0)] #hide
+end #hide
+function merge_report(log_file) #hide
+    lines = readlines(log_file) #hide
+    info_line = findfirst( #hide
+        x -> occursin("pass filters and QC", x), #hide
+        lines #hide
+    ) #hide
+    variants, _, _, people, _ = split(lines[info_line], " ") #hide
+    return [parse(Int, variants), parse(Int, people)] #hide
+end #hide
 #hide
 nothing #hide
 #=
@@ -145,7 +167,7 @@ Number of variants and individuals in fileset after merge.
 
 table = DataFrame(Dict( #hide
     "" => ["Variants", "Individuals"], #hide
-    "Merged" => count_variants_and_indv(merged_genotypes_prefix), #hide
+    "Merged" => merge_report(merge_log), #hide
 )) #hide
 table |> markdown_table() #hide
 
@@ -168,8 +190,8 @@ Number of variants and individuals in merged fileset after QC.
 =#
 
 table = DataFrame(Dict( #hide
-    "" => ["Variants", "Individuals"], #hide
-    "MergedQCed" => count_variants_and_indv(merged_qced_genotypes_prefix), #hide
+    "" => ["--geno", "--hwe", "--mind"], #hide
+    "MergedQCed" => merge_qc_report(qc_merge_log), #hide
 )) #hide
 table |> markdown_table() #hide
 

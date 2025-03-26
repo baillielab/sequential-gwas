@@ -10,7 +10,7 @@ process QCMergedGenotypes {
 
     output:
         tuple path("${output_prefix}.bed"), path("${output_prefix}.bim"), path("${output_prefix}.fam"), emit: genotypes 
-        tuple path("${output_prefix}.filtered_samples.csv"), path("${output_prefix}.filtered_variants.csv"), emit: reports
+        path("${output_prefix}.log"), emit: log
 
     script:
         input_prefix = get_prefix(bed_file)
@@ -27,8 +27,5 @@ process QCMergedGenotypes {
             --keep ${unrelated_samples} \
             --make-bed \
             --out ${output_prefix}
-        
-        ${get_julia_cmd(task.cpus)} report-qc-effect \
-            ${input_prefix} ${output_prefix}
         """
 }

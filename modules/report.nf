@@ -22,9 +22,9 @@ process MakeReport {
         path(shared_variants)
         path(wgs)
 
-        path(merged_genotypes)
+        path(merge_log)
         path(unrelated_individuals)
-        path(merged_qced_genotypes)
+        path(qc_merge_log)
         path(pca_plots)
         path(high_loading_variants)
         path(final_merged_genotypes)
@@ -39,8 +39,6 @@ process MakeReport {
         initial_bed_2021_2023_prefix = get_prefix(initial_2021_2023_bed)
         initial_bed_2024_now_prefix = get_prefix(initial_2024_now_bed)
         wgs_prefix = get_prefix(wgs[0])
-        merged_genotypes_prefix = get_prefix(merged_genotypes[0])
-        merged_qced_genotypes_prefix = get_prefix(merged_qced_genotypes[0])
         pca_plots_prefix = get_prefix(get_prefix(get_prefix(pca_plots[0])))
         final_merged_genotypes_prefix = get_prefix(final_merged_genotypes[0])
         """
@@ -58,9 +56,9 @@ process MakeReport {
             ${release_2024_now_kgp_samples_to_drop} \
             ${shared_variants} \
             ${wgs_prefix} \
-            ${merged_genotypes_prefix} \
+            ${merge_log} \
             ${unrelated_individuals} \
-            ${merged_qced_genotypes_prefix} \
+            ${qc_merge_log} \
             ${pca_plots_prefix} \
             ${high_loading_variants} \
             ${final_merged_genotypes_prefix} \

@@ -29,10 +29,10 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     run(cmd)
 
     # Basic checks, complete checks are implemented in `combine_datasets_wgs.jl`
-    nindividuals = nrow(SequentialGWAS.read_fam(joinpath(RESULTS_DIR, "genotypes.arrays_wgs.aggregated.fam")))
+    nindividuals = nrow(SequentialGWAS.read_fam(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.fam")))
     @test nindividuals > 1000
-    @test nrow(SequentialGWAS.read_bim(joinpath(RESULTS_DIR, "genotypes.arrays_wgs.aggregated.bim"))) > 100
-    @test isfile(joinpath(RESULTS_DIR, "genotypes.arrays_wgs.aggregated.bed"))
+    @test nrow(SequentialGWAS.read_bim(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.bim"))) > 100
+    @test isfile(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.bed"))
     covariates = CSV.read(joinpath(RESULTS_DIR, "covariates.merged.csv"), DataFrame)
     @test Set(covariates.PLATFORM) == Set(["GSA-MD-24v3-0_A1", "GSA-MD-48v4-0_A1"])
     @test nrow(covariates) == nindividuals

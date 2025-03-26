@@ -223,13 +223,12 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     
     # Check report and final dataset
     @test isfile(joinpath(RESULTS_DIR, "report.md"))
-    @test isfile(joinpath(RESULTS_DIR, "genotypes.arrays_wgs.aggregated.bed"))
-    @test isfile(joinpath(RESULTS_DIR, "genotypes.arrays_wgs.aggregated.bim"))
-    @test isfile(joinpath(RESULTS_DIR, "genotypes.arrays_wgs.aggregated.fam"))
-    final_bim = SequentialGWAS.read_bim(joinpath(RESULTS_DIR, "genotypes.arrays_wgs.aggregated.bim"))
+    @test isfile(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.bed"))
+    @test isfile(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.bim"))
+    @test isfile(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.fam"))
+    final_bim = SequentialGWAS.read_bim(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.bim"))
     variants_removed_by_pca = readlines(joinpath(pca_dir, "variants_to_exclude.txt"))
     @test intersect(final_bim.VARIANT_ID, variants_removed_by_pca) == []
-
 end
 
 end
