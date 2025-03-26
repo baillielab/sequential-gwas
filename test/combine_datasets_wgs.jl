@@ -216,13 +216,8 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     # Check covariates
     covariates = CSV.read(joinpath(RESULTS_DIR, "covariates.merged.csv"), DataFrame)
     @test nrow(covariates) > 100
-    @test eltype(covariates.AGE) <: Union{Missing, Int}
-    @test eltype(covariates.SEX) <: Union{Missing, Int}
     @test eltype(covariates.ANCESTRY) <: AbstractString
     @test all(eltype(covariates[!, "PC$pc"]) <: Float64 for pc in 1:10)
-    @test Set(covariates.COHORT) == Set(["genomicc", "mild", "isaric4c"])
-    @test eltype(covariates.DIAGNOSIS_IS_SEVERE) <: Union{Missing, Int}
-    @test Set(covariates.ISARIC_MAX_SEVERITY_SCORE) == Set([missing, 4, 5])
     @test Set(covariates.PLATFORM) == Set(["GSA-MD-24v3-0_A1", "GSA-MD-48v4-0_A1", "WGS"])
     @test filter(x -> x.IID == "odap3001", covariates).PLATFORM == ["WGS"] # Check the sample is assigned WGS and not 2024 release
     

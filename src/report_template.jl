@@ -214,7 +214,6 @@ table = DataFrame(Dict( #hide
 )) #hide
 table |> markdown_table() #hide
 
-
 #=
 - Estimated Ancestries
 
@@ -226,15 +225,6 @@ ancestries = combine(groupby(covariates, :ANCESTRY), nrow => :N) #hide
 ancestries |> markdown_table() #hide
 
 #=
-- Samples per cohort
-
-Number of individuals per cohort
-=#
-
-cohorts = combine(groupby(covariates, :COHORT), nrow => :N) #hide
-cohorts |> markdown_table() #hide
-
-#=
 - Samples per platform
 
 Number of individuals per genetic measurement platform
@@ -242,22 +232,3 @@ Number of individuals per genetic measurement platform
 
 platforms = combine(groupby(covariates, :PLATFORM), nrow => :N) #hide
 platforms |> markdown_table() #hide
-
-#=
-- Samples per Sex
-
-Number of individuals per sex
-=#
-
-sex = combine(groupby(covariates, :SEX), nrow => :N) #hide
-sex |> markdown_table() #hide
-
-#=
-- Age Distribution
-=#
-
-fig = Figure(resolution = (800, 400)) #hide
-ax = Axis(fig[1, 1], xlabel = "Age", ylabel = "Number") #hide
-hist!(ax, collect(skipmissing(covariates.AGE)), bins = 50) #hide
-save("age_distribution.png", fig) #hide
-MD(string("![age-distribution](age_distribution.png)")) #hide

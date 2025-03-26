@@ -124,11 +124,6 @@ function cli_settings()
     end
 
     @add_arg_table! s["combine-covariates"] begin
-        "covariates-file"
-            arg_type = String
-            required = true
-            help = "Path to covariates file."
-        
         "ancestry-file"
             arg_type = String
             required = true
@@ -594,7 +589,6 @@ function julia_main()::Cint
         )
     elseif cmd == "combine-covariates"
         combine_covariates(
-            cmd_settings["covariates-file"],
             cmd_settings["ancestry-file"],
             cmd_settings["pcs-file"],
             cmd_settings["wgs-samples"],

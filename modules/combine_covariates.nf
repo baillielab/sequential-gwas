@@ -5,7 +5,6 @@ process CombineCovariates {
     publishDir "${params.PUBLISH_DIR}", mode: 'copy'
 
     input:
-        path covariates_file
         path ancestry_file
         tuple path(eigenvalues), path(eigenvectors)
         path wgs_samples
@@ -19,7 +18,6 @@ process CombineCovariates {
     script:
         """
         ${get_julia_cmd(task.cpus)} combine-covariates \
-            ${covariates_file} \
             ${ancestry_file} \
             ${eigenvectors} \
             ${wgs_samples} \

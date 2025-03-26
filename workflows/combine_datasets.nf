@@ -95,9 +95,7 @@ workflow CombineDatasets {
         )
     }
     // Combine Covariates
-    covariates = file(params.COVARIATES, checkIfExists: true)
     combined_covariates = CombineCovariates(
-        covariates,
         merge_output.ancestries,
         merge_output.pcs,
         wgs_sample_ids,

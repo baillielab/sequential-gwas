@@ -103,7 +103,6 @@ function map_sample_ids_to_platform(wgs_samples_file,
 end
 
 function combine_covariates(
-    covariates_file, 
     ancestry_file, 
     pcs_file,
     wgs_samples_file,
@@ -118,15 +117,10 @@ function combine_covariates(
         release_2021_2023_fam,
         release_2024_now_fam
     )
-    covariates = read_and_process_covariates(covariates_file)
     ancestries = read_and_process_ancestry(ancestry_file)
     pcs = read_and_process_pcs(pcs_file)
     merged = innerjoin(
-        innerjoin(
-            covariates, 
-            ancestries, 
-            on=:IID
-        ),
+        ancestries,
         pcs,
         on=:IID
     )
