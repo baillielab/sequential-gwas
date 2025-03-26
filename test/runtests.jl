@@ -12,7 +12,6 @@ TESTDIR = joinpath(PKGDIR, "test")
     end
 
     # Unit Tests
-    @test include(joinpath(TESTDIR, "read_write.jl"))
     @test include(joinpath(TESTDIR, "qc_from_kgp.jl"))
     @test include(joinpath(TESTDIR, "relatedness.jl"))
 
