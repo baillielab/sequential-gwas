@@ -11,11 +11,14 @@ process QCMergedGenotypes {
     output:
         tuple path("${output_prefix}.bed"), path("${output_prefix}.bim"), path("${output_prefix}.fam"), emit: genotypes 
         path("${output_prefix}.log"), emit: log
+        path("ref_alleles.txt"), emit: ref_allele
 
     script:
         input_prefix = get_prefix(bed_file)
         output_prefix = "${input_prefix}.qced"
         """
+        awk 'BEGIN {OFS="\\t"} {split(\$2, arr, ":"); print \$2, arr[3]}' ${bim_file} > ref_alleles.txt
+
         plink2 \
             --threads ${task.cpus} \
             --memory ${task.memory.toMega().toString()} \
@@ -23,6 +26,7 @@ process QCMergedGenotypes {
             --geno ${params.QC_GENOTYPE_MISSING_RATE} \
             --mind ${params.QC_INDIVIDUAL_MISSING_RATE} \
             --hwe ${params.QC_HWE_P} ${params.QC_HWE_K} \
+            --ref-allele ref_alleles.txt \
             --output-chr chr26 \
             --keep ${unrelated_samples} \
             --make-bed \

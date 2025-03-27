@@ -227,6 +227,9 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     @test isfile(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.bim"))
     @test isfile(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.fam"))
     final_bim = SequentialGWAS.read_bim(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.bim"))
+    for row in eachrow(final_bim)
+        @test split(row.VARIANT_ID, ":")[3] == row.ALLELE_2
+    end
     variants_removed_by_pca = readlines(joinpath(pca_dir, "variants_to_exclude.txt"))
     @test intersect(final_bim.VARIANT_ID, variants_removed_by_pca) == []
 end
