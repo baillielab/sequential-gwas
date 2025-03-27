@@ -35,7 +35,7 @@ git checkout $FLOWOMICC_TAG
 2. Download and save the docker image
    
 ```bash
-docker pull olivierlabayle/genomicc:$FLOWOMICC_TAG
+docker pull --platform linux/amd64 olivierlabayle/genomicc:$FLOWOMICC_TAG
 docker save olivierlabayle/genomicc:$FLOWOMICC_TAG | gzip > sequential-gwas/genomicc.tar.gz
 ```
 
