@@ -7,7 +7,7 @@ include { WGSIndividuals } from '../modules/wgs_individuals.nf'
 include { Report } from '../subworkflows/report.nf'
 include { CombineCovariates } from '../modules/combine_covariates.nf'
 
-workflow CombineDatasets {
+workflow CombineGeneticDatasets {
     main:
         // Process 1000GP dataset
         kgp = KGP()

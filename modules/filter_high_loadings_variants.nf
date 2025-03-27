@@ -1,6 +1,6 @@
 include { get_prefix } from './utils.nf'
 
-process FilterHighLoadingsVariants {
+process MaybeFilterHighLoadingsVariants {
     label "multithreaded"
     publishDir "${params.PUBLISH_DIR}", mode: 'copy'
 

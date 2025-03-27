@@ -1,29 +1,10 @@
 # Combining Datasets
 
-This workflow combines the various available data sources into a unified dataset.
+This workflow combines the various genetic data sources available into a unified dataset.
 
 ## Inputs
 
-Since GenOMICC is an ongoing project where the data is continuously collected, it came and will continue to arrive in different formats. This page aims at making it clear what are the inputs and outputs to the pipeline.
-
-All file paths are currently reported with respect to my a015 project but this will be standardized in the future.
-
-### External Resources
-
-As well as our in-house data, the pipeline depends on external reference data. In principle these files should already be present on ODAP and there is nothing you need to do.
-
-#### The 1000 GP
-
-- All VCF files and indexes present in [this FTP folder](https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/)
-- The associated 1000 GP [pedigree file](https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/1kGP.3202_samples.pedigree_info.txt).
-
-These files should be stored in the same folder which is defined by the `KGP_DIR (default: /mnt/odap-beegfs/software/gwas-resources/1000-genomes-HC)` Nextflow parameter.
-
-#### GATK
-
-- The [reference genome](https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta) published by the Broad Institute.
-
-This should be in a folder defined by the `GATK_DIR (default: /mnt/odap-beegfs/software/gwas-resources/gatk)` Nextflow parameter.
+Since GenOMICC is an ongoing project where the data is continuously collected, it came and will continue to arrive in different formats. This section makes clear what are the inputs to the pipeline.
 
 ### Genetic Data
 
@@ -50,22 +31,39 @@ So, in the example above, the `R8_GENOTYPES` workflow parameter (see below) shou
 #### Whole Genome Sequencing
 
 The wgs GVCF files are all located in a `wgs-reheadered` folder.
+
+### External Resources
+
+As well as our in-house data, the pipeline depends on external reference data. In principle these files should already be present on ODAP and there is nothing you need to do.
+
+#### The 1000 GP
+
+- All VCF files and indexes present in [this FTP folder](https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_phased/)
+- The associated 1000 GP [pedigree file](https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/1kGP.3202_samples.pedigree_info.txt).
+
+These files should be stored in the same folder which is defined by the `KGP_DIR (default: /mnt/odap-beegfs/software/gwas-resources/1000-genomes-HC)` Nextflow parameter.
+
+#### GATK
+
+- The [reference genome](https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta) published by the Broad Institute.
+
+This should be in a folder defined by the `GATK_DIR (default: /mnt/odap-beegfs/software/gwas-resources/gatk)` Nextflow parameter.
   
 ## Running The Workflow
 
 If the previous steps have been completed successfully you can run:
 
 ```bash
-./run.sh CombineDatasets
+./run.sh CombineGeneticDatasets
 ```
 
 ## Outputs
 
-All outputs are produced in `PUBLISH_DIR`, the main outputs of the workflow are:
+All outputs are produced in `PUBLISH_DIR` (defaults to `results`), the main outputs of the workflow are:
 
 - `report.md`: A report of the pipeline execution
-- `genotypes.arrays_wgs.aggregated.{bed,bim,fam}`: The aggregated genotypes
-- `covariates.merged.csv`: Covariate file combined with principal components and ancestry estimates.
+- `genotypes.aggregated.qced.final.{bed,bim,fam}`: The aggregated genotypes
+- `covariates.merged.csv`: THe covariates inferred from the genotypes (acestry, PCs).
 
 ## Pipeline parameters
 
@@ -73,17 +71,26 @@ This is the list of all the pipeline's parameters. In principle they don't need 
 
 ### Input Files
 
-These need to be provided:
+These are project specific and need to be provided:
 
 - `R8_GENOTYPES`: Prefix to release r8 genotypes (before 2021).
 - `BEFORE_2024_GENOTYPES`: Prefix to genotypes released between 2021-2023.
 - `SINCE_2024_GENOTYPES`: Prefix to genotypes released after 2024.
 - `WGS_GVCFS` (optional): Prefix to whole genome sequencing files.
 
+### External Inputs Parameters
+
+These are already set if you are using the `odap` profile.
+
+- `RESOURCES_DIR` (default: ./assets/resources"): Path to all external resources.
+- `KGP_DIR`: Path to the 1000 Genome Project specific resources (see [The 1000 GP](@ref)).
+- `GATK_DIR`: Path to GATK specific resources (see [GATK](@ref)).
+- `GRC37_TO_GRC38_CHAIN_FILE` (default: "./assets/hg19ToHg38.over.chain.gz"): Path to chain file used to liftover the GRCh37 genotypes to GRCh38.
+
 ### QC Parameters
 
-- `QC_GENOTYPE_MISSING_RATE` (default: 0.1): Maximum missing rate per variant across all individuals. Variants above the threshold are dropped.
-- `QC_INDIVIDUAL_MISSING_RATE` (default: 0.1): Maximum missing rate per individual across genotypes. Individuals above the threshold are dropped.
+- `QC_GENOTYPE_MISSING_RATE` (default: 0.02): Maximum missing rate per variant across all individuals. Variants above the threshold are dropped.
+- `QC_INDIVIDUAL_MISSING_RATE` (default: 0.02): Maximum missing rate per individual across genotypes. Individuals above the threshold are dropped.
 - `QC_HWE_P` (default: 1e-10): Used to identify potential technical artifacts and drop variants.
 - `QC_HWE_K` (default: 0.001): Used together with `QC_HWE_P`
 - `PCA_APPROX` (default: true): Whether PCA is performed via approximation [see](https://www.cog-genomics.org/plink/2.0/strat)
@@ -97,13 +104,6 @@ These need to be provided:
 - `WGS_PUBLISH_DIR` (default: "results/wgs"): Where data associated with the whole-genome sequencing data will be output.
 - `GATK_PUBLISH_DIR` (default: "results/gatk"): Where data associated with GATK requirements will be output.
 - `MERGED_PUBLISH_DIR` (default: "results/merged"): Where the merged genetic data will be output.
-
-### External Inputs Parameters
-
-- `RESOURCES_DIR` (default: ./assets/resources"): Path to all external resources.
-- `KGP_DIR` (default: "./assets/kgp"): Path to the 1000 Genome Project specific resources.
-- `GATK_DIR` (default: "./assets/gatk"): Path to GATK specific resources.
-- `GRC37_TO_GRC38_CHAIN_FILE` (default: "./assets/hg19ToHg38.over.chain.gz"): Path to chain file used to liftover the GRCh37 genotypes to GRCh38.
 
 ## Current Limitations
 

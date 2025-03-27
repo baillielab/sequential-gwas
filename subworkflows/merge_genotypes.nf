@@ -3,7 +3,7 @@ include { MergeGenotypes } from '../modules/merge_plink_files.nf'
 include { KingRelationshipInference } from '../modules/king_relationship_inference.nf'
 include { QCMergedGenotypes } from '../modules/qc_merged_genotypes.nf'
 include { LDPruning } from '../modules/ld_pruning.nf'
-include { PCAQC } from '../subworkflows/pca.nf'
+include { PCAAnalysis } from '../subworkflows/pca.nf'
 include { AncestryEstimation } from '../subworkflows/ancestry.nf'
 
 workflow MergeGenotypingArraysAndWGS {
@@ -71,7 +71,7 @@ workflow MergeGenotypesAndQC {
             high_ld_regions
         )
         // PCA QC
-        pca_output = PCAQC(qced_merged_genotypes.genotypes, ancestry, high_ld_regions)
+        pca_output = PCAAnalysis(qced_merged_genotypes.genotypes, ancestry, high_ld_regions)
 
     emit:
         merge_log = merged_genotypes_output.log
