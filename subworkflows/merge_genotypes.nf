@@ -6,40 +6,6 @@ include { LDPruning } from '../modules/ld_pruning.nf'
 include { PCAAnalysis } from '../subworkflows/pca.nf'
 include { AncestryEstimation } from '../subworkflows/ancestry.nf'
 
-workflow MergeGenotypingArraysAndWGS {
-    take:
-        qced_array_genotypes
-        qced_gws_genotypes
-        plink_shared_variants
-        kgp_genotypes
-        kgp_pedigree
-        high_ld_regions
-
-    main:
-        all_genotypes = qced_array_genotypes
-            .map{ it -> it[1..3] }
-            .concat(qced_gws_genotypes)
-        merge_outputs = MergeGenotypesAndQC(
-            all_genotypes,
-            plink_shared_variants,
-            kgp_genotypes,
-            kgp_pedigree,
-            high_ld_regions
-        )
-    
-    emit:
-        merge_log = merge_outputs.merge_log
-        qc_merge_log = merge_outputs.qc_merge_log
-        merged = merge_outputs.merged
-        qced_merged = merge_outputs.qced_merged
-        final_merged = merge_outputs.final_merged
-        unrelated_individuals = merge_outputs.unrelated_individuals
-        pca_plots = merge_outputs.pca_plots
-        high_loadings_variants = merge_outputs.high_loadings_variants
-        pcs = merge_outputs.pcs
-        ancestries = merge_outputs.ancestries    
-}
-
 workflow MergeGenotypesAndQC {
     take:
         all_genotypes

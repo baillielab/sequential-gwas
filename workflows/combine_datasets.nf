@@ -2,7 +2,7 @@ include { GVCFGenotyping} from '../subworkflows/gvcf_genotyping.nf'
 include { GenotypesQC } from '../subworkflows/genotyping_arrays_qc.nf'
 include { KGP } from './kgp.nf'
 include { DownloadOrAccessReferenceGenome } from '../modules/download_reference_genome.nf'
-include { MergeGenotypesAndQC; MergeGenotypingArraysAndWGS } from '../subworkflows/merge_genotypes.nf'
+include { MergeGenotypesAndQC } from '../subworkflows/merge_genotypes.nf'
 include { WGSIndividuals } from '../modules/wgs_individuals.nf'
 include { Report } from '../subworkflows/report.nf'
 include { CombineCovariates } from '../modules/combine_covariates.nf'
@@ -47,7 +47,7 @@ workflow CombineGeneticDatasets {
             wgs_gvcfs = Channel.fromFilePairs("${params.WGS_GVCFS}*{.gvcf.gz,.gvcf.gz.tbi}", checkIfExists: true)
             wgs_sample_ids = WGSIndividuals(wgs_gvcfs.map{it -> it[1]}.collect())
             // Basic QC for genotyping arrays
-            qced_genotypes = GenotypesQC(
+            genotyping_qc_outputs = GenotypesQC(
                 grc37_genotypes, 
                 grc38_genotypes, 
                 chain_file,
@@ -57,66 +57,61 @@ workflow CombineGeneticDatasets {
             // Genotyping of WGS data based on genotyping arrays variants
             wgs_data = GVCFGenotyping(
                 wgs_gvcfs, 
-                qced_genotypes.gatk_shared_variants,
-                qced_genotypes.plink_shared_variants,
+                genotyping_qc_outputs.gatk_shared_variants,
+                genotyping_qc_outputs.plink_shared_variants,
                 reference_genome,
             )
             wgs_genotypes = wgs_data.genotypes
-            // Merge All Genotypes
-            merge_output = MergeGenotypingArraysAndWGS(
-                qced_genotypes.genotypes, 
-                wgs_genotypes,
-                qced_genotypes.plink_shared_variants,
-                kgp_genotypes,
-                kgp.pedigree,
-                high_ld_regions
-            )
+            qced_genotypes = genotyping_qc_outputs.genotypes
+                .map{ it -> it[1..3] }
+                .concat(wgs_genotypes)
         }
         else {
             wgs_sample_ids = file("${projectDir}/assets/NO_WGS_SAMPLES.txt")
             wgs_genotypes = file("${projectDir}/assets/NO_WGS_SAMPLES.txt")
             // Basic QC for genotyping arrays
-            qced_genotypes = GenotypesQC(
+            genotyping_qc_outputs = GenotypesQC(
                 grc37_genotypes, 
                 grc38_genotypes, 
                 chain_file,
                 kgp_bim_afreq,
                 wgs_sample_ids
             )
-            // Merge All Genotypes
-            merge_output = MergeGenotypesAndQC(
-                qced_genotypes.genotypes.map{ it -> it[1..3] }, 
-                qced_genotypes.plink_shared_variants,
-                kgp_genotypes,
-                kgp.pedigree,
-                high_ld_regions
-            )
+            qced_genotypes = genotyping_qc_outputs.genotypes.map{ it -> it[1..3] }
         }
+        // Merge All Genotypes
+        merge_qc_outputs = MergeGenotypesAndQC(
+            qced_genotypes, 
+            genotyping_qc_outputs.plink_shared_variants,
+            kgp_genotypes,
+            kgp.pedigree,
+            high_ld_regions
+        )
         // Combine Covariates
         combined_covariates = CombineCovariates(
-            merge_output.ancestries,
-            merge_output.pcs,
+            merge_qc_outputs.ancestries,
+            merge_qc_outputs.pcs,
             wgs_sample_ids,
-            qced_genotypes.genotypes.filter { it -> it[0] == "release-r8" }.map{ it -> it[3] }.first(),
-            qced_genotypes.genotypes.filter { it -> it[0] == "release-2021-2023" }.map{ it -> it[3] }.first(),
-            qced_genotypes.genotypes.filter { it -> it[0] == "release-2024-now" }.map{ it -> it[3] }.first()
+            genotyping_qc_outputs.genotypes.filter { it -> it[0] == "release-r8" }.map{ it -> it[3] }.first(),
+            genotyping_qc_outputs.genotypes.filter { it -> it[0] == "release-2021-2023" }.map{ it -> it[3] }.first(),
+            genotyping_qc_outputs.genotypes.filter { it -> it[0] == "release-2024-now" }.map{ it -> it[3] }.first()
         )
         // Report
         Report(
-            qced_genotypes.unlifted,
-            qced_genotypes.initial_bed_files,
-            qced_genotypes.basic_qc_logs,
-            qced_genotypes.kgp_qc_files_r8,
-            qced_genotypes.kgp_qc_files_2021_2023,
-            qced_genotypes.kgp_qc_files_2024_now,
-            qced_genotypes.plink_shared_variants,
+            genotyping_qc_outputs.unlifted,
+            genotyping_qc_outputs.initial_bed_files,
+            genotyping_qc_outputs.basic_qc_logs,
+            genotyping_qc_outputs.kgp_qc_files_r8,
+            genotyping_qc_outputs.kgp_qc_files_2021_2023,
+            genotyping_qc_outputs.kgp_qc_files_2024_now,
+            genotyping_qc_outputs.plink_shared_variants,
             wgs_genotypes,
-            merge_output.merge_log,
-            merge_output.unrelated_individuals,
-            merge_output.qc_merge_log,
-            merge_output.pca_plots,
-            merge_output.high_loadings_variants,
-            merge_output.final_merged,
+            merge_qc_outputs.merge_log,
+            merge_qc_outputs.unrelated_individuals,
+            merge_qc_outputs.qc_merge_log,
+            merge_qc_outputs.pca_plots,
+            merge_qc_outputs.high_loadings_variants,
+            merge_qc_outputs.final_merged,
             combined_covariates
         )
 
