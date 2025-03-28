@@ -8,4 +8,8 @@ using PackageCompiler
 #     executables=["seq-gwas" => "julia_main"],
 # )
 
-create_sysimage(["SequentialGWAS"], sysimage_path="FlowOMMIC.so", cpu_target=PackageCompiler.default_app_cpu_target())
+create_sysimage(["SequentialGWAS"], 
+    sysimage_path="FlowOMMIC.so", 
+    include_transitive_dependencies=false, 
+    cpu_target=PackageCompiler.default_app_cpu_target()
+)
