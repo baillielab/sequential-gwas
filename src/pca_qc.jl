@@ -12,20 +12,20 @@ function plot_pc_k_vs_kplus1!(ax, eigenvectors, k, colormap)
     end
 end
 
-function plot_pca(eigenvectors_file, ancestry_file; outprefix="pca")
+function plot_pca(eigenvectors_file, ancestry_file; outprefix="pca", figsize=1600)
     eigenvectors = CSV.read(eigenvectors_file, DataFrame)
     ancestry = CSV.read(ancestry_file, DataFrame, select=[:IID, :Superpopulation])
     leftjoin!(eigenvectors, ancestry, on=:IID)
     colormap = Dict(key => k for (k, key) in enumerate(unique(eigenvectors.Superpopulation)))
     # PC1 vs PC2 plot
-    fig = Figure(size=(800, 800))
+    fig = Figure(size=(figsize, figsize))
     ax = Axis(fig[1, 1], xlabel="PC1", ylabel="PC2")
     plot_pc_k_vs_kplus1!(ax, eigenvectors, 1, colormap)
     fig[2, :] = Legend(fig, ax, orientation=:horizontal, tellwidth=false)
     save(string(outprefix, ".1vs2.png"), fig)
     # All PCs plots
     n_pcs = size(eigenvectors, 2) - 3
-    fig = Figure(size=(800, 800))
+    fig = Figure(size=(figsize, figsize))
     ax_row = 1
     ax_col = 1
     local ax
@@ -47,10 +47,11 @@ end
 function get_outliers_and_save_plots(loadings; 
     output_prefix="before_pca_qc",
     iqr_factor=3,
-    npcs=10
+    npcs=10,
+    figsize=1600
     )
     outliers = Set([])  
-    fig = Figure(size=(800, 800))
+    fig = Figure(size=(figsize, figsize))
     ax_row = 1
     ax_col = 1
     for pc in 1:npcs
