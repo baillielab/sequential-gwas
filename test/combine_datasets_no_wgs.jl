@@ -8,7 +8,7 @@ using DelimitedFiles
 
 PKGDIR = pkgdir(SequentialGWAS)
 TESTDIR = joinpath(PKGDIR, "test")
-RESULTS_DIR = joinpath(PKGDIR, "results")
+RESULTS_DIR = joinpath(PKGDIR, "results_no_wgs")
 
 @testset "Test Array Genotypes Merging" begin
     profile = if isinteractive()

@@ -243,7 +243,7 @@ Number of individuals per estimated ancestry group
 =#
 
 covariates = CSV.read(covariates_file, DataFrame) #hide
-ancestries = combine(groupby(covariates, :ANCESTRY), nrow => :N) #hide
+ancestries = combine(groupby(covariates, :ANCESTRY_ESTIMATE), nrow => :N) #hide
 ancestries |> markdown_table() #hide
 
 #=

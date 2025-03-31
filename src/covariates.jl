@@ -74,7 +74,8 @@ end
 
 function read_and_process_ancestry(ancestry_file)
     ancestries = CSV.read(ancestry_file, DataFrame)
-    return select(ancestries, :FID, :IID, :Superpopulation => :ANCESTRY)
+    rename!(ancestries, :Superpopulation => :ANCESTRY_ESTIMATE)
+    return ancestries
 end
 
 function read_and_process_pcs(pcs_file)

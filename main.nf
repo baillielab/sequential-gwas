@@ -28,6 +28,7 @@ params.PCA_MAF = 0.01
 params.PCA_APPROX = true
 params.IQR_FACTOR = 10
 params.FILTER_HIGH_LOADINGS_VARIANTS = false
+params.ANCESTRY_THRESHOLD = 0.8
 
 // GWAS params
 params.MIN_GROUP_SIZE = 100

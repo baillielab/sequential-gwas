@@ -179,32 +179,20 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
 
     ## Check Ancestry
     ancestry_dir = joinpath(RESULTS_DIR, "ancestry")
-    kgp_merged_fam = SequentialGWAS.read_fam(joinpath(ancestry_dir, "merged","genotypes_and_kgp.merged.fam"))
-    kgp_ancestries = CSV.read(
-        joinpath(TESTDIR, "assets", "kgp", "20130606_g1k_3202_samples_ped_population.txt"), 
-        DataFrame,
-        select=[:SampleID, :Superpopulation]
-    )
-    leftjoin!(kgp_merged_fam, kgp_ancestries, on=:IID => :SampleID)
-    pop_counts = combine(groupby(kgp_merged_fam, :Superpopulation), nrow)
-    @test nrow(pop_counts) == 6
-    Q = readdlm(joinpath(ancestry_dir, "ancestry", "genotypes_and_kgp.merged.ldpruned.5.Q"))
-    kgp_merged_fam.POP_IDX = [i.I[2] for i in argmax(Q, dims=2)[:, 1]]
-    kgp_fam = filter(x -> x.Superpopulation !== missing, kgp_merged_fam)
-    # Check the prediction is the same individuals with known superpopulation
-    @test length(groupby(kgp_fam, [:Superpopulation, :POP_IDX])) == 5
-    # Check predictions are consistent
     ancestry_predictions = CSV.read(
         joinpath(ancestry_dir, "ancestry", "genotypes_and_kgp.merged.ldpruned.ancestry.csv"), 
         DataFrame, 
-        select=[:IID, :Superpopulation]
     )
-    genomicc_with_pred = innerjoin(
-        kgp_merged_fam, 
-        select(ancestry_predictions, :IID, :Superpopulation => :SuperpopulationPred),
-        on=:IID
-    )
-    @test length(groupby(genomicc_with_pred, [:SuperpopulationPred, :POP_IDX])) > 0
+    @test length(groupby(ancestry_predictions, :Superpopulation)) == 6 # 5 pops + admixed
+    populations = names(ancestry_predictions)[4:end]
+    for row in eachrow(ancestry_predictions)
+        probas = collect(row[4:end])
+        if row.Superpopulation == "ADMIXED"
+            @test maximum(probas) <= 0.6 # set threshold
+        else
+            @test row.Superpopulation == populations[argmax(probas)]
+        end
+    end
     
     # Check PCA-QC
     pca_dir = joinpath(merge_dir, "pca_qced")
@@ -216,7 +204,7 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     # Check covariates
     covariates = CSV.read(joinpath(RESULTS_DIR, "covariates.merged.csv"), DataFrame)
     @test nrow(covariates) > 100
-    @test eltype(covariates.ANCESTRY) <: AbstractString
+    @test eltype(covariates.ANCESTRY_ESTIMATE) <: AbstractString
     @test all(eltype(covariates[!, "PC$pc"]) <: Float64 for pc in 1:10)
     @test Set(covariates.PLATFORM) == Set(["GSA-MD-24v3-0_A1", "GSA-MD-48v4-0_A1", "WGS"])
     @test filter(x -> x.IID == "odap3001", covariates).PLATFORM == ["WGS"] # Check the sample is assigned WGS and not 2024 release

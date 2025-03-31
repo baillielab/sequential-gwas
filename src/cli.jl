@@ -301,6 +301,11 @@ function cli_settings()
             arg_type = String
             help = "Output file name."
             default = "pop.pop"
+
+        "--threshold"
+            arg_type = Float64
+            help = "Threshold for ancestry assignment."
+            default = 0.8
     end
 
     @add_arg_table! s["plot-pca"] begin
@@ -538,7 +543,8 @@ function julia_main()::Cint
         estimate_ancestry(
             cmd_settings["genotypes-prefix"],
             cmd_settings["pedigree-file"];
-            output=cmd_settings["output"]
+            output=cmd_settings["output"],
+            threshold=cmd_settings["threshold"]
         )
     elseif cmd == "mock"
         mock_data(

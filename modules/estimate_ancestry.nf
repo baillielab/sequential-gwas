@@ -20,6 +20,7 @@ process EstimateAncestry {
         ${get_julia_cmd(task.cpus)} estimate-ancestry \
             ${input_prefix} \
             ${pedigree} \
-            --output=${output}
+            --output=${output} \
+            --threshold=${params.ANCESTRY_THRESHOLD}
         """
 }
