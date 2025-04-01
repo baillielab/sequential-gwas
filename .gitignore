@@ -45,3 +45,5 @@ sandbox.jl
 build
 
 FlowOMMIC.so
+
+genomicc.sif

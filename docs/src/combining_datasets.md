@@ -63,7 +63,7 @@ All outputs are produced in `PUBLISH_DIR` (defaults to `results`), the main outp
 
 - `report.md`: A report of the pipeline execution
 - `genotypes.aggregated.qced.final.{bed,bim,fam}`: The aggregated genotypes
-- `covariates.merged.csv`: THe covariates inferred from the genotypes (acestry, PCs).
+- `covariates.merged.csv`: THe covariates inferred from the genotypes (ancestry, PCs).
 
 ## Pipeline parameters
 

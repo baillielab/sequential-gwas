@@ -35,6 +35,7 @@ params.TOPMED_REFRESH_RATE = 180
 params.TOPMED_MAX_PARALLEL_JOBS = 3
 params.IMPUTATION_R2_FILTER = 0.8
 params.N_SAMPLES_PER_IMPUTATION_JOBS = 19000
+params.TOPMED_JOBS_LIST = "${projectDir}/assets/NO_TOPMED_JOBS"
 
 // GWAS params
 params.MIN_GROUP_SIZE = 100
@@ -47,7 +48,7 @@ params.REGENIE_BSIZE = 1000
 params.N_PCS = 20
 
 include { CombineGeneticDatasets } from './workflows/combine_datasets.nf'
-include { Imputation } from './workflows/imputation.nf'
+include { Impute } from './workflows/imputation.nf'
 include { KGP } from './workflows/kgp.nf'
 include { GWAS } from './workflows/gwas.nf'
 

@@ -110,7 +110,12 @@ function cli_settings()
         "--output-dir"
             arg_type = String
             help = "Output directory for imputed files."
-            default = "." 
+            default = "."
+        
+        "--jobs-file"
+            arg_type = String
+            help = "List of job-ids to download."
+            default = nothing
     end
 
     @add_arg_table! s["gwas-plots"] begin
@@ -668,7 +673,7 @@ function julia_main()::Cint
             cmd_settings["group"];
             output_prefix=cmd_settings["output-prefix"]
         )
-    elseif cmd =="impute"
+    elseif cmd == "impute"
         impute(
             cmd_settings["genotypes-prefix"],
             cmd_settings["token-file"];
@@ -677,6 +682,7 @@ function julia_main()::Cint
             refresh_rate=cmd_settings["refresh-rate"],
             r2=cmd_settings["r2"],
             samples_per_file=cmd_settings["samples-per-file"],
+            jobs_file=cmd_settings["jobs-file"],
             output_dir=cmd_settings["output-dir"]
         )
     else

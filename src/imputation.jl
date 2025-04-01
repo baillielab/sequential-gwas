@@ -80,12 +80,12 @@ function get_job_status(job_id, token)
     return JSON.parse(read(cmd, String))
 end
 
-function wait_for_completion(token, job_id, jobname; rate=60)
+function wait_for_completion(token, job_id; rate=60)
     while true
         status = get_job_status(job_id, token)
         state = status["state"]
         if state == 5 || state == 6
-            throw(error("Job $jobname failed."))
+            throw(error("Job $job_id failed."))
         elseif state == 4
             return status
         else
@@ -134,7 +134,8 @@ function download_files(download_list, job_output_dir, token, password)
     end
 end
 
-function download_results(status, token, password, jobname; output_dir=".")
+function download_results(status, token, password; output_dir=".")
+    jobname = status["name"]
     job_output_dir = joinpath(output_dir, string("imputed_", jobname))
     download_list = SequentialGWAS.get_download_list(status, job_output_dir)
     download_files(download_list, job_output_dir, token, password)
@@ -144,9 +145,18 @@ function send_to_topmed_and_download(channel, token, password; refresh_rate=120,
     for (jobname, group) in channel
         job_details = send_job_to_topmed(group, jobname, token, password;r2=r2)
         job_id = job_details["id"]
-        status = SequentialGWAS.wait_for_completion(token, job_id, jobname; rate=refresh_rate)
-        SequentialGWAS.download_results(status, token, password, jobname; output_dir=output_dir)
+        status = SequentialGWAS.wait_for_completion(token, job_id; rate=refresh_rate)
+        SequentialGWAS.download_results(status, token, password; output_dir=output_dir)
     end
+end
+
+function download_from_job_ids(jobs_file, token; password="abcde", refresh_rate=360, output_dir=".")
+    job_ids = readlines(jobs_file)
+    for job_id in job_ids
+        status = SequentialGWAS.wait_for_completion(token, job_id; rate=refresh_rate)
+        SequentialGWAS.download_results(status, token, password; output_dir=output_dir)
+    end
+    return 0
 end
 
 function impute(genotypes_prefix, token_file; 
@@ -155,29 +165,65 @@ function impute(genotypes_prefix, token_file;
     refresh_rate=120,
     r2=0.8,
     samples_per_file=10_000,
+    jobs_file=nothing,
     output_dir="."
     )
     token = read(token_file, String)
-    # Split the bed file into smaller VCF files for each chromosome
-    vcfs_dir = joinpath(output_dir, "vcfs")
-    mkpath(vcfs_dir)
-    SequentialGWAS.split_bed_file_to_vcf(genotypes_prefix; output_dir=vcfs_dir, samples_per_file=samples_per_file)
-    # Group files into a channel for submission
-    vcf_files_channel = SequentialGWAS.get_vcf_files_channel(vcfs_dir)
-    # Send for submission and download, maximum 3 concurrent tasks running at once on topmed
-    tasks = [
-        Threads.@spawn send_to_topmed_and_download(
-            vcf_files_channel, 
-            token, 
-            password; 
-            refresh_rate=refresh_rate,
-            r2=r2,
-            output_dir=output_dir
-        ) for _ in 1:max_concurrent_submissions
-    ]
+    if jobs_file !== nothing
+        download_from_job_ids(jobs_file, token; password=password, refresh_rate=refresh_rate, output_dir=output_dir)
+    else
+        # Split the bed file into smaller VCF files for each chromosome
+        vcfs_dir = joinpath(output_dir, "vcfs")
+        mkpath(vcfs_dir)
+        SequentialGWAS.split_bed_file_to_vcf(genotypes_prefix; output_dir=vcfs_dir, samples_per_file=samples_per_file)
+        # Group files into a channel for submission
+        vcf_files_channel = SequentialGWAS.get_vcf_files_channel(vcfs_dir)
+        # Send for submission and download, maximum 3 concurrent tasks running at once on topmed
+        tasks = [
+            Threads.@spawn send_to_topmed_and_download(
+                vcf_files_channel, 
+                token, 
+                password; 
+                refresh_rate=refresh_rate,
+                r2=r2,
+                output_dir=output_dir
+            ) for _ in 1:max_concurrent_submissions
+        ]
 
-    for task in tasks
-        wait(task)
+        for task in tasks
+            wait(task)
+        end
+        
     end
     return 0
+end
+
+function merge_imputed_genotypes_by_chr(chr, prefix)
+    merge_list = "work/b8/d8c46db6b2c3c5cc6431722136609b/merge_list.txt"
+    sample_list = "work/b8/d8c46db6b2c3c5cc6431722136609b/samples.txt"
+    genotype_files = readlines(merge_list)
+    samples = readlines(sample_list)
+    samples_end = parse.(Int, [split(s, "-")[end] for s in samples])
+    sorted_genotypes_and_samples = sort([(gf, se) for (gf, se) in zip(genotype_files, samples_end)], by= x->x[2])
+    sorted_vcf_files = getindex.(sorted_genotypes_and_samples, 1)
+    # Merge
+    merge_output = read(Cmd([
+            "bcftools", 
+            "merge",
+            "--threads", string(nthreads()),
+            "-o", "$chr.merged.vcf.gz",
+            "-O", "z",
+            sorted_vcf_files...
+            ]), 
+        String
+    )
+    # Convert to BGEN
+    read(Cmd([
+        "plink2", 
+        "--vcf", "$chr.merged.vcf.gz", 
+        "--export", "bgen-1.2", 
+        "--out", "$chr.merged.bgen"
+        ]), 
+        String
+    )
 end
