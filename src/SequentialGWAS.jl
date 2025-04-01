@@ -35,6 +35,7 @@ include("ancestry.jl")
 include("covariates.jl")
 include("gwas_plots.jl")
 include("gvcf_genotyping.jl")
+include("imputation.jl")
 
 export julia_main
 

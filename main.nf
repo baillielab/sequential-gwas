@@ -30,6 +30,12 @@ params.IQR_FACTOR = 10
 params.FILTER_HIGH_LOADINGS_VARIANTS = false
 params.ANCESTRY_THRESHOLD = 0.8
 
+// Imputation
+params.TOPMED_REFRESH_RATE = 180
+params.TOPMED_MAX_PARALLEL_JOBS = 3
+params.IMPUTATION_R2_FILTER = 0.8
+params.N_SAMPLES_PER_IMPUTATION_JOBS = 19000
+
 // GWAS params
 params.MIN_GROUP_SIZE = 100
 params.VARIABLES_CONFIG = "${projectDir}/assets/variables.yaml"
@@ -38,7 +44,7 @@ params.REGENIE_MAC = 10
 params.REGENIE_BSIZE = 1000
 
 // Other params
-params.N_PCS = 10
+params.N_PCS = 20
 
 include { CombineGeneticDatasets } from './workflows/combine_datasets.nf'
 include { Imputation } from './workflows/imputation.nf'

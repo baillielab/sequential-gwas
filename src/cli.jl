@@ -65,6 +65,52 @@ function cli_settings()
         "merge-covariates-pcs"
             action = :command
             help = "Merges covariates and PCs files."
+        
+        "impute"
+            action = :command
+            help = "Imputes genotypes using the TOPMed API."
+    end
+
+    @add_arg_table! s["impute"] begin
+        "genotypes-prefix"
+            arg_type = String
+            required = true
+            help = "Prefix to genotypes"
+
+        "token-file"
+            arg_type = String
+            required = true
+            help = "Path to TOPMed API token file."
+
+        "--password"
+            arg_type = String
+            help = "Password for the TOPMed API."
+            default = "abcde"
+
+        "--max-concurrent-submissions"
+            arg_type = Int
+            help = "Maximum number of concurrent submissions to the TOPMed API."
+            default = 3
+
+        "--refresh-rate"
+            arg_type = Int
+            help = "Rate at which to refresh the job status."
+            default = 120
+
+        "--r2"
+            arg_type = Float64
+            help = "R2 threshold for imputation."
+            default = 0.8
+
+        "--samples-per-file"
+            arg_type = Int
+            help = "Number of samples per file."
+            default = 10_000
+
+        "--output-dir"
+            arg_type = String
+            help = "Output directory for imputed files."
+            default = "." 
     end
 
     @add_arg_table! s["gwas-plots"] begin
@@ -621,6 +667,17 @@ function julia_main()::Cint
             cmd_settings["results"],
             cmd_settings["group"];
             output_prefix=cmd_settings["output-prefix"]
+        )
+    elseif cmd =="impute"
+        impute(
+            cmd_settings["genotypes-prefix"],
+            cmd_settings["token-file"];
+            password=cmd_settings["password"],
+            max_concurrent_submissions=cmd_settings["max-concurrent-submissions"],
+            refresh_rate=cmd_settings["refresh-rate"],
+            r2=cmd_settings["r2"],
+            samples_per_file=cmd_settings["samples-per-file"],
+            output_dir=cmd_settings["output-dir"]
         )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))
