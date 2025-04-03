@@ -24,6 +24,8 @@ where:
 
 ## Workflow Parameters
 
+This is the list of all the pipeline's parameters, they can be set in the `run.config` file under the `params` section.
+
 - `GENOTYPES_PREFIX`: Prefix to plink `.bed` genotypes.
 - `BGEN_GENOTYPES_PREFIX` = Prefix to imputed `.bgen` genotypes.
 - `COVARIATES`: Path to covariate file (likely the output of [Combining Datasets](@ref))
@@ -48,7 +50,7 @@ If the previous steps have been completed successfully you can run:
 All outputs are produced in `PUBLISH_DIR`, the main outputs of the workflow are:
 
 
-## DAG
+## Workflow DAG
 
 ```@raw html
 <iframe src="../assets/gwas_dag.html" width="100%" height="800px"></iframe>

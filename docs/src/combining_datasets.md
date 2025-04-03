@@ -65,9 +65,9 @@ All outputs are produced in `PUBLISH_DIR` (defaults to `results`), the main outp
 - `genotypes.aggregated.qced.final.{bed,bim,fam}`: The aggregated genotypes
 - `covariates.merged.csv`: THe covariates inferred from the genotypes (ancestry, PCs).
 
-## Pipeline parameters
+## Workflow Parameters
 
-This is the list of all the pipeline's parameters. In principle they don't need to be changed if the conventions in this documentation have been respected and are up to date. Otherwise, please feel free to open an issue.
+This is the list of all the pipeline's parameters, they can be set in the `run.config` file under the `params` section.
 
 ### Input Files
 
@@ -106,14 +106,14 @@ These are already set if you are using the `odap` profile.
 - `GATK_PUBLISH_DIR` (default: "results/gatk"): Where data associated with GATK requirements will be output.
 - `MERGED_PUBLISH_DIR` (default: "results/merged"): Where the merged genetic data will be output.
 
-## Current Limitations
+## Current Limitations
 
 These are current limitations of the aggregation workflow:
 
 - Only chromosomes 1 to 22 are processed.
 - Only bi-allelic SNPs are used.
 
-## DAG
+## Workflow DAG
 
 ```@raw html
 <iframe src="../assets/combining_datasets_dag.html" width="100%" height="2000px"></iframe>

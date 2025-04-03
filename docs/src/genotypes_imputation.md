@@ -39,6 +39,8 @@ All outputs are produced in `PUBLISH_DIR` (defaults to `results`), the main outp
 
 ## Workflow Parameters
 
+This is the list of all the pipeline's parameters, they can be set in the `run.config` file under the `params` section.
+
 ### Inputs Parameters
 
 - `GENOTYPES_PREFIX`: Prefix to genotypes files.

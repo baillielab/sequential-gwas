@@ -69,6 +69,37 @@ function cli_settings()
         "impute"
             action = :command
             help = "Imputes genotypes using the TOPMed API."
+
+        "download-topmed-job"
+            action = :command
+            help = "Download job results using the TOPMed API."
+    end
+
+    @add_arg_table! s["download-topmed-job"] begin
+        "jobs-file"
+            arg_type = String
+            required = true
+            help = "File containing TOPMed job ids (one per line)"
+
+        "token-file"
+            arg_type = String
+            required = true
+            help = "Path to TOPMed API token file."
+
+        "--password"
+            arg_type = String
+            help = "Password for the TOPMed API."
+            default = "abcde"
+
+        "--refresh-rate"
+            arg_type = Int
+            help = "Rate at which to refresh the job status."
+            default = 120
+            
+        "--output-dir"
+            arg_type = String
+            help = "Output directory for imputed files."
+            default = "."
     end
 
     @add_arg_table! s["impute"] begin
@@ -111,11 +142,6 @@ function cli_settings()
             arg_type = String
             help = "Output directory for imputed files."
             default = "."
-        
-        "--jobs-file"
-            arg_type = String
-            help = "List of job-ids to download."
-            default = nothing
     end
 
     @add_arg_table! s["gwas-plots"] begin
@@ -682,7 +708,14 @@ function julia_main()::Cint
             refresh_rate=cmd_settings["refresh-rate"],
             r2=cmd_settings["r2"],
             samples_per_file=cmd_settings["samples-per-file"],
-            jobs_file=cmd_settings["jobs-file"],
+            output_dir=cmd_settings["output-dir"]
+        )
+    elseif cmd == "download-topmed-job"
+        download_from_job_ids(
+            cmd_settings["jobs-file"], 
+            cmd_settings["token-file"];
+            password=cmd_settings["password"],
+            refresh_rate=cmd_settings["refresh-rate"], 
             output_dir=cmd_settings["output-dir"]
         )
     else
