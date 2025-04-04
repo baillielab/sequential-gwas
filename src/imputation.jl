@@ -16,7 +16,9 @@ function write_chromosome_list(genotypes_prefix; output_prefix="genomicc")
 end
 
 function get_vcf_files_channel(genotypes_prefix)
-    vcf_files = filter(x -> occursin(genotypes_prefix, x), readdir(dirname(genotypes_prefix), join=true))
+    dir = dirname(genotypes_prefix)
+    dir = dir == "" ? "." : dir
+    vcf_files = filter(x -> occursin(genotypes_prefix, x), readdir(dir, join=true))
     samples = [split(basename(f), ".")[end-2] for f in vcf_files]
     chromosomes = [split(basename(f), ".")[2] for f in vcf_files]
     vcf_files_df = DataFrame(FILE=vcf_files, SAMPLES=samples, CHR=chromosomes)

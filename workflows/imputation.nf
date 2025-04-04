@@ -209,12 +209,12 @@ workflow Impute {
     }
 
     // jobs_results = DownloadJobResults(topmed_api_token, jobs_files)
-    // all_dose_vcfs = jobs_results.imputed_genotypes.flatten()
+    // all_dose_vcfs = jobs_files.imputed_genotypes.flatten()
 
-    // Make BGEN Output
-    // Idea 1: Merge vcf and then convert
+    // // Make BGEN Output
+    // // Idea 1: Merge vcf and then convert
     // all_dose_vcfs_indices = IndexVCF(all_dose_vcfs)
-    // dose_vcfs_and_indices_by_chr = all_dose_vcfs.concat(all_dose_vcfs_indices)
+    // dose_vcfs_and_indices_by_chr = [all_dose_vcfs.concat(all_dose_vcfs_indices)
     //     .map{ it -> [it.getName().tokenize(".")[1], it]}
     //     .groupTuple()
     //     .view()
