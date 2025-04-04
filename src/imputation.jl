@@ -1,51 +1,28 @@
-function make_sample_batches(prefix; output_dir=".", samples_per_file=5_000)
+function write_sample_batches(prefix; output_prefix="genomicc", samples_per_file=5_000)
     fam = SequentialGWAS.read_fam(string(prefix, ".fam"))
     return map(Iterators.partition(1:nrow(fam), samples_per_file)) do indices
-        filename = joinpath(output_dir, string("samples_", indices[1], "_", indices[end], ".keep"))
+        filename = string(output_prefix, ".samples_", indices[1], "_", indices[end], ".keep")
         CSV.write(filename, fam[indices, [:FID, :IID]], delim=' ', header=false)
-        filename
     end
 end
 
-function get_chromosomes(prefix)
-    bim = SequentialGWAS.read_bim(string(prefix, ".bim"))
-    return unique(bim.CHR_CODE)
-end
-
-function get_vcf_files_channel(dir)
-    vcf_files = filter(x -> endswith(x, ".vcf.gz"), readdir(dir, join=true))
-    samples = [join(split(replace(basename(f), ".vcf.gz" => ""), "_")[3:4], "-") for f in vcf_files]
-    chromosomes = [split(replace(basename(f), ".vcf.gz" => ""), "_")[1] for f in vcf_files]
-    vcf_files_df = DataFrame(FILE=vcf_files, SAMPLES=samples, CHR=chromosomes)
-    return Channel() do channel
-        for (key, group) in pairs(groupby(vcf_files_df, :SAMPLES))
-            put!(channel, (key.SAMPLES, group))
+function write_chromosome_list(genotypes_prefix; output_prefix="genomicc")
+    bim = SequentialGWAS.read_bim(string(genotypes_prefix, ".bim"))
+    open(string(output_prefix, ".chromosomes.txt"), "w") do io
+        for chr in unique(bim.CHR_CODE)
+            println(io, chr)
         end
     end
 end
 
-function split_bed_file_to_vcf(prefix; output_dir=".", samples_per_file=5_000)
-    sample_batches = SequentialGWAS.make_sample_batches(prefix; output_dir=output_dir, samples_per_file=samples_per_file)
-    chromosomes = SequentialGWAS.get_chromosomes(prefix)
-    @threads for chr in chromosomes
-        for samples_batch in sample_batches
-            samples_ext = splitext(basename(samples_batch))[1]
-            output_prefix = joinpath(output_dir, string(chr, "_", samples_ext))
-            run(Cmd([
-                "plink2",
-                "--bfile", prefix,
-                "--threads", "1",
-                "--output-chr", "chr26",
-                "--keep", samples_batch,
-                "--chr", string(chr),
-                "--export", "vcf-4.2", "id-delim=@",
-                "--out", output_prefix
-            ]))
-            run(Cmd([
-                "bgzip",
-                "--force",
-                string(output_prefix, ".vcf")
-            ]))
+function get_vcf_files_channel(genotypes_prefix)
+    vcf_files = filter(x -> occursin(genotypes_prefix, x), readdir(dirname(genotypes_prefix), join=true))
+    samples = [split(basename(f), ".")[end-2] for f in vcf_files]
+    chromosomes = [split(basename(f), ".")[2] for f in vcf_files]
+    vcf_files_df = DataFrame(FILE=vcf_files, SAMPLES=samples, CHR=chromosomes)
+    return Channel() do channel
+        for (key, group) in pairs(groupby(vcf_files_df, :SAMPLES))
+            put!(channel, (key.SAMPLES, group))
         end
     end
 end
@@ -199,12 +176,12 @@ function download_results(status, token, password; output_dir=".", refresh_rate=
     download_files(download_list, jobname, token, password; md5_dict=md5_dict, refresh_rate=refresh_rate)
 end
 
-function send_to_topmed_and_write_job_id(channel, token, password; refresh_rate=120, r2=0.8, output_dir=".")
+function send_to_topmed_and_write_job_id(channel, token, password; refresh_rate=120, r2=0.8, output_prefix="genomicc")
     for (jobname, group) in channel
         job_details = send_job_to_topmed(group, jobname, token, password;r2=r2)
         job_id = job_details["id"]
         status = SequentialGWAS.wait_for_completion(token, job_id; rate=refresh_rate)
-        write(joinpath(output_dir, string(job_id, ".txt")), job_id)
+        write(string(output_prefix, ".", job_id, ".txt"), job_id)
     end
 end
 
@@ -219,21 +196,22 @@ function download_from_job_ids(jobs_file, token_file; password="abcde", refresh_
 end
 
 
+function write_imputation_split_lists(genotypes_prefix; output_prefix="genomicc", samples_per_file=20_000)
+    write_sample_batches(genotypes_prefix; output_prefix=output_prefix, samples_per_file=samples_per_file)
+    write_chromosome_list(genotypes_prefix; output_prefix=output_prefix)
+end
+
 function impute(genotypes_prefix, token_file; 
     password="abcde", 
     max_concurrent_submissions=3,
     refresh_rate=120,
     r2=0.8,
-    samples_per_file=10_000,
-    output_dir="."
+    output_prefix="genomicc"
     )
     token = read(token_file, String)
     # Split the bed file into smaller VCF files for each chromosome
-    vcfs_dir = joinpath(output_dir, "vcfs")
-    mkpath(vcfs_dir)
-    SequentialGWAS.split_bed_file_to_vcf(genotypes_prefix; output_dir=vcfs_dir, samples_per_file=samples_per_file)
     # Group files into a channel for submission
-    vcf_files_channel = SequentialGWAS.get_vcf_files_channel(vcfs_dir)
+    vcf_files_channel = SequentialGWAS.get_vcf_files_channel(genotypes_prefix)
     # Send for submission and download, maximum 3 concurrent tasks running at once on topmed
     tasks = [
         Threads.@spawn send_to_topmed_and_write_job_id(
@@ -242,7 +220,7 @@ function impute(genotypes_prefix, token_file;
             password; 
             refresh_rate=refresh_rate,
             r2=r2,
-            output_dir=output_dir
+            output_prefix=output_prefix
         ) for _ in 1:max_concurrent_submissions
     ]
 

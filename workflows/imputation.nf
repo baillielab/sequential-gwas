@@ -1,5 +1,51 @@
 include { get_prefix; get_julia_cmd } from '../modules/utils.nf'
 
+process WriteImputationSplitLists {
+    input:
+        path genotypes
+
+    output:
+        path "genomicc.chromosomes.txt", emit: chromosomes
+        path "*.keep", emit: samples
+
+    script:
+        genotypes_prefix = get_prefix(genotypes[0])
+        """
+        ${get_julia_cmd(task.cpus)} write-imputation-split-lists \
+            ${genotypes_prefix} \
+            --output-prefix genomicc \
+            --n-samples-per-file ${params.N_SAMPLES_PER_IMPUTATION_JOBS}
+        """
+}
+
+process MakeVCFSplit {
+    label "multithreaded"
+
+    input:
+        path genotypes
+        tuple val(chr), path(samples)
+
+    output:
+        path("${output_prefix}.vcf.gz")
+
+    script:
+        genotypes_prefix = get_prefix(genotypes[0])
+        samples_id = samples.getName().tokenize(".")[1]
+        output_prefix = "genomicc.${chr}.${samples_id}"
+        """
+        plink2 \
+            --bfile ${genotypes_prefix} \
+            --keep ${samples} \
+            --chr ${chr} \
+            --export vcf-4.2 id-delim=@ \
+            --out ${output_prefix} \
+            --threads ${task.cpus} \
+            --output-chr chr26
+        
+        bgzip ${output_prefix}.vcf
+        """
+}
+
 process TOPMedImputation {
     cpus = params.TOPMED_MAX_PARALLEL_JOBS
     // label "bigmem"
@@ -21,8 +67,7 @@ process TOPMedImputation {
             --max-concurrent-submissions ${params.TOPMED_MAX_PARALLEL_JOBS} \
             --refresh-rate ${params.TOPMED_REFRESH_RATE} \
             --r2 ${params.IMPUTATION_R2_FILTER} \
-            --samples-per-file ${params.N_SAMPLES_PER_IMPUTATION_JOBS} \
-            --output-dir .
+            --output-prefix genomicc
         """
 }
 
@@ -48,17 +93,6 @@ process DownloadJobResults {
             --password ${params.TOPMED_ENCRYPTION_PASSWORD} \
             --refresh-rate ${params.TOPMED_REFRESH_RATE} \
             --output-dir .
-        """
-
-    stub:
-        """
-        mkdir ${job_id} imputed_1-5001/local imputed_1-5001/qcreport imputed_1-5001/statisticDir
-        touch imputed_${job_id}/qcreport/qcreport.html
-        touch imputed_${job_id}/statisticDir/chunks-excluded.txt
-        touch imputed_${job_id}/statisticDir/snps-excluded.txt
-        touch imputed_${job_id}/statisticDir/typed-only.txt
-        touch imputed_${job_id}/local/chr_1.dose.vcf.gz imputed_1-5001/local/chr_1.empiricalDose.vcf.gz imputed_1-5001/local/chr_1.info.gz
-        touch imputed_${job_id}/local/chr_2.dose.vcf.gz imputed_1-5001/local/chr_2.empiricalDose.vcf.gz imputed_1-5001/local/chr_2.info.gz
         """
 }
 
@@ -160,33 +194,33 @@ workflow Impute {
     bed_genotypes = Channel.fromPath("${params.GENOTYPES_PREFIX}.{bed,bim,fam}").collect()
 
     if (params.TOPMED_JOBS_LIST == "NO_TOPMED_JOBS") {
-        jobs_files = TOPMedImputation(topmed_api_token, bed_genotypes)
+        split_files = WriteImputationSplitLists(bed_genotypes)
+        chrs_samples_split_files = split_files.chromosomes.splitText(){x -> x[0..-2]}
+            .combine(split_files.samples.flatten())
+        vcf_splits = MakeVCFSplit(
+            bed_genotypes,
+            chrs_samples_split_files
+        )
+        jobs_files = TOPMedImputation(topmed_api_token, vcf_splits.collect())
     }
     else {
         jobs_files = Channel.fromList(params.TOPMED_JOBS_LIST)
             .collectFile { it -> [ "${it}.txt", it + '\n' ] }
     }
 
-    jobs_results = DownloadJobResults(topmed_api_token, jobs_files)
-    all_dose_vcfs = jobs_results.imputed_genotypes.flatten()
+    // jobs_results = DownloadJobResults(topmed_api_token, jobs_files)
+    // all_dose_vcfs = jobs_results.imputed_genotypes.flatten()
 
     // Make BGEN Output
     // Idea 1: Merge vcf and then convert
-    all_dose_vcfs_indices = IndexVCF(all_dose_vcfs)
-    dose_vcfs_and_indices_by_chr = all_dose_vcfs.concat(all_dose_vcfs_indices)
-        .map{ it -> [it.getName().tokenize(".")[1], it]}
-        .groupTuple()
-        .view()
-    chr_vcfs = MergeVCFsByChr(dose_vcfs_and_indices_by_chr)
-    pgen_files = VCFToPGEN(chr_vcfs)
-
-    // Idea 2: Convert all VCF files to BGEN and then merge: not working since plink2 can't do non-concatenating merge...
-    // bgen_files = VCFToPGEN(all_dose_vcfs)
-    // bgen_files_by_chr = bgen_files
-    //     .map{ it -> [it[0].getName().tokenize(".")[1], it]} // Prepend Chromosome to list
-    //     .groupTuple() // Group by chromosome
-    //     .map { it -> [it[0], it[1].flatten()]} // flatten all files in a single list per chromosome
+    // all_dose_vcfs_indices = IndexVCF(all_dose_vcfs)
+    // dose_vcfs_and_indices_by_chr = all_dose_vcfs.concat(all_dose_vcfs_indices)
+    //     .map{ it -> [it.getName().tokenize(".")[1], it]}
+    //     .groupTuple()
     //     .view()
-    // MergePGENsByChr(bgen_files_by_chr)
+    // chr_vcfs = MergeVCFsByChr(dose_vcfs_and_indices_by_chr)
+    // pgen_files = VCFToPGEN(chr_vcfs)
+
+
 
 }

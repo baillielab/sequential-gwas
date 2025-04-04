@@ -66,6 +66,10 @@ function cli_settings()
             action = :command
             help = "Merges covariates and PCs files."
         
+        "write-imputation-split-lists"
+            action = :command
+            help = "Writes imputation split lists for TOPMed API."
+        
         "impute"
             action = :command
             help = "Imputes genotypes using the TOPMed API."
@@ -73,6 +77,23 @@ function cli_settings()
         "download-topmed-job"
             action = :command
             help = "Download job results using the TOPMed API."
+    end
+
+    @add_arg_table! s["write-imputation-split-lists"] begin
+        "genotypes-prefix"
+            arg_type = String
+            required = true
+            help = "Prefix to genotypes"
+
+        "--output-prefix"
+            arg_type = String
+            help = "Prefix to output files."
+            default = "genomicc"
+
+        "--n-samples-per-file"
+            arg_type = Int
+            help = "Number of samples per file."
+            default = 20_000
     end
 
     @add_arg_table! s["download-topmed-job"] begin
@@ -138,9 +159,9 @@ function cli_settings()
             help = "Number of samples per file."
             default = 10_000
 
-        "--output-dir"
+        "--output-prefix"
             arg_type = String
-            help = "Output directory for imputed files."
+            help = "Output prefix for jobs files."
             default = "."
     end
 
@@ -699,6 +720,12 @@ function julia_main()::Cint
             cmd_settings["group"];
             output_prefix=cmd_settings["output-prefix"]
         )
+    elseif cmd == "write-imputation-split-lists"
+        write_imputation_split_lists(
+            cmd_settings["genotypes-prefix"]; 
+            output_prefix=cmd_settings["output-prefix"],
+            samples_per_file=cmd_settings["n-samples-per-file"]
+        )
     elseif cmd == "impute"
         impute(
             cmd_settings["genotypes-prefix"],
@@ -707,8 +734,7 @@ function julia_main()::Cint
             max_concurrent_submissions=cmd_settings["max-concurrent-submissions"],
             refresh_rate=cmd_settings["refresh-rate"],
             r2=cmd_settings["r2"],
-            samples_per_file=cmd_settings["samples-per-file"],
-            output_dir=cmd_settings["output-dir"]
+            output_prefix=cmd_settings["output-prefix"]
         )
     elseif cmd == "download-topmed-job"
         download_from_job_ids(
