@@ -48,7 +48,7 @@ process MakeVCFSplit {
 
 process TOPMedImputation {
     cpus = params.TOPMED_MAX_PARALLEL_JOBS
-    // label "bigmem"
+    label "bigmem"
 
     input:
         path topmed_api_token_file

@@ -163,7 +163,7 @@ function download_files(download_list, jobname, token, password; md5_dict=Dict()
     end
 end
 
-function get_md5_map!(download_list, jobname, token, password; refresh_rate=refresh_rate)
+function get_md5_map!(download_list, jobname, token; refresh_rate=refresh_rate)
     md5_index = only(findall(x -> x["filename"] == "results.md5", download_list))
     md5_file_dict = popat!(download_list, md5_index)
     output_file = download_file_from_topmed(md5_file_dict, token, jobname; refresh_rate=refresh_rate)
@@ -174,7 +174,7 @@ end
 function download_results(status, token, password; output_dir=".", refresh_rate=360)
     jobname = status["name"]
     download_list = get_download_list(status, output_dir)
-    md5_dict = get_md5_map!(download_list, jobname, token, password; refresh_rate=refresh_rate)
+    md5_dict = get_md5_map!(download_list, jobname, token; refresh_rate=refresh_rate)
     download_files(download_list, jobname, token, password; md5_dict=md5_dict, refresh_rate=refresh_rate)
 end
 
@@ -187,8 +187,13 @@ function send_to_topmed_and_write_job_id(channel, token, password; refresh_rate=
     end
 end
 
-function download_from_job_ids(jobs_file, token_file; password="abcde", refresh_rate=360, output_dir=".")
+function get_token(token_file)
     token = read(token_file, String)
+    return endswith(token, "\n") ? token[1:end-1] : token
+end
+
+function download_from_job_ids(jobs_file, token_file; password="abcde", refresh_rate=360, output_dir=".")
+    token = get_token(token_file)
     job_ids = readlines(jobs_file)
     for job_id in job_ids
         status = SequentialGWAS.wait_for_completion(token, job_id; rate=refresh_rate)
@@ -210,7 +215,7 @@ function impute(genotypes_prefix, token_file;
     r2=0.8,
     output_prefix="genomicc"
     )
-    token = read(token_file, String)
+    token = get_token(token_file)
     # Split the bed file into smaller VCF files for each chromosome
     # Group files into a channel for submission
     vcf_files_channel = SequentialGWAS.get_vcf_files_channel(genotypes_prefix)
