@@ -27,7 +27,7 @@ end
 function split_bed_file_to_vcf(prefix; output_dir=".", samples_per_file=5_000)
     sample_batches = SequentialGWAS.make_sample_batches(prefix; output_dir=output_dir, samples_per_file=samples_per_file)
     chromosomes = SequentialGWAS.get_chromosomes(prefix)
-    Threads.@threads for chr in chromosomes
+    @threads for chr in chromosomes
         for samples_batch in sample_batches
             samples_ext = splitext(basename(samples_batch))[1]
             output_prefix = joinpath(output_dir, string(chr, "_", samples_ext))
@@ -217,6 +217,7 @@ function download_from_job_ids(jobs_file, token_file; password="abcde", refresh_
     end
     return 0
 end
+
 
 function impute(genotypes_prefix, token_file; 
     password="abcde", 

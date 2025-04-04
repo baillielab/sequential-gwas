@@ -1,8 +1,8 @@
 include { get_prefix; get_julia_cmd } from '../modules/utils.nf'
 
 process TOPMedImputation {
-    cpus = 3
-    time = '4days' // it can take a while to finish imputation
+    cpus = params.TOPMED_MAX_PARALLEL_JOBS
+    // label "bigmem"
 
     input:
         path topmed_api_token_file
@@ -63,8 +63,7 @@ process DownloadJobResults {
 }
 
 process MergeVCFsByChr {
-    // label "multithreaded"
-    cpus = 8
+    label "hyperthreaded"
 
     input:
         tuple val(chr), path(vcf_files)
@@ -83,21 +82,10 @@ process MergeVCFsByChr {
 
         mamba run -n bcftools_env bcftools merge --threads ${task.cpus} -o ${output} -O z -l merge_list.txt
         """
-
-    stub:
-        output_prefix = "${chr}.merged"
-        samples_string = samples.join("\n")
-        files_string = files.join("\n")
-        """
-        echo "${samples_string}" > samples.txt
-        echo "${files_string}" > merge_list.txt
-        touch ${output_prefix}.bgen ${output_prefix}.bgi ${output_prefix}.sample
-        """
 }
 
 process IndexVCF {
-    // label "multithreaded"
-    cpus = 4
+    label "multithreaded"
 
     input:
         path vcf_file
@@ -112,8 +100,7 @@ process IndexVCF {
 }
 
 process VCFToPGEN {
-    // label "multithreaded"
-    cpus = 8
+    label "multithreaded"
 
     input:
         path vcf_file
@@ -129,8 +116,7 @@ process VCFToPGEN {
 }
 
 process MergePGENsByChr {
-    // label "multithreaded"
-    cpus = 8
+    label "multithreaded"
 
     input:
         tuple val(chr), path(pgen_files)
@@ -174,7 +160,7 @@ workflow Impute {
     bed_genotypes = Channel.fromPath("${params.GENOTYPES_PREFIX}.{bed,bim,fam}").collect()
 
     if (params.TOPMED_JOBS_LIST == "NO_TOPMED_JOBS") {
-        jobs_files = TOPMedImputation(topmed_api_token, bed_genotypes, topmed_jobs_file)
+        jobs_files = TOPMedImputation(topmed_api_token, bed_genotypes)
     }
     else {
         jobs_files = Channel.fromList(params.TOPMED_JOBS_LIST)
@@ -184,17 +170,8 @@ workflow Impute {
     jobs_results = DownloadJobResults(topmed_api_token, jobs_files)
     all_dose_vcfs = jobs_results.imputed_genotypes.flatten()
 
-    // imputed_genotypes = Channel.fromPath([
-    //     "work/2c/fcd1d2c2c44aeae15aedd71d78a0eb/local/samples-15001-20000.chr1.dose.vcf.gz",
-    //     "work/2c/fcd1d2c2c44aeae15aedd71d78a0eb/local/samples-15001-20000.chr2.dose.vcf.gz",
-    //     "work/06/ee9813d34e6d0982640271d84912a4/local/samples-1-5000.chr1.dose.vcf.gz",
-    //     "work/06/ee9813d34e6d0982640271d84912a4/local/samples-1-5000.chr2.dose.vcf.gz"
-    //     ])
-
-    // all_dose_vcfs = imputed_genotypes.flatten()
-
     // Make BGEN Output
-    // Idea 1: Merge vcf and the nconvert
+    // Idea 1: Merge vcf and then convert
     all_dose_vcfs_indices = IndexVCF(all_dose_vcfs)
     dose_vcfs_and_indices_by_chr = all_dose_vcfs.concat(all_dose_vcfs_indices)
         .map{ it -> [it.getName().tokenize(".")[1], it]}
