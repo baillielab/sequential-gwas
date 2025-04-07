@@ -61,7 +61,7 @@ process TOPMedImputation {
         genotypes_prefix = get_prefix(genotypes[0])
         """
         ${get_julia_cmd(task.cpus)} impute \
-            ${genotypes_prefix} \
+            genomicc \
             ${topmed_api_token_file} \
             --password ${params.TOPMED_ENCRYPTION_PASSWORD} \
             --max-concurrent-submissions ${params.TOPMED_MAX_PARALLEL_JOBS} \
@@ -71,28 +71,45 @@ process TOPMedImputation {
         """
 }
 
-process DownloadJobResults {
-    label "hyperthreaded"
-
+process GetTOPMedDownloadList {
     input:
         path topmed_api_token_file
-        val jobs_file
-    
+        val job_id
+
     output:
-        path "qcreport/*", emit: qcreports
-        path "statisticDir/*", emit: statistics
-        path "local/*dose.vcf.gz", emit: imputed_genotypes
-        path "local/*empiricalDose.vcf.gz", emit: imputed_empirical_genotypes
-        path "local/*info.gz", emit: info
+        tuple val(job_id), path("*.txt"), emit: info_files
+        tuple val(job_id), path("*.zip"), emit: zip_files
+        tuple val(job_id), path("*.md5", arity: 1), emit: md5_file
+        tuple val(job_id), path("*.html", arity: 1), emit: report_file
 
     script:
         """
-        ${get_julia_cmd(task.cpus)} download-topmed-job \
-            ${jobs_file} \
+        ${get_julia_cmd(task.cpus)} get-topmed-download-list \
+            ${job_id} \
             ${topmed_api_token_file} \
-            --password ${params.TOPMED_ENCRYPTION_PASSWORD} \
-            --refresh-rate ${params.TOPMED_REFRESH_RATE} \
-            --output-dir .
+            --refresh-rate ${params.TOPMED_REFRESH_RATE}
+        """
+}
+
+process DownloadTOPMedZipFile {
+    input:
+        tuple val(job_id), path(md5_file), path(zip_file_info)
+        path topmed_api_token_file
+
+    output:
+        tuple val(job_id), path(output_file)
+
+    script:
+        def output_file_parts = zip_file_info.getName().tokenize(".")
+        output_file_parts.remove(1)
+        output_file = output_file_parts.join(".")
+        """
+        ${get_julia_cmd(task.cpus)} download-topmed-file \
+            ${job_id} \
+            ${topmed_api_token_file} \
+            ${zip_file_info} \
+            --md5-file ${md5_file} \
+            --refresh-rate ${params.TOPMED_REFRESH_RATE}
         """
 }
 
@@ -202,19 +219,24 @@ workflow Impute {
             chrs_samples_split_files
         )
         jobs_files = TOPMedImputation(topmed_api_token, vcf_splits.collect())
+        job_ids = jobs_files.splitText().map {it -> it[0..-2]}
     }
     else {
-        jobs_files = Channel.fromList(params.TOPMED_JOBS_LIST)
-            .collectFile { it -> [ "${it}.txt", it + '\n' ] }
+        job_ids = Channel.fromList(params.TOPMED_JOBS_LIST)
     }
 
-    // jobs_results = DownloadJobResults(topmed_api_token, jobs_files)
-    // all_dose_vcfs = jobs_files.imputed_genotypes.flatten()
+    files_to_download = GetTOPMedDownloadList(topmed_api_token, job_ids)
+
+    zip_files_infos = files_to_download.zip_files.transpose()
+    md5_files = files_to_download.md5_file.transpose()
+    md5_to_zip_files_infos = md5_files.combine(zip_files_infos, by: 0)
+    zip_files = DownloadTOPMedZipFile(md5_to_zip_files_infos, topmed_api_token)
+
 
     // // Make BGEN Output
     // // Idea 1: Merge vcf and then convert
     // all_dose_vcfs_indices = IndexVCF(all_dose_vcfs)
-    // dose_vcfs_and_indices_by_chr = [all_dose_vcfs.concat(all_dose_vcfs_indices)
+    // dose_vcfs_and_indices_by_chr = all_dose_vcfs.concat(all_dose_vcfs_indices)
     //     .map{ it -> [it.getName().tokenize(".")[1], it]}
     //     .groupTuple()
     //     .view()

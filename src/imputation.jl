@@ -73,17 +73,14 @@ function wait_for_completion(token, job_id; rate=60)
     end
 end
 
-function get_download_list(status, job_output_dir)
+function get_download_list(status)
     download_list = []
     for output in status["outputParams"]
         if output["name"] !== "logfile"
-            output_subdir = joinpath(job_output_dir, output["name"])
-            mkpath(output_subdir)
             for file_dict in output["files"]
                 push!(
                     download_list, 
                     Dict(
-                        "output_subdir" => output_subdir,
                         "hash" => file_dict["hash"],
                         "filename" => file_dict["name"],
                     )
@@ -108,12 +105,10 @@ function has_download_suceeded(output_file)
     end
 end
 
-function download_file_from_topmed(file_dict, token, jobname; md5_dict = Dict(), refresh_rate=360)
+function _download_topmed_file(file_dict, token, jobname; refresh_rate=360)
     file_hash = file_dict["hash"]
     file_name = file_dict["filename"]
-    download_subdir = file_dict["output_subdir"]
-    output_prefix = string("samples-", jobname, ".")
-    output_file = joinpath(download_subdir, string(output_prefix, file_name))
+    output_file = string(jobname, ".", file_name)
     while true
         read(Cmd([
             "curl", "-sL", 
@@ -122,60 +117,11 @@ function download_file_from_topmed(file_dict, token, jobname; md5_dict = Dict(),
             "-o", output_file
         ]), String)
         if has_download_suceeded(output_file)
-            # Check hash is correct or redownload (This can happen because too many downloads happen at once and TOPMed does not like it)
-            if file_name in keys(md5_dict)
-                hash_to_file = readchomp(`md5sum $output_file`)
-                file_md5 = first(split(hash_to_file, " "))
-                if file_md5 !== md5_dict[file_name]
-                    return output_file
-                else
-                    @info "Incorrect MD5 sum for file: $output_file, redownloading"
-                    sleep(refresh_rate)
-                end
-            else
-                return output_file
-            end
+            return output_file
         else
             sleep(refresh_rate)
         end
     end
-end
-
-function download_files(download_list, jobname, token, password; md5_dict=Dict(), refresh_rate=360)
-    Threads.@threads for file_dict in download_list
-        # Download File
-        output_file = download_file_from_topmed(file_dict, token, jobname; md5_dict=md5_dict, refresh_rate=refresh_rate)
-        # Maybe Unzip and rename with prefix
-        if endswith(output_file, "zip")
-            file_name = file_dict["filename"]
-            download_subdir = file_dict["output_subdir"]
-            output_prefix = string("samples-", jobname, ".")
-            extract_dir = joinpath(download_subdir, replace(file_name, ".zip" => ""))
-            run(Cmd(["unzip", "-P", password, output_file, "-d", extract_dir]))
-            for extracted_file in readdir(extract_dir)
-                mv(
-                    joinpath(extract_dir, extracted_file), 
-                    joinpath(download_subdir, string(output_prefix, extracted_file))
-                )
-            end
-            rm(extract_dir)
-        end
-    end
-end
-
-function get_md5_map!(download_list, jobname, token; refresh_rate=refresh_rate)
-    md5_index = only(findall(x -> x["filename"] == "results.md5", download_list))
-    md5_file_dict = popat!(download_list, md5_index)
-    output_file = download_file_from_topmed(md5_file_dict, token, jobname; refresh_rate=refresh_rate)
-    md5_df = CSV.read(output_file, DataFrame; header=["MD5", "FILENAME"])
-    return Dict(zip(md5_df.FILENAME, md5_df.MD5))
-end
-
-function download_results(status, token, password; output_dir=".", refresh_rate=360)
-    jobname = status["name"]
-    download_list = get_download_list(status, output_dir)
-    md5_dict = get_md5_map!(download_list, jobname, token; refresh_rate=refresh_rate)
-    download_files(download_list, jobname, token, password; md5_dict=md5_dict, refresh_rate=refresh_rate)
 end
 
 function send_to_topmed_and_write_job_id(channel, token, password; refresh_rate=120, r2=0.8, output_prefix="genomicc")
@@ -192,16 +138,48 @@ function get_token(token_file)
     return endswith(token, "\n") ? token[1:end-1] : token
 end
 
-function download_from_job_ids(jobs_file, token_file; password="abcde", refresh_rate=360, output_dir=".")
+function get_download_list_and_checksum(job_id, token_file; refresh_rate=360)
     token = get_token(token_file)
-    job_ids = readlines(jobs_file)
-    for job_id in job_ids
-        status = SequentialGWAS.wait_for_completion(token, job_id; rate=refresh_rate)
-        SequentialGWAS.download_results(status, token, password; output_dir=output_dir, refresh_rate=refresh_rate)
+    status = wait_for_completion(token, job_id; rate=refresh_rate)
+    jobname = status["name"]
+    download_list = get_download_list(status)
+    # Download md5 checksums
+    md5_index = only(findall(x -> x["filename"] == "results.md5", download_list))
+    md5_file_dict = popat!(download_list, md5_index)
+    _download_topmed_file(md5_file_dict, token, jobname; refresh_rate=refresh_rate)
+    # Write files to be downloaded
+    for file_dict in download_list
+        open(string(jobname, ".todownload.", file_dict["filename"]), "w") do io
+            JSON.print(io, file_dict)
+        end
     end
+
     return 0
 end
 
+function get_md5_dict(md5_file)
+    md5_df = CSV.read(md5_file, DataFrame; header=["MD5", "FILENAME"])
+    return Dict(zip(md5_df.FILENAME, md5_df.MD5))
+end
+
+function download_topmed_file(job_id, token_file, file_info; md5_file=nothing, refresh_rate=360)
+    token = SequentialGWAS.get_token(token_file)
+    status = SequentialGWAS.wait_for_completion(token, job_id; rate=refresh_rate)
+    jobname = status["name"]
+    file_dict = open(JSON.parse, file_info)
+    output_file = SequentialGWAS._download_topmed_file(file_dict, token, jobname; refresh_rate=refresh_rate)
+    
+    # Check hash for zip files
+    if endswith(file_dict["filename"], "zip")
+        expected_hash = SequentialGWAS.get_md5_dict(md5_file)[file_dict["filename"]]
+        hash_to_file = readchomp(`md5sum $output_file`)
+        file_hash = first(split(hash_to_file, " "))
+        file_hash == expected_hash ||
+            throw("Downloaded file's md5 checksum does not match expected md5 checksum. ($output_file)")
+    end
+
+    return 0
+end
 
 function write_imputation_split_lists(genotypes_prefix; output_prefix="genomicc", samples_per_file=20_000)
     write_sample_batches(genotypes_prefix; output_prefix=output_prefix, samples_per_file=samples_per_file)
@@ -237,6 +215,7 @@ function impute(genotypes_prefix, token_file;
 
     return 0
 end
+
 
 function lower_sample_id(filename)
     sample_prefix = first(split(basename(filename), "."))

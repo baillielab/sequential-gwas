@@ -74,9 +74,40 @@ function cli_settings()
             action = :command
             help = "Imputes genotypes using the TOPMed API."
 
-        "download-topmed-job"
+        "get-topmed-download-list"
             action = :command
-            help = "Download job results using the TOPMed API."
+            help = "Download results list using the TOPMed API."
+
+        "download-topmed-file"
+            action = :command
+            help = "Downloads a file from TOPMed."
+    end
+
+    @add_arg_table! s["download-topmed-file"] begin
+        "job-id"
+            arg_type = String
+            required = true
+            help = "job-id"
+
+        "token-file"
+            arg_type = String
+            required = true
+            help = "Path to TOPMed API token file."
+
+        "file-info"
+            arg_type = String
+            required = true
+            help = "Info of the file to be downloaded."
+
+        "--md5-file"
+            arg_type = String
+            default = nothing
+            help = "Optional file to check MD5 against (for imputed .zip files)."
+
+        "--refresh-rate"
+            arg_type = Int
+            help = "Rate at which to refresh the job status."
+            default = 120
     end
 
     @add_arg_table! s["write-imputation-split-lists"] begin
@@ -96,31 +127,21 @@ function cli_settings()
             default = 20_000
     end
 
-    @add_arg_table! s["download-topmed-job"] begin
-        "jobs-file"
+    @add_arg_table! s["get-topmed-download-list"] begin
+        "job-id"
             arg_type = String
             required = true
-            help = "File containing TOPMed job ids (one per line)"
+            help = "job-id"
 
         "token-file"
             arg_type = String
             required = true
             help = "Path to TOPMed API token file."
 
-        "--password"
-            arg_type = String
-            help = "Password for the TOPMed API."
-            default = "abcde"
-
         "--refresh-rate"
             arg_type = Int
             help = "Rate at which to refresh the job status."
             default = 120
-            
-        "--output-dir"
-            arg_type = String
-            help = "Output directory for imputed files."
-            default = "."
     end
 
     @add_arg_table! s["impute"] begin
@@ -736,14 +757,20 @@ function julia_main()::Cint
             r2=cmd_settings["r2"],
             output_prefix=cmd_settings["output-prefix"]
         )
-    elseif cmd == "download-topmed-job"
-        download_from_job_ids(
-            cmd_settings["jobs-file"], 
+    elseif cmd == "get-topmed-download-list"
+        get_download_list_and_checksum(
+            cmd_settings["job-id"], 
             cmd_settings["token-file"];
-            password=cmd_settings["password"],
             refresh_rate=cmd_settings["refresh-rate"], 
-            output_dir=cmd_settings["output-dir"]
         )
+    elseif cmd == "download-topmed-file"
+        download_topmed_file(
+            cmd_settings["job-id"], 
+            cmd_settings["token-file"],
+            cmd_settings["file-info"];
+            md5_file=cmd_settings["md5-file"],
+            refresh_rate=cmd_settings["refresh-rate"]
+            )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))
     end
