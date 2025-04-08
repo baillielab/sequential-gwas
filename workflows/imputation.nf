@@ -113,6 +113,19 @@ process DownloadTOPMedZipFile {
         """
 }
 
+process UnzipTOPMedFile {
+    input:
+        tuple val(job_id), path(zip_file)
+
+    script:
+        chr = zip_file.getName().tokenize(".")[1]
+        """
+        chr_filename=\$(unzip -l samples_1_15000.chr_22.zip | awk '{print \$4}' | grep 'dose.vcf.gz\$')
+        unzip zip_file $chr_filename
+        """
+
+}
+
 process MergeVCFsByChr {
     label "hyperthreaded"
 
