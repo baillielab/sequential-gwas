@@ -97,7 +97,7 @@ process DownloadTOPMedZipFile {
         path topmed_api_token_file
 
     output:
-        tuple val(job_id), path(output_file)
+        path output_file
 
     script:
         def output_file_parts = zip_file_info.getName().tokenize(".")
@@ -115,15 +115,18 @@ process DownloadTOPMedZipFile {
 
 process UnzipTOPMedFile {
     input:
-        tuple val(job_id), path(zip_file)
+        path(zip_file)
+
+    output:
+        path("*.dose.vcf.gz"), emit: vcf_file
+        path("*.empiricalDose.vcf.gz"), emit: vcf_index_file
+        path("*.info.txt"), emit: info_file
+        path("*.html"), emit: report_file
 
     script:
-        chr = zip_file.getName().tokenize(".")[1]
         """
-        chr_filename=\$(unzip -l samples_1_15000.chr_22.zip | awk '{print \$4}' | grep 'dose.vcf.gz\$')
-        unzip zip_file $chr_filename
+        unzip $zip_file
         """
-
 }
 
 process MergeVCFsByChr {
@@ -219,7 +222,7 @@ process MergeVCFsToBGENByChr {
         """
 }
 
-workflow Impute {
+workflow Imputation {
     topmed_api_token = file(params.TOPMED_TOKEN_FILE)
     bed_genotypes = Channel.fromPath("${params.GENOTYPES_PREFIX}.{bed,bim,fam}").collect()
 

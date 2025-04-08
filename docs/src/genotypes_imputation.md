@@ -20,16 +20,10 @@ Please have a look at the wokflow parameters below for how to setup the run.
 If the previous steps have been completed successfully you can run:
 
 ```bash
-./run.sh ImputeAndDownload
+./run.sh Imputation
 ```
 
-If for some reason, all jobs get submitted but the workflow crashes before the results are downloaded, you can resume with:
-
-```bash
-./run.sh DownloadImputed
-```
-
-If not all jobs were submitted, it is likely better to cancel the running jobs manually on TOPMed and try the `ImputeAndDownload` again.
+If not all jobs were submitted, it is likely better to cancel the running jobs manually on TOPMed and try the `Imputation` workflow again.
 
 ## Outputs
 

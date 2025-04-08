@@ -616,6 +616,7 @@ end
 function julia_main()::Cint
     settings = parse_args(ARGS, cli_settings())
     cmd = settings["%COMMAND%"]
+    @info "Running FlowOMICC: $cmd"
     cmd_settings = settings[cmd]
     if cmd == "snps-to-flip"
         make_snps_to_flip_list(cmd_settings["out"], cmd_settings["manifest-file"])

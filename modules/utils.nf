@@ -4,8 +4,10 @@ def get_prefix(file){
 
 def get_julia_cmd(cpus){
     def sysimageFile = new File("/opt/sequential-gwas/FlowOMMIC.so")
-    def opts = workflow.profile in ["dev", "devsingularity", "eddie"]
-    if (workflow.profile in ["dev", "devsingularity"]) {
+    if (workflow.profile == "dev") {
+        return "julia --project=/opt/sequential-gwas --startup-file=no --threads=${cpus} /opt/sequential-gwas/bin/seq-gwas.jl"
+    }
+    else if (workflow.profile == "devsingularity"){
         return "JULIA_CPU_TARGET=generic JULIA_DEPOT_PATH=/tmp:\$JULIA_DEPOT_PATH julia --project=/opt/sequential-gwas --startup-file=no --threads=${cpus} /opt/sequential-gwas/bin/seq-gwas.jl"
     }
     else {

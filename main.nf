@@ -48,7 +48,7 @@ params.REGENIE_BSIZE = 1000
 params.N_PCS = 20
 
 include { CombineGeneticDatasets } from './workflows/combine_datasets.nf'
-include { Impute } from './workflows/imputation.nf'
+include { Imputation } from './workflows/imputation.nf'
 include { KGP } from './workflows/kgp.nf'
 include { GWAS } from './workflows/gwas.nf'
 
