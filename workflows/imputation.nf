@@ -113,25 +113,27 @@ process DownloadTOPMedZipFile {
         """
 }
 
-process UnzipTOPMedFile {
+process UnzipTOPMedFile {    
     input:
         path(zip_file)
 
     output:
-        path("*.dose.vcf.gz"), emit: vcf_file
-        path("*.empiricalDose.vcf.gz"), emit: vcf_index_file
-        path("*.info.txt"), emit: info_file
-        path("*.html"), emit: report_file
+        path("*.dose.vcf.gz"), emit: dose
+        path("*.empiricalDose.vcf.gz"), emit: empirical_dose
+        path("*.info.gz"), emit: info
 
     script:
+        jobname = zip_file.getName().tokenize(".")[0]
         """
-        unzip $zip_file
+        unzip -P ${params.TOPMED_ENCRYPTION_PASSWORD} ${zip_file} -d temp_extract
+
+        for f in temp_extract/*; do
+            mv "\$f" "./${jobname}.\$(basename "\$f")"
+        done
         """
 }
 
 process MergeVCFsByChr {
-    label "hyperthreaded"
-
     input:
         tuple val(chr), path(vcf_files)
 
@@ -142,7 +144,7 @@ process MergeVCFsByChr {
         output = "${chr}.vcf.gz"
         sorted_vcf_files_string = vcf_files
             .findAll { x -> x.getName().endsWith("vcf.gz") }
-            .sort{ x -> x.getName().tokenize("-")[1].toInteger() }
+            .sort{ x -> x.getName().tokenize("_")[1].toInteger() }
             .join("\n")
         """
         echo "${sorted_vcf_files_string}" > merge_list.txt
@@ -152,8 +154,6 @@ process MergeVCFsByChr {
 }
 
 process IndexVCF {
-    label "multithreaded"
-
     input:
         path vcf_file
 
@@ -166,8 +166,23 @@ process IndexVCF {
         """
 }
 
+process QCMergedImputedFile {
+    input:
+        path vcf_file
+
+    output:
+        path "${output}"
+
+    script:
+        output = "${get_prefix(get_prefix(vcf_file))}.qced.vcf.gz"
+        """
+        mamba run -n bcftools_env \
+            bcftools view -m2 -e '( R2 < ${params.IMPUTATION_R2_FILTER})' --threads ${task.cpus} -O z -o ${output} ${vcf_file}
+        """
+}
+
 process VCFToPGEN {
-    label "multithreaded"
+    publishDir "${params.PUBLISH_DIR}", mode: "copy"
 
     input:
         path vcf_file
@@ -179,53 +194,17 @@ process VCFToPGEN {
         output_prefix = get_prefix(get_prefix(vcf_file))
         """
         plink2 --vcf ${vcf_file} --make-pgen --threads ${task.cpus} --out ${output_prefix}
+
+        awk -F'\\t' 'BEGIN{OFS="\\t"} {sub(/.*@/, "", \$1); print}' ${output_prefix}.psam > ${output_prefix}.psam.tmp
+        mv ${output_prefix}.psam.tmp ${output_prefix}.psam
         """
 }
 
-process MergePGENsByChr {
-    label "multithreaded"
-
-    input:
-        tuple val(chr), path(pgen_files)
-
-    output:
-        tuple path("${chr}.pgen"), path("${chr}.psam"), path("${chr}.pgi")
-
-    script:
-        output = "${chr}.merged.vcf.gz"
-        sorted_pgen_files_string = pgen_files
-            .findAll { x -> x.getName().endsWith("pgen") } // Only pgen files
-            .collect { x -> get_prefix(x) } // Only keep prefix as expected by plink2
-            .sort { x -> x.tokenize("-")[1].toInteger() } // Sort by sample batch to retain order of original fileset in imputed merged file
-            .join("\n")
-        """
-        echo "${sorted_pgen_files_string}" > merge_list.txt
-
-        plink2 --set-all-var-ids @:#\\\$r,\\\$a --new-id-max-allele-len 81 --pmerge-list merge_list.txt --threads ${task.cpus} --make-pgen --out ${chr}
-        """
-}
-
-process MergeVCFsToBGENByChr {
-    input:
-        tuple val(chr), path(vcf_files)
-
-    output:
-        tuple val(chr), path("${output_prefix}.bgen"), path("${output_prefix}.sample")
-
-    script:
-        output_prefix = "${chr}.merged"
-        qctool_input_string = vcf_files
-            .sort{ x -> x.getName().tokenize("-")[1].toInteger() }
-            .join(" -g ")
-        """
-        qctool -g ${qctool_input_string} -og ${output_prefix}.bgen -os ${output_prefix}.sample
-        """
-}
 
 workflow Imputation {
     topmed_api_token = file(params.TOPMED_TOKEN_FILE)
     bed_genotypes = Channel.fromPath("${params.GENOTYPES_PREFIX}.{bed,bim,fam}").collect()
-
+    // Send for Imputation or retrieve jobs list
     if (params.TOPMED_JOBS_LIST == "NO_TOPMED_JOBS") {
         split_files = WriteImputationSplitLists(bed_genotypes)
         chrs_samples_split_files = split_files.chromosomes.splitText(){x -> x[0..-2]}
@@ -235,30 +214,31 @@ workflow Imputation {
             chrs_samples_split_files
         )
         jobs_files = TOPMedImputation(topmed_api_token, vcf_splits.collect())
-        job_ids = jobs_files.splitText().map {it -> it[0..-2]}
+        job_ids = jobs_files
+            .splitText()
+            .map { it -> it.trim() }
     }
     else {
         job_ids = Channel.fromList(params.TOPMED_JOBS_LIST)
     }
-
+    // Download TOPMed files
     files_to_download = GetTOPMedDownloadList(topmed_api_token, job_ids)
-
     zip_files_infos = files_to_download.zip_files.transpose()
     md5_files = files_to_download.md5_file.transpose()
     md5_to_zip_files_infos = md5_files.combine(zip_files_infos, by: 0)
     zip_files = DownloadTOPMedZipFile(md5_to_zip_files_infos, topmed_api_token)
-
-
-    // // Make BGEN Output
-    // // Idea 1: Merge vcf and then convert
-    // all_dose_vcfs_indices = IndexVCF(all_dose_vcfs)
-    // dose_vcfs_and_indices_by_chr = all_dose_vcfs.concat(all_dose_vcfs_indices)
-    //     .map{ it -> [it.getName().tokenize(".")[1], it]}
-    //     .groupTuple()
-    //     .view()
-    // chr_vcfs = MergeVCFsByChr(dose_vcfs_and_indices_by_chr)
-    // pgen_files = VCFToPGEN(chr_vcfs)
-
-
-
+    // Unzip TOPMed files
+    unziped_files = UnzipTOPMedFile(zip_files)
+    // Merge VCFs by chromosome
+    imputed_files = unziped_files.dose.flatten()
+    indices = IndexVCF(imputed_files)
+    imputed_files_and_indices_by_chr = imputed_files
+        .concat(indices)
+        .map { it -> [it.getName().tokenize(".")[1], it]}
+        .groupTuple()
+    chr_vcfs = MergeVCFsByChr(imputed_files_and_indices_by_chr)
+    // QC merged VCFs
+    qced_vcfs_chrs = QCMergedImputedFile(chr_vcfs)
+    // Convert VCFs to PGEN
+    VCFToPGEN(qced_vcfs_chrs)
 }

@@ -4,7 +4,7 @@ This workflow combines the various genetic data sources available into a unified
 
 ## Inputs
 
-Since GenOMICC is an ongoing project where the data is continuously collected, it came and will continue to arrive in different formats. This section makes clear what are the inputs to the pipeline.
+Since GenOMICC is an ongoing project where the data is continuously collected, it came and will continue to arrive in different formats. This section describes the input data, the corresponding workflow parameters are described below.
 
 ### Genetic Data
 
@@ -54,7 +54,7 @@ This should be in a folder defined by the `GATK_DIR (default: /mnt/odap-beegfs/s
 If the previous steps have been completed successfully you can run:
 
 ```bash
-./run.sh CombineGeneticDatasets
+taskset -c 998 nextflow run main.nf -entry CombineGeneticDatasets -c run.config -profile odap -resume -with-report -with-trace
 ```
 
 ## Outputs

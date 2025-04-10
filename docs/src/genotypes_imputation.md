@@ -1,13 +1,13 @@
 # Genotypes Imputation
 
-This workflow sends the genotypes for imputation to [TOPMed](https://imputation.biodatacatalyst.nhlbi.nih.gov/#!pages/home), it follows the principles provided in their [documentation](https://topmedimpute.readthedocs.io/en/latest/).
+This workflow sends the genotypes for imputation to [TOPMed](https://imputation.biodatacatalyst.nhlbi.nih.gov/#!pages/home), downloads and aggregates the results per chromosome. It follows the principles provided in their [documentation](https://topmedimpute.readthedocs.io/en/latest/).
 
 !!! note "Platform"
-    At the moment, it is impossible to run this workflow from ODAP because the TOPMed servers have not been white listed. Instead you can run it locally or from [eddie](https://digitalresearchservices.ed.ac.uk/resources/eddie). It is also highly beneficial to have 1 thread per chromosome file for downloads since these can be done concurrently.
+    At the moment, it is impossible to run this workflow from ODAP because the TOPMed servers have not been white listed. Instead you can run it from [eddie](https://digitalresearchservices.ed.ac.uk/resources/eddie).
 
 ## Inputs
 
-For thiw workflow to work, you will need:
+For this workflow to work, you will need:
 
 - Genotypes: likely the output of the [Combining Datasets](@ref) workflow.
 - A TOPMed token: see [this page](http://topmedimpute.readthedocs.io/en/latest/api/#authentication).
@@ -20,16 +20,17 @@ Please have a look at the wokflow parameters below for how to setup the run.
 If the previous steps have been completed successfully you can run:
 
 ```bash
-./run.sh Imputation
+nextflow run main.nf -entry Imputation -profile eddie -resume -with-report -with-trace -c run.config
 ```
 
-If not all jobs were submitted, it is likely better to cancel the running jobs manually on TOPMed and try the `Imputation` workflow again.
+!!! note "Crash"
+    The `TOPMedImputation` process waits for TOPMed imputation jobs to finish, which might be longer than the maximum eddie job duration (48h) depending on the server's queue size. In that case, the workflow will crash but all the TOPMed jobs should have been submitted. Resuming the workflow will thus not work and it will try to resubmit new jobs. In order to bypass this behaviour you can pass an optional `TOPMED_JOBS_LIST` to proceed directly to the download stage. These job ids can be obtained from the TOPMed urls.
 
 ## Outputs
 
 All outputs are produced in `PUBLISH_DIR` (defaults to `results`), the main outputs of the workflow are:
 
-- `chr_P.{bgen,bgi,sample`: A set of imputed genotypes, one for each chromosome.
+- `chr_P.qced.{pgen,pvar,psam}`: A set of imputed genotypes, one for each chromosome in PGEN format.
 
 ## Workflow Parameters
 
@@ -50,4 +51,4 @@ This is the list of all the pipeline's parameters, they can be set in the `run.c
 ### Secondary Options
 
 - `TOPMED_REFRESH_RATE` (default: 180): The frequency (in seconds) with which the workflow will monitor the imputation process to send further jobs.
-- `TOPMED_MAX_PARALLEL_JOBS` (default: 3): The maximum number of concurrent imputation processes, this is limited to 3 at the moment by TOPMed
+- `TOPMED_MAX_PARALLEL_JOBS` (default: 3): The maximum number of concurrent imputation processes, this is limited to 3 at the moment by TOPMed.
