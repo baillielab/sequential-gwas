@@ -126,8 +126,8 @@ process MakeGWASPlots {
 
 workflow GWAS {
     // Inputs
-    genotypes = Channel.fromPath("${params.GENOTYPES_PREFIX}.{bed,bim,fam}").collect()
-    bgen_genotypes = Channel.fromPath("${params.BGEN_GENOTYPES_PREFIX}.{bgen,bgen.bgi,sample}").collect(sort: true)
+    genotypes = Channel.fromPath("${params.GENOTYPES_PREFIX}.{bed,bim,fam}").collect(sort: true)
+    imputed_genotypes = Channel.fromPath("${params.IMPUTED_GENOTYPES_PREFIX}.{pgen,pvar,psam}").collect(sort: true)
     covariates = file(params.COVARIATES, checkIfExists: true)
     variables_config = file(params.VARIABLES_CONFIG, checkIfExists: true)
     high_ld_regions = file(params.HIGH_LD_REGIONS, checkIfExists: true)
@@ -163,7 +163,7 @@ workflow GWAS {
         .join(group_phenotypes)
         .join(group_samples)
         .join(group_step1_output)
-    group_gwas_results = RegenieStep2(bgen_genotypes, group_inputs_step2)
+    group_gwas_results = RegenieStep2(imputed_genotypes, group_inputs_step2)
     // Plot
     MakeGWASPlots(group_gwas_results)
 

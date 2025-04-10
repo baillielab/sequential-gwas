@@ -26,9 +26,9 @@ where:
 
 This is the list of all the pipeline's parameters, they can be set in the `run.config` file under the `params` section.
 
-- `GENOTYPES_PREFIX`: Prefix to plink `.bed` genotypes.
-- `BGEN_GENOTYPES_PREFIX` = Prefix to imputed `.bgen` genotypes.
-- `COVARIATES`: Path to covariate file (likely the output of [Combining Datasets](@ref))
+- `GENOTYPES_PREFIX`: Prefix to genotypes in PLINK BED format (likely the output of the [Combining Datasets](@ref) workflow).
+- `IMPUTED_GENOTYPES_PREFIX` = Prefix to imputed genotypes in PGEN format (likely the output of the [Genotypes Imputation](@ref) workflow).
+- `COVARIATES`: Path to covariate file (likely the output of the [Combining Datasets](@ref) workflow)
 - `N_PCS (default: 10)`: Number of principal components to compute.
 - `PCA_APPROX` (default: true): Whether PCA is performed via approximation [see](https://www.cog-genomics.org/plink/2.0/strat)
 - `MIN_GROUP_SIZE (default: 100)`: Minimum number of samples in a group to proceed to effect size estimation.
