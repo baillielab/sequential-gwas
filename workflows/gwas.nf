@@ -7,6 +7,7 @@ process MakeCovariatesAndGroups {
 
     input:
         path(covariates)
+        path(inferred_covariates)
         path(variables_config)
 
     output:
@@ -16,6 +17,7 @@ process MakeCovariatesAndGroups {
         """
         ${get_julia_cmd(task.cpus)} make-gwas-groups \
             ${covariates} \
+            ${inferred_covariates} \
             ${variables_config} \
             --output-prefix group \
             --min-group-size ${params.MIN_GROUP_SIZE}
@@ -129,10 +131,11 @@ workflow GWAS {
     genotypes = Channel.fromPath("${params.GENOTYPES_PREFIX}.{bed,bim,fam}").collect(sort: true)
     imputed_genotypes = Channel.fromPath("${params.IMPUTED_GENOTYPES_PREFIX}.{pgen,pvar,psam}").collect(sort: true)
     covariates = file(params.COVARIATES, checkIfExists: true)
+    inferred_covariates = file(params.INFERRED_COVARIATES, checkIfExists: true)
     variables_config = file(params.VARIABLES_CONFIG, checkIfExists: true)
     high_ld_regions = file(params.HIGH_LD_REGIONS, checkIfExists: true)
     // Define covariates, phenotypes and groups
-    MakeCovariatesAndGroups(covariates, variables_config)
+    MakeCovariatesAndGroups(covariates, inferred_covariates, variables_config)
     group_files = MakeCovariatesAndGroups
         .out
         .flatten()
