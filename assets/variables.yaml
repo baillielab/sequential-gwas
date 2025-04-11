@@ -1,4 +1,4 @@
-groupby: ["ANCESTRY"]
+groupby: ["ANCESTRY_ESTIMATE"]
 phenotypes: ["SEVERE_COVID_19"]
-covariates: ["AGE", "SEX", "AGE_x_SEX", "AGE_x_AGE", "PLATFORM"]
+covariates: ["AGE", "SEX", "AGE_x_SEX", "AGE_x_AGE"]
 
