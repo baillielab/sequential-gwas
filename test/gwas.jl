@@ -28,9 +28,6 @@ RESULTS_DIR = joinpath(PKGDIR, "gwas_results")
     cmd = Cmd(["nextflow", "run", "main.nf", "-entry", "GWAS", "-c", "test/assets/gwas.workflow.config", "-profile", profile, "-resume"])
     run(cmd)
 
-    # Test groups
-    
-
 end
 
 true
