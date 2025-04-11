@@ -20,6 +20,8 @@ using MarkdownTables
 using YAML
 using GeneticsMakie
 using JSON
+using MLJBase
+using MLJModels
 using Base.Threads
 
 include("resources.jl")

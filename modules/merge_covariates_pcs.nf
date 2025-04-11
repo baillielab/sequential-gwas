@@ -2,20 +2,21 @@ include { get_julia_cmd } from './utils.nf'
 
 process MergeCovariatesPCs {
     label "bigmem"
-    publishDir "${params.PUBLISH_DIR}/gwas/${group}", mode: 'symlink'
+    publishDir "${params.PUBLISH_DIR}/gwas/covariates", mode: 'symlink'
 
     input:
-        tuple val(group), path(covariates), path(eigenvec), path(eigenval)
+        path covariates
+        path eigenvecs
 
     output:
-        tuple val(group), path("${output_file}")
+        path("${output_file}")
 
     script:
-        output_file = "${group}.covariates_pcs.csv"
+        output_file = "covariates_and_pcs.csv"
         """
         ${get_julia_cmd(task.cpus)} merge-covariates-pcs \
             ${covariates} \
-            ${eigenvec} \
+            chr \
             --output=${output_file}
         """
 }

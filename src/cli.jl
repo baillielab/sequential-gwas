@@ -81,6 +81,22 @@ function cli_settings()
         "download-topmed-file"
             action = :command
             help = "Downloads a file from TOPMed."
+
+        "merge-regenie-chr-results"
+            action = :command
+            help = "Merges REGENIE results from different chromosomes."
+    end
+
+    @add_arg_table! s["merge-regenie-chr-results"] begin
+        "input-prefix"
+            arg_type = String
+            required = true
+            help = "Prefix to input files."
+
+        "--output"
+            arg_type = String
+            help = "Output file name."
+            default = "results.csv"
     end
 
     @add_arg_table! s["download-topmed-file"] begin
@@ -209,15 +225,15 @@ function cli_settings()
             required = true
             help = "Path to covariates file."
         
-        "pcs-file"
+        "pcs-prefix"
             arg_type = String
             required = true
-            help = "Path to PCs file."
+            help = "Prefix to PCs files."
 
         "--output"
             arg_type = String
             help = "Output file name."
-            default = "covariates_pcs.csv"
+            default = "covariates_and_pcs.csv"
     end
 
     @add_arg_table! s["make-gwas-groups"] begin
@@ -737,9 +753,9 @@ function julia_main()::Cint
             min_group_size=cmd_settings["min-group-size"]
         )
     elseif cmd == "merge-covariates-pcs"
-        merge_covariates_pcs(
+        merge_covariates_and_pcs(
             cmd_settings["covariates-file"],
-            cmd_settings["pcs-file"];
+            cmd_settings["pcs-prefix"];
             output=cmd_settings["output"]
         )
     elseif cmd == "gwas-plots"
@@ -778,6 +794,11 @@ function julia_main()::Cint
             md5_file=cmd_settings["md5-file"],
             refresh_rate=cmd_settings["refresh-rate"]
             )
+    elseif cmd == "merge-regenie-chr-results"
+        merge_regenie_chr_results(
+            cmd_settings["input-prefix"];
+            output=cmd_settings["output"]
+        )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))
     end

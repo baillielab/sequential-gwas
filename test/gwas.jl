@@ -8,7 +8,7 @@ using DelimitedFiles
 
 PKGDIR = pkgdir(SequentialGWAS)
 TESTDIR = joinpath(PKGDIR, "test")
-RESULTS_DIR = joinpath(PKGDIR, "results")
+RESULTS_DIR = joinpath(PKGDIR, "gwas_results")
 
 @testset "Test Array Genotypes Merging" begin
     profile = if isinteractive()
@@ -27,6 +27,9 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     cd(PKGDIR)
     cmd = Cmd(["nextflow", "run", "main.nf", "-entry", "GWAS", "-c", "test/assets/gwas.workflow.config", "-profile", profile, "-resume"])
     run(cmd)
+
+    # Test groups
+    
 
 end
 

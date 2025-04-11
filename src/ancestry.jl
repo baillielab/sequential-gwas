@@ -52,6 +52,6 @@ function estimate_ancestry(genotypes_prefix, pedigree_file; output="ancestry.csv
     ancestry = ancestry_from_fam(fam, index_to_pop; threshold=threshold)
     CSV.write(
         output, 
-        select(ancestry, :FID, :IID, :Superpopulation, values(index_to_pop)...), 
+        DataFrames.select(ancestry, :FID, :IID, :Superpopulation, values(index_to_pop)...), 
     )
 end

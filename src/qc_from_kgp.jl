@@ -138,7 +138,7 @@ function generate_files_from_actions(outdir, prefixes_and_bims)
             bim
         )
         # Write new bim file, replace missing by chr:bp:all1:all2, they will be dropped downstream
-        new_bim = select(bim, :CHR_CODE, :NEW_VARIANT_ID, :POSITION, :BP_COORD, :ALLELE_1, :ALLELE_2)
+        new_bim = DataFrames.select(bim, :CHR_CODE, :NEW_VARIANT_ID, :POSITION, :BP_COORD, :ALLELE_1, :ALLELE_2)
         CSV.write(
             joinpath(outdir, string(prefix, ".new.bim")),
             new_bim, 
@@ -152,7 +152,7 @@ function generate_files_from_actions(outdir, prefixes_and_bims)
         )
         CSV.write(
             joinpath(outdir, string(prefix, ".flip.txt")), 
-            select(to_flip, [:NEW_VARIANT_ID]),
+            DataFrames.select(to_flip, [:NEW_VARIANT_ID]),
             header=false
         )
     end
@@ -181,7 +181,7 @@ function write_release_samples_to_drop(prefixes_and_fams, wgs_samples_file)
         matched_samples = innerjoin(all_sample_ids, fam_data, on=:IID)
         CSV.write(
             string(release_prefix, ".samples_to_drop.txt"),
-            select(matched_samples, [:FID, :IID]),
+            DataFrames.select(matched_samples, [:FID, :IID]),
             header=false,
             delim="\t"
         )

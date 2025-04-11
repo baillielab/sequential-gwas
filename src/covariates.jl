@@ -58,14 +58,14 @@ function process_cohort(cohorts)
     replace(cohorts, "NA" => missing, "severe" => "genomicc")
 end
 
-function read_and_process_covariates(covariates_file, inferred_covariates_file, required_covariates)
+function read_and_process_covariates(covariates_file, inferred_covariates_file, required_covariate_variables)
     # Read the covariates file
     covariates = CSV.read(
         covariates_file, 
         DataFrame
         )
     # Process the covariates
-    select!(covariates,
+    DataFrames.select!(covariates,
         :genotype_file_id => :IID,
         :age_years => process_age => :AGE,
         :sex => process_sexes => :SEX,
@@ -83,9 +83,9 @@ function read_and_process_covariates(covariates_file, inferred_covariates_file, 
     # Join
     covariates = innerjoin(covariates, inferred_covariates, on=:IID)
     # Add user defined covariates
-    add_user_defined_covariates!(covariates, required_covariates)
+    required_covariate_variables = add_user_defined_covariates!(covariates, required_covariate_variables)
 
-    return covariates
+    return covariates, required_covariate_variables
 end
 
 function read_and_process_ancestry(ancestry_file)
@@ -179,41 +179,49 @@ function define_phenotypes!(covariates, phenotypes)
                 is_severe_covid_19(row)
             end
         else
-            throw(ArgumentError("Unsupported phenotype"))
+            throw(ArgumentError("Unsupported phenotype: $phenotype"))
         end
     end
 end
 
-function add_user_defined_covariates!(covariates, variables)
-    covariate_names = names(covariates)
-    for variable in variables
-        variable ∈ covariate_names && continue
-        if occursin("_x_", variable)
+function add_user_defined_covariates!(covariates, required_covariate_variables)
+    all_colnames = names(covariates)
+    updated_required_covariate_variables = []
+    for variable in required_covariate_variables
+        if variable ∈ all_colnames
+            if eltype(covariates[!, variable]) <: AbstractString
+                covariates[!, variable] = categorical(covariates[!, variable])
+                mach = machine(OneHotEncoder(), covariates[!, [variable]])
+                fit!(mach, verbosity=0)
+                Xt = MLJBase.transform(mach)
+                for colname in names(Xt)
+                    covariates[!, colname] = Xt[!, colname]
+                    push!(updated_required_covariate_variables, colname)
+                end
+            else
+                push!(updated_required_covariate_variables, variable)
+            end
+        elseif occursin("_x_", variable)
             base_variables = split(variable, "_x_")
-            issubset(base_variables, covariate_names) || throw(ArgumentError("Some base covariate in $variable was not found."))
+            issubset(base_variables, all_colnames) || throw(ArgumentError("Some base covariate in $variable was not found."))
             columns = (covariates[!, v] for v in base_variables)
             covariates[!, variable] = .*(columns...)
+            push!(updated_required_covariate_variables, variable)
         else
             throw(ArgumentError("Covariate $variable not suported."))
         end
     end
+    return updated_required_covariate_variables
 end
 
-function write_covariates_and_phenotypes_group(data, required_covariates, required_phenotypes; group_id="all", output_prefix="gwas", min_group_size=100)
+function write_covariates_and_phenotypes_group(data; group_id="all", output_prefix="gwas", min_group_size=100)
     # Only retain individuals with no missing values for all covariates and phenotypes
-    nomissing = dropmissing(select(data, "FID", "IID", required_covariates, required_phenotypes))
-    if nrow(nomissing) < min_group_size
+    if nrow(data) < min_group_size
         @info "Skipping group $group_id because it has fewer than $min_group_size individuals."
         return
     end
-    # Write group covariates
-    covariates = select(nomissing, "FID", "IID", required_covariates)
-    CSV.write(string(output_prefix, ".covariates.", group_id, ".csv"), covariates, delim="\t")
-    # Write group phenotype
-    phenotypes = select(nomissing, "FID", "IID", required_phenotypes)
-    CSV.write(string(output_prefix, ".phenotype.", group_id, ".csv"), phenotypes, delim="\t")
     # Write group individuals
-    CSV.write(string(output_prefix, ".individuals.", group_id, ".txt"), select(nomissing, ["FID", "IID"]), header=false, delim="\t")
+    CSV.write(string(output_prefix, ".individuals.", group_id, ".txt"), DataFrames.select(data, ["FID", "IID"]), header=false, delim="\t")
 end
 
 function make_gwas_groups(
@@ -223,32 +231,77 @@ function make_gwas_groups(
     output_prefix="gwas", 
     min_group_size=100
     )
+    # Parse required variables
     variables = YAML.load_file(variables_file)
-    covariates = SequentialGWAS.read_and_process_covariates(covariates_file, inferred_covariates_file, variables["covariates"])
+    required_covariate_variables = variables["covariates"]
+    required_phenotype_variables = variables["phenotypes"]
+    # Define required covariates
+    covariates, required_covariate_variables = SequentialGWAS.read_and_process_covariates(covariates_file, inferred_covariates_file, variables["covariates"])
+    # Define required phenotypes
     SequentialGWAS.define_phenotypes!(covariates, variables["phenotypes"])
+    # Only keep non-missing
+    all_variables = vcat(required_covariate_variables, required_phenotype_variables)
+    all_variables = haskey(variables, "groupby") ? vcat(all_variables, variables["groupby"]) : all_variables
+    covariates = dropmissing(DataFrames.select(covariates, "FID", "IID", all_variables))
+    # Write covariates
+    CSV.write(
+        string(output_prefix, ".covariates.csv"), 
+        DataFrames.select(covariates, "FID", "IID", required_covariate_variables), 
+        delim="\t"
+    )
+    # Write phenotypes
+    CSV.write(
+        string(output_prefix, ".phenotypes.csv"), 
+        DataFrames.select(covariates, "FID", "IID", required_phenotype_variables), 
+        delim="\t"
+    )
+    # Write groups' individuals lists
     if haskey(variables, "groupby")
-        for (groupkey, group) in pairs(groupby(covariates, variables["groupby"], skipmissing=true, sort=true))
+        for (groupkey, group) in pairs(groupby(covariates, variables["groupby"], sort=true))
             group_id = join(groupkey, "_")
-            write_covariates_and_phenotypes_group(group, variables["covariates"], variables["phenotypes"]; 
+            write_covariates_and_phenotypes_group(group; 
                 group_id=group_id, 
                 output_prefix=output_prefix, 
                 min_group_size=min_group_size
             )
         end
     else
-        write_covariates_and_phenotypes_group(covariates, variables["covariates"], variables["phenotypes"]; 
+        write_covariates_and_phenotypes_group(covariates; 
                 group_id="all", 
                 output_prefix=output_prefix, 
                 min_group_size=min_group_size
         )
     end
-
+    # Write covariate list for REGENIE
+    open(string(output_prefix, ".covariates_list.txt"), "w") do io
+        for covariate in required_covariate_variables
+            println(io, covariate)
+        end
+    end
 end
 
-function merge_covariates_pcs(covariates_file, pcs_file; output="covariates_pcs.csv")
+
+function read_loco_pcs(pc_file)
+    chr_out = first(split(pc_file, "."))
+    pcs = CSV.read(pc_file, DataFrame, drop=["#FID"])
+    PC_colnames = filter(!=("IID"), names(pcs))
+    for PC_colname in PC_colnames
+        rename!(pcs, Symbol(PC_colname) => Symbol(string(uppercase(chr_out), "_OUT_", PC_colname)))
+    end
+    return pcs
+end
+
+function merge_covariates_and_pcs(covariates_file, pcs_prefix; output="covariates_and_pcs.csv")
     covariates = CSV.read(covariates_file, DataFrame)
-    pcs = CSV.read(pcs_file, DataFrame, drop=["#FID"])
-    merged = innerjoin(covariates, pcs, on=:IID)
-    CSV.write(output, merged, delim="\t")
-    return merged
+    pcs_dir = dirname(pcs_prefix)
+    pcs_dir = pcs_dir == "" ? "." : pcs_dir
+    pcs_files = filter(startswith(pcs_prefix), readdir(pcs_dir))
+    chrs = unique(getindex.(split.(pcs_files, "."), 1))
+    chr_out_pcs = map(chrs) do chr
+        chr_out_pcs_files = filter(x -> startswith(x, chr*"."), pcs_files)
+        mapreduce(read_loco_pcs, vcat, chr_out_pcs_files)
+    end
+    covariates_and_pcs = innerjoin(covariates, chr_out_pcs..., on=:IID)
+    CSV.write(output, covariates_and_pcs, delim="\t")
+    return 0
 end

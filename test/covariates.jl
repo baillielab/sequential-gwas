@@ -35,8 +35,8 @@ TESTDIR = joinpath(PKGDIR, "test")
     groups = Set(getindex.(split.(basename.(output_files), "."), 3))
     @test groups == Set(["ADMIXED", "AMR", "EUR", "SAS"])
     variables = YAML.load_file(variables_file)
-    expected_covariates = ["FID", "IID", variables["covariates"]...]
-    expected_phenotypes = ["FID", "IID", variables["phenotypes"]...]
+    expected_covariates = ["FID", "IID", "AGE", "SEX", "AGE_x_SEX", "AGE_x_AGE", "PLATFORM__GSA-MD-24v3-0_A1", "PLATFORM__GSA-MD-48v4-0_A1"]
+    expected_phenotypes = ["FID", "IID", "SEVERE_COVID_19"]
     for group in groups
         covariates = CSV.read(joinpath(tmpdir, "group.covariates.$group.csv"), DataFrame)
         @test names(covariates) == expected_covariates

@@ -36,13 +36,13 @@ function make_mock_wgs(outprefix, wgs_prefix, wgs_snps, release_2024_now_map, ne
     # Make regions file to extract
     map_df = DataFrame(release_2024_now_map, ["CHR", "ID", "POS", "BP"])
     wgs_snps_df = DataFrame(ID=wgs_snps)
-    merged = innerjoin(select(map_df, [:CHR, :ID, :BP]), wgs_snps_df, on=:ID)
+    merged = innerjoin(DataFrames.select(map_df, [:CHR, :ID, :BP]), wgs_snps_df, on=:ID)
     merged.CHR .= string.("chr", merged.CHR)
     merged.BP_MINUS_ONE = merged.BP .- 1
     merged.BP_PLUS_ONE = merged.BP .+ 1
     tmpdir = mktempdir()
     regions_file = joinpath(tmpdir, "variants.tsv")
-    CSV.write(regions_file, select(merged, [:CHR, :BP_MINUS_ONE, :BP_PLUS_ONE]), delim='\t', header=false)
+    CSV.write(regions_file, DataFrames.select(merged, [:CHR, :BP_MINUS_ONE, :BP_PLUS_ONE]), delim='\t', header=false)
     # List gvcf files
     gvcf_dir = dirname(wgs_prefix)
     gvcf_files = filter(endswith("gvcf.gz"), readdir(gvcf_dir))

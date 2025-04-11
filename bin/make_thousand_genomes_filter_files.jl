@@ -30,7 +30,7 @@ panel_file_1000_gp = CSV.read(
 
 subpop_file = joinpath(OUT_DIR, "individuals_subset.csv")
 subpop = mapreduce(vcat, groupby(panel_file_1000_gp, [:Superpopulation, :Sex])) do group
-    select(group[1:P, :], :SampleID)
+    DataFrames.select(group[1:P, :], :SampleID)
 end
 CSV.write(subpop_file, subpop, delim="\t", header=false)
 
@@ -53,7 +53,7 @@ for (chr_key, chr_group) in pairs(groupby(map_file_genomic, :CHR))
     variants_file = joinpath(OUT_DIR, string("variants_", chr, ".txt"))
     CSV.write(
         variants_file, 
-        select(chr_group, [:CHR, :BP_START, :BP_END]), 
+        DataFrames.select(chr_group, [:CHR, :BP_START, :BP_END]), 
         delim="\t", 
         header=false
     )

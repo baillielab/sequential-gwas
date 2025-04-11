@@ -5,3 +5,5 @@ build/*
 .nextflow/*
 work/*
 results/*
+gwas_results/*
+results_no_wgs/*

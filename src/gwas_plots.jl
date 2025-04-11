@@ -1,5 +1,5 @@
 function harmonize(results)
-    return select(results, 
+    return DataFrames.select(results, 
         :CHROM => (x -> string.(x)) => :CHR,
         :GENPOS => :BP,
         :ID => :SNP,
@@ -25,4 +25,12 @@ function gwas_plots(results_path, group; output_prefix = group)
     Label(fig[1, 1, Top()], text = group, fontsize = 20)
     resize_to_layout!(fig)
     save(string(output_prefix, ".qq.png"), fig)
+end
+
+function merge_regenie_chr_results(input_prefix; output="results.csv")
+    dir, input_prefix_ = splitdir(input_prefix)
+    dir = dir == "" ? "." : dir
+    files = filter(x -> startswith(x, input_prefix_), readdir(dir))
+    results = mapreduce(f -> CSV.read(joinpath(dir, f), DataFrame), vcat, files)
+    CSV.write(output, results)
 end

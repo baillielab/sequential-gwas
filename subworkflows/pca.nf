@@ -1,7 +1,7 @@
 include { LDPruning; GroupLDPruning } from '../modules/ld_pruning.nf'
 include { PCAFindHighLoadings } from '../modules/pca_qc.nf'
 include { MaybeFilterHighLoadingsVariants } from '../modules/filter_high_loadings_variants.nf'
-include { GroupPCA } from '../modules/pca.nf'
+include { LocoGroupPCA } from '../modules/pca.nf'
 
 workflow PCAAnalysis {
     take:
@@ -21,15 +21,30 @@ workflow PCAAnalysis {
         pcs = pca_qc_output.pcs
 }
 
-workflow PCA {
+// workflow PCA {
+//     take:
+//         genotypes
+//         high_ld_regions
+
+//     main:
+//         ld_pruned_genotypes = GroupLDPruning(genotypes, high_ld_regions)
+//         pcs = GroupPCA(ld_pruned_genotypes)
+
+//     emit:
+//         pcs
+// }
+
+workflow LOCOPCA {
     take:
         genotypes
         high_ld_regions
+        chromosomes
 
     main:
         ld_pruned_genotypes = GroupLDPruning(genotypes, high_ld_regions)
-        pcs = GroupPCA(ld_pruned_genotypes)
+        chrs_and_genotypes = chromosomes.combine(ld_pruned_genotypes)
+        chrs_and_pcs = LocoGroupPCA(chrs_and_genotypes)
 
     emit:
-        pcs
+        chrs_and_pcs
 }

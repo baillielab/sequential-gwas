@@ -31,6 +31,7 @@ Manifest.toml
 work/
 results/
 results_no_wgs/
+gwas_results/
 .nextflow/
 .nextflow.*
 trace*

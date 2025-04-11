@@ -1,5 +1,5 @@
 include { get_prefix; get_julia_cmd } from '../modules/utils.nf'
-include { PCA } from '../subworkflows/pca.nf'
+include { LOCOPCA } from '../subworkflows/pca.nf'
 include { MergeCovariatesPCs } from '../modules/merge_covariates_pcs.nf'
 
 process MakeCovariatesAndGroups {
@@ -11,15 +11,19 @@ process MakeCovariatesAndGroups {
         path(variables_config)
 
     output:
-        path("group*")
+        path("${output_prefix}.covariates.csv"), emit: covariates
+        path("${output_prefix}.phenotypes.csv"), emit: phenotypes
+        path("${output_prefix}.covariates_list.txt"), emit: covariates_list
+        path("*individuals*"), emit: groups_lists
 
     script:
+        output_prefix = "clean"
         """
         ${get_julia_cmd(task.cpus)} make-gwas-groups \
             ${covariates} \
             ${inferred_covariates} \
             ${variables_config} \
-            --output-prefix group \
+            --output-prefix ${output_prefix} \
             --min-group-size ${params.MIN_GROUP_SIZE}
         """
 }
@@ -55,21 +59,25 @@ process RegenieStep1 {
     publishDir "${params.PUBLISH_DIR}/gwas/${group}/regenie_step1", mode: 'symlink'
 
     input:
-        tuple val(group), path(bed), path(bim), path(fam), path(phenotypes), path(covariates)
+        path(phenotypes)
+        path(covariates)
+        val (covariates_list)
+        tuple val(group), path(samples), path(bed), path(bim), path(fam)
 
     output:
         tuple val(group), path("${group}.step1_1.loco"), path("${group}.step1_pred.listrelative")
 
     script:
-        phenotypes_type = "bt"
         genotypes_prefix = get_prefix(bed)
         """
         mamba run -n regenie_env regenie \
             --step 1 \
             --bed ${genotypes_prefix} \
+            --keep ${samples} \
             --phenoFile ${phenotypes} \
             --covarFile ${covariates} \
-            --${phenotypes_type} \
+            --covarColList ${covariates_list.join(',')} \
+            --bt \
             --bsize ${params.REGENIE_BSIZE} \
             --lowmem \
             --out ${group}.step1
@@ -82,28 +90,48 @@ process RegenieStep2 {
     publishDir "${params.PUBLISH_DIR}/gwas/${group}/regenie_step2", mode: 'symlink'
 
     input:
-        tuple path(bgen), path(bgi), path(sample)
-        tuple val(group), path(covariates), path(phenotypes), path(individuals), path(step1_loco), path(step1_pred)
+        tuple val(group), path(individuals), path(step1_loco), path(step1_pred), val(chr), path(imputed_genotypes)
+        path(covariates)
+        path(phenotypes)
+        val(covariates_list)
 
     output:
         tuple val(group), path("*.regenie")
 
     script:
-        outprefix = "${get_prefix(bgen)}.${group}.step2"
+        input_prefix = get_prefix(imputed_genotypes[0])
+        outprefix = "${chr}.${group}.step2"
         """
         mamba run -n regenie_env regenie \
             --step 2 \
-            --bgen ${bgen} \
-            --bgi ${bgi} \
-            --sample ${sample} \
+            --pgen ${input_prefix} \
             --phenoFile ${phenotypes} \
             --covarFile ${covariates} \
+            --covarColList ${covariates_list.join(',')},CHR${chr.replace('chr', '')}_OUT_PC{1:${params.N_PCS}} \
             --keep ${individuals} \
             --bt \
             --firth --approx --pThresh 0.01 \
             --pred ${step1_pred} \
             --bsize ${params.REGENIE_BSIZE} \
-            --out ${outprefix}
+            --out ${outprefix} \
+            --threads ${task.cpus}
+        """
+}
+
+process MergeRegenieResults {
+    publishDir "${params.PUBLISH_DIR}/gwas/${group}/results", mode: 'copy'
+
+    input:
+        tuple val(group), path(group_results)
+
+    output:
+        tuple val(group), path("${output}")
+
+    script:
+        output = "${group}.csv"
+        """
+        ${get_julia_cmd(task.cpus)} merge-regenie-chr-results \
+            chr --output=${output}
         """
 }
 
@@ -111,7 +139,7 @@ process MakeGWASPlots {
     publishDir "${params.PUBLISH_DIR}/gwas/${group}/plots", mode: 'symlink'
 
     input:
-        tuple val(group), path(gwas_results)
+        tuple val(group), path(group_results)
 
     output:
         path "${group}.manhattan.png"
@@ -120,7 +148,7 @@ process MakeGWASPlots {
     script:
         """
         ${get_julia_cmd(task.cpus)} gwas-plots \
-            ${gwas_results} \
+            ${group_results} \
             ${group} \
             --output-prefix ${group}
         """
@@ -129,45 +157,44 @@ process MakeGWASPlots {
 workflow GWAS {
     // Inputs
     genotypes = Channel.fromPath("${params.GENOTYPES_PREFIX}.{bed,bim,fam}").collect(sort: true)
-    imputed_genotypes = Channel.fromPath("${params.IMPUTED_GENOTYPES_PREFIX}.{pgen,pvar,psam}").collect(sort: true)
+    imputed_genotypes = Channel.fromPath("${params.IMPUTED_GENOTYPES_PREFIX}*")
+        .map { it -> [it.getName().tokenize('.')[0], it] }
+        .groupTuple(sort: true)
+    chromosomes = imputed_genotypes
+        .map { it[0] }
     covariates = file(params.COVARIATES, checkIfExists: true)
     inferred_covariates = file(params.INFERRED_COVARIATES, checkIfExists: true)
     variables_config = file(params.VARIABLES_CONFIG, checkIfExists: true)
     high_ld_regions = file(params.HIGH_LD_REGIONS, checkIfExists: true)
     // Define covariates, phenotypes and groups
     MakeCovariatesAndGroups(covariates, inferred_covariates, variables_config)
-    group_files = MakeCovariatesAndGroups
+    covariates = MakeCovariatesAndGroups.out.covariates
+    phenotypes = MakeCovariatesAndGroups.out.phenotypes
+    covariates_list = MakeCovariatesAndGroups.out.covariates_list
+        .splitText()
+        .map { it -> it.trim() }
+        .collect()
+    group_samples = MakeCovariatesAndGroups
         .out
+        .groups_lists
         .flatten()
         .map { it -> [it.getName().tokenize('.')[-2], it] }
-    group_samples = group_files
-        .filter { group, file -> file.getName().contains("individuals") }
     // Extract genotypes for each group
     group_beds = BEDGroupsQCed(genotypes, group_samples)
-    group_pcs = PCA(group_beds, high_ld_regions)
-    // Extract covariates and pcs for each group
-    group_covariates = group_files
-        .filter { group, file -> file.getName().contains("covariates") }
-    covariates_and_pcs = group_covariates
-        .join(group_pcs)
-    group_covariates_and_pcs = MergeCovariatesPCs(covariates_and_pcs)
+    group_pcs = LOCOPCA(group_beds, high_ld_regions, chromosomes)
+    // Merge PCs and covariates
+    pcs = group_pcs.map { it[-1] }.collect()
+    covariates_and_pcs = MergeCovariatesPCs(covariates, pcs)
     // Extract phenotypes for each group
-    group_phenotypes = group_files
-        .filter { group, file -> file.getName().contains("phenotype") }
-    // Run Regenie Step 1
-    group_phenotypes = group_files
-        .filter { group, file -> file.getName().contains("phenotype") }
-    group_files_step_1 = group_beds
-        .join(group_phenotypes)
-        .join(group_covariates_and_pcs)
-    group_step1_output = RegenieStep1(group_files_step_1)
+    group_individuals_and_beds = group_samples.join(group_beds)
+    group_step1_output = RegenieStep1(phenotypes, covariates, covariates_list, group_individuals_and_beds)
     // Run Regenie Step 2
-    group_inputs_step2 = group_covariates_and_pcs
-        .join(group_phenotypes)
-        .join(group_samples)
+    inputs_step2 = group_samples
         .join(group_step1_output)
-    group_gwas_results = RegenieStep2(imputed_genotypes, group_inputs_step2)
+        .combine(imputed_genotypes)
+    outputs_step2 = RegenieStep2(inputs_step2, covariates_and_pcs, phenotypes, covariates_list)
+    // Mrge Regenie results
+    group_results = MergeRegenieResults(outputs_step2.groupTuple())
     // Plot
-    MakeGWASPlots(group_gwas_results)
-
+    MakeGWASPlots(group_results)
 }
