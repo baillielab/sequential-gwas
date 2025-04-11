@@ -241,16 +241,16 @@ function cli_settings()
             arg_type = String
             required = true
             help = "Path to covariates file."
-        
-        "inferred-covariates"
-            arg_type = String
-            required = true
-            help = "Path to covariates inferred from genotypes."
 
         "variables-file"
             arg_type = String
             required = true
             help = "Path to variables file."
+
+        "--inferred-covariates"
+            arg_type = String
+            default = nothing
+            help = "Path to covariates inferred from genotypes."
 
         "--output-prefix"
             arg_type = String
@@ -747,8 +747,8 @@ function julia_main()::Cint
     elseif cmd == "make-gwas-groups"
         make_gwas_groups(
             cmd_settings["covariates"],
-            cmd_settings["inferred-covariates"],
             cmd_settings["variables-file"];
+            inferred_covariates_file=cmd_settings["inferred-covariates"],
             output_prefix=cmd_settings["output-prefix"],
             min_group_size=cmd_settings["min-group-size"]
         )

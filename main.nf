@@ -38,6 +38,7 @@ params.N_SAMPLES_PER_IMPUTATION_JOBS = 19000
 params.TOPMED_JOBS_LIST = "NO_TOPMED_JOBS"
 
 // GWAS params
+params.INFERRED_COVARIATES = "${projectDir}/assets/NO_INFERRED_COVARIATES"
 params.MIN_GROUP_SIZE = 100
 params.VARIABLES_CONFIG = "${projectDir}/assets/variables.yaml"
 params.REGENIE_MAF = 0.01

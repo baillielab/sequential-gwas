@@ -18,13 +18,13 @@ process MakeCovariatesAndGroups {
 
     script:
         output_prefix = "clean"
+        inferred_covariates_option = inferred_covariates.getName() == "NO_INFERRED_COVARIATES" ? "" : " --inferred-covariates ${inferred_covariates}"
         """
         ${get_julia_cmd(task.cpus)} make-gwas-groups \
             ${covariates} \
-            ${inferred_covariates} \
             ${variables_config} \
             --output-prefix ${output_prefix} \
-            --min-group-size ${params.MIN_GROUP_SIZE}
+            --min-group-size ${params.MIN_GROUP_SIZE}${inferred_covariates_option}
         """
 }
 

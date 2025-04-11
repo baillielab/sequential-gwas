@@ -44,10 +44,9 @@ The `phenotype` variables must either be `case_or_control` or have an existing d
 
 The `covariates` variables are used as adjustment variables in the regression model. In REGENIE step 2, principal components are also added in a leave-one-chromosome-out scheme to the covariates defined here. 
 
-Again, due to the ill-definition of the covariates file, at the moment, only a subset of covariates can be processed: `AGE`, `SEX`, `ANCESTRY_ESTIMATE`, `AFR`, `SAS`, `EAS`, `AMR`, `EUR` and `PLATFORM`. The latter corresponding to the genetic assay measurement technology (WGS or genotyping chip series). Categorical covariates are one-hot encoded.
+Again, due to the ill-definition of the covariates file, at the moment, only a subset of non-inferred covariates can be processed: `AGE` and `SEX`. Categorical covariates are one-hot encoded.
 
 !!! note "Interaction Terms"
-
     Interaction terms can be added to the covariate list with the ``_x_`` delimiter.
 
 ## Workflow Parameters

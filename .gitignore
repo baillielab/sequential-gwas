@@ -29,7 +29,7 @@ Manifest.toml
 
 # Nextflow
 work/
-results/
+*_results/
 results_no_wgs/
 gwas_results/
 .nextflow/

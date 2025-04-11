@@ -58,7 +58,9 @@ function process_cohort(cohorts)
     replace(cohorts, "NA" => missing, "severe" => "genomicc")
 end
 
-function read_and_process_covariates(covariates_file, inferred_covariates_file, required_covariate_variables)
+function read_and_process_covariates(covariates_file, required_covariate_variables;
+    inferred_covariates_file=nothing
+    )
     # Read the covariates file
     covariates = CSV.read(
         covariates_file, 
@@ -66,22 +68,24 @@ function read_and_process_covariates(covariates_file, inferred_covariates_file, 
         )
     # Process the covariates
     DataFrames.select!(covariates,
+        :genotype_file_id => :FID,
         :genotype_file_id => :IID,
         :age_years => process_age => :AGE,
         :sex => process_sexes => :SEX,
         :severe_cohort_primary_diagnosis => process_primary_diagnosis => :GENOMICC_PRIMARY_DIAGNOSIS,
         :cohort => process_cohort => :COHORT,
-        :case_or_control => process_severity => :DIAGNOSIS_IS_SEVERE,
+        :case_or_control,
         :isaric_cohort_max_severity_score => process_isaric_score => :ISARIC_MAX_SEVERITY_SCORE
     )
     # Read inferred covariates
-    inferred_covariates = CSV.read(
-        inferred_covariates_file, 
-        DataFrame,
-        select=[:FID, :IID, :ANCESTRY_ESTIMATE, :AFR, :SAS, :EAS, :AMR, :EUR, :PLATFORM]
-    )
-    # Join
-    covariates = innerjoin(covariates, inferred_covariates, on=:IID)
+    if inferred_covariates_file !== nothing
+        inferred_covariates = CSV.read(
+            inferred_covariates_file, 
+            DataFrame
+        )
+        # Join
+        covariates = innerjoin(covariates, inferred_covariates, on=[:FID, :IID])
+    end
     # Add user defined covariates
     required_covariate_variables = add_user_defined_covariates!(covariates, required_covariate_variables)
 
@@ -172,11 +176,25 @@ function is_severe_covid_19(row)
     end
 end
 
+function is_case(x)
+    if x == "case"
+        return 1
+    elseif x == "control"
+        return 0
+    else
+        return missing
+    end
+end
+
 function define_phenotypes!(covariates, phenotypes)
     for phenotype in phenotypes
         if phenotype == "SEVERE_COVID_19"
             covariates.SEVERE_COVID_19 = map(eachrow(covariates)) do row
                 is_severe_covid_19(row)
+            end
+        elseif phenotype == "case_or_control"
+            covariates.case_or_control = map(covariates.case_or_control) do x
+                is_case(x)
             end
         else
             throw(ArgumentError("Unsupported phenotype: $phenotype"))
@@ -226,8 +244,8 @@ end
 
 function make_gwas_groups(
     covariates_file, 
-    inferred_covariates_file, 
-    variables_file; 
+    variables_file;
+    inferred_covariates_file=nothing,
     output_prefix="gwas", 
     min_group_size=100
     )
@@ -236,9 +254,13 @@ function make_gwas_groups(
     required_covariate_variables = variables["covariates"]
     required_phenotype_variables = variables["phenotypes"]
     # Define required covariates
-    covariates, required_covariate_variables = SequentialGWAS.read_and_process_covariates(covariates_file, inferred_covariates_file, variables["covariates"])
+    covariates, required_covariate_variables = read_and_process_covariates(
+        covariates_file, 
+        required_covariate_variables;
+        inferred_covariates_file=inferred_covariates_file
+    )
     # Define required phenotypes
-    SequentialGWAS.define_phenotypes!(covariates, variables["phenotypes"])
+    SequentialGWAS.define_phenotypes!(covariates, required_phenotype_variables)
     # Only keep non-missing
     all_variables = vcat(required_covariate_variables, required_phenotype_variables)
     all_variables = haskey(variables, "groupby") ? vcat(all_variables, variables["groupby"]) : all_variables
