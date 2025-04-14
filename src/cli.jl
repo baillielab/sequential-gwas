@@ -297,7 +297,7 @@ function cli_settings()
         "--output"
             arg_type = String
             help = "Output file name."
-            default = "covariates.merged.csv"
+            default = "covariates.inferred.csv"
     end
 
     @add_arg_table! s["make-report"] begin

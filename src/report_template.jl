@@ -210,7 +210,7 @@ MD(string("[loadings-before](loadings_before_pca.png)")) #hide
 cp(string(pca_plot_prefix, ".before_pca_qc.all.png"), "pca_ancestry_before.png") #hide
 MD(string("[pca-ancestry-before](pca_ancestry_before.png)")) #hide
 
-# - Number of variants excluded by PCA QC (high loadings)
+# - Number of variants that would be excluded by PCA QC if applied (high loadings)
 
 countlines(high_loadings_variants) #hide
 

@@ -130,7 +130,7 @@ function combine_covariates(
     release_r8_fam,
     release_2021_2023_fam,
     release_2024_now_fam;
-    output="covariates.merged.csv"
+    output="covariates.inferred.csv"
     )
     sample_id_to_platform = map_sample_ids_to_platform(
         wgs_samples_file,

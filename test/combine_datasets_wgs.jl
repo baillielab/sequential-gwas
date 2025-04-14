@@ -169,6 +169,7 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     qced_merged_bim = SequentialGWAS.read_bim(joinpath(merge_dir, "qced", "genotypes.merged.qced.bim"))
     @test issubset(qced_merged_bim.VARIANT_ID, shared_variants)
     qced_merged_fam = SequentialGWAS.read_fam(joinpath(merge_dir, "qced", "genotypes.merged.qced.fam"))
+    @test qced_merged_fam.FID == qced_merged_fam.IID
     unrelated_king = CSV.read(
         joinpath(RESULTS_DIR, "merged/king_relatedness/kingunrelated.txt"),
         DataFrame,
@@ -202,7 +203,7 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     @test isfile(joinpath(pca_dir, "genotypes.merged.qced.ldpruned.after_pca_qc.loadings.png"))
 
     # Check covariates
-    covariates = CSV.read(joinpath(RESULTS_DIR, "covariates.merged.csv"), DataFrame)
+    covariates = CSV.read(joinpath(RESULTS_DIR, "covariates.inferred.csv"), DataFrame)
     @test nrow(covariates) > 100
     @test eltype(covariates.ANCESTRY_ESTIMATE) <: AbstractString
     @test all(eltype(covariates[!, "PC$pc"]) <: Float64 for pc in 1:10)
@@ -212,8 +213,8 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     # Check report and final dataset
     @test isfile(joinpath(RESULTS_DIR, "report.md"))
     @test isfile(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.bed"))
-    @test isfile(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.bim"))
-    @test isfile(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.fam"))
+    final_fam = SequentialGWAS.read_fam(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.fam"))
+    @test final_fam.FID == final_fam.IID
     final_bim = SequentialGWAS.read_bim(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.bim"))
     for row in eachrow(final_bim)
         @test split(row.VARIANT_ID, ":")[3] == row.ALLELE_2

@@ -13,7 +13,7 @@ process CombineCovariates {
         path release_2024_now_fam
 
     output:
-        path("covariates.merged.csv")
+        path("covariates.inferred.csv")
 
     script:
         """
@@ -24,6 +24,6 @@ process CombineCovariates {
             ${release_r8_fam} \
             ${release_2021_2023_fam} \
             ${release_2024_now_fam} \
-            --output=covariates.merged.csv
+            --output=covariates.inferred.csv
         """
 }

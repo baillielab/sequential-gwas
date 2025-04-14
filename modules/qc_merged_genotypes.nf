@@ -31,5 +31,8 @@ process QCMergedGenotypes {
             --keep ${unrelated_samples} \
             --make-bed \
             --out ${output_prefix}
+
+        awk '{ \$1 = \$2; print }' ${output_prefix}.fam > temp.fam
+        mv temp.fam ${output_prefix}.fam
         """
 }
