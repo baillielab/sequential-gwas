@@ -30,8 +30,9 @@ RESULTS_DIR = joinpath(PKGDIR, "results_no_wgs")
 
     # Basic checks, complete checks are implemented in `combine_datasets_wgs.jl`
     fam = SequentialGWAS.read_fam(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.fam"))
+    nindividuals = nrow(fam)
     @test fam.IID == fam.FID
-    @test nrow(fam) > 1000
+    @test nindividuals > 1000
     @test nrow(SequentialGWAS.read_bim(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.bim"))) > 100
     @test isfile(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.bed"))
     covariates = CSV.read(joinpath(RESULTS_DIR, "covariates.inferred.csv"), DataFrame)
