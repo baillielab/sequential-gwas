@@ -182,6 +182,7 @@ process QCMergedImputedFile {
 }
 
 process VCFToPGEN {
+    label "bigmem"
     publishDir "${params.PUBLISH_DIR}", mode: "copy"
 
     input:
@@ -215,6 +216,7 @@ workflow Imputation {
         )
         jobs_files = TOPMedImputation(topmed_api_token, vcf_splits.collect())
         job_ids = jobs_files
+            .flatten()
             .splitText()
             .map { it -> it.trim() }
     }
