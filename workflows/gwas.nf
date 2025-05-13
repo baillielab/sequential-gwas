@@ -77,6 +77,7 @@ process RegenieStep1 {
             --phenoFile ${phenotypes} \
             --covarFile ${covariates} \
             --covarColList ${covariates_list.join(',')} \
+            --cv ${params.REGENIE_CV_NFOLDS} \
             --bt \
             --bsize ${params.REGENIE_BSIZE} \
             --lowmem \
@@ -156,7 +157,7 @@ process MakeGWASPlots {
 
 workflow GWAS {
     // Inputs
-    genotypes = Channel.fromPath("${params.GENOTYPES_PREFIX}.{bed,bim,fam}").collect(sort: true)
+    genotypes = Channel.fromPath("${params.GENOTYPES_PREFIX}.{bed,bim,fam}", checkIfExists: true).collect(sort: true)
     imputed_genotypes = Channel.fromPath("${params.IMPUTED_GENOTYPES_PREFIX}*")
         .map { it -> [it.getName().tokenize('.')[0], it] }
         .groupTuple(sort: true)

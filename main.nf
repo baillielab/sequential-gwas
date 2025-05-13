@@ -44,6 +44,7 @@ params.VARIABLES_CONFIG = "${projectDir}/assets/variables.yaml"
 params.REGENIE_MAF = 0.01
 params.REGENIE_MAC = 10
 params.REGENIE_BSIZE = 1000
+params.REGENIE_CV_NFOLDS = 5
 
 // Other params
 params.N_PCS = 20
