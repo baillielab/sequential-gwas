@@ -19,6 +19,20 @@
 </head>
 <body>
 <pre class="mermaid" style="text-align: center;">
+%%{
+  init: {
+    'theme': 'base',
+    'themeVariables': {
+      'primaryColor': '#B6ECE2',
+      'primaryTextColor': '#160F26',
+      'primaryBorderColor': '#065647',
+      'lineColor': '#545555',
+      'clusterBkg': '#BABCBD22',
+      'clusterBorder': '#DDDEDE',
+      'fontFamily': 'arial'
+    }
+  }
+}%%
 flowchart TB
     subgraph " "
     v0["Channel.fromPath"]
@@ -28,22 +42,23 @@ flowchart TB
     v8["variables_config"]
     v16["high_ld_regions"]
     end
-    subgraph GWAS
-    v9([MakeCovariatesAndGroups])
-    v15([BEDGroupsQCed])
-    subgraph LOCOPCA
-    v17([GroupLDPruning])
-    v19([LocoGroupPCA])
-    v3(( ))
-    v20(( ))
+    subgraph "GWAS [GWAS]"
+    v9(["MakeCovariatesAndGroups"])
+    v15(["BEDGroupsQCed"])
+    subgraph "GWAS:LOCOPCA [LOCOPCA]"
+    v17(["GroupLDPruning"])
+    v19(["LocoGroupPCA"])
+    v18(( ))
     end
-    v22([MergeCovariatesPCs])
-    v24([RegenieStep1])
-    v27([RegenieStep2])
-    v29([MergeRegenieResults])
-    v30([MakeGWASPlots])
+    v22(["MergeCovariatesPCs"])
+    v24(["RegenieStep1"])
+    v27(["RegenieStep2"])
+    v29(["MergeRegenieResults"])
+    v30(["MakeGWASPlots"])
     v1(( ))
+    v3(( ))
     v10(( ))
+    v20(( ))
     v28(( ))
     end
     subgraph " "
@@ -65,8 +80,8 @@ flowchart TB
     v15 --> v17
     v15 --> v3
     v16 --> v17
-    v17 --> v3
-    v3 --> v19
+    v17 --> v18
+    v18 --> v19
     v19 --> v20
     v20 --> v22
     v22 --> v27
@@ -80,10 +95,11 @@ flowchart TB
     v29 --> v30
     v30 --> v32
     v30 --> v31
+    v3 --> v18
 
 </pre>
 <script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
   mermaid.initialize({ startOnLoad: true, maxTextSize: Number.MAX_SAFE_INTEGER, maxEdges: Number.MAX_SAFE_INTEGER });
 </script>
 </body>
