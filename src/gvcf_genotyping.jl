@@ -49,6 +49,10 @@ function allele_map_from_shared_variants(shared_variants_file)
     return variants_map
 end
 
+"""
+    update_bim_with_mapped_alleles(tmp_prefix, shared_variants_file)
+
+"""
 function update_bim_with_mapped_alleles(tmp_prefix, shared_variants_file)
     bim_file = string(tmp_prefix, ".bim")
     # Convert VCF to a temporary PLINK bed
@@ -61,20 +65,32 @@ function update_bim_with_mapped_alleles(tmp_prefix, shared_variants_file)
         ## Check if the variant is in the shared variants (we also genotype around the variants so it could not be)
         if haskey(variants_map, row.VARIANT_ID)
             info = variants_map[row.VARIANT_ID]
+            # ref/alt variables will be updated to build a new variant id
+            chr, pos, ref, alt = split(info.variant_id, ":")
+            # If the ALLELE_1 is missing
             if row.ALLELE_1 == "."
-                try
+                # In principle this is likely because the individual is homozygous reference
+                # we set the alternate allele from the shared variants
+                # ref and alt variables are unchanged
+                if haskey(info.allele_map, row.ALLELE_2)
                     row.ALLELE_1 = info.allele_map[row.ALLELE_2]
-                catch
-                    ## If the individual has a non ref/alt variant from the genotyping arrays (i.e. rare) we will not integrate it
-                    return row.VARIANT_ID
+                # Otherwise it means it is a rare variant with unkown alternate allele (I am not sure when this could happen since the reference is given to GATK)
+                # We update the `alt` variable (this variant will be dropped downstream)
+                else
+                    alt = row.ALLELE_2
+                end
+            # Otherwise we verify the alleles present are the original alt and ref
+            else
+                # if they are not we update the `alt`/`ref` variables so that the variant will be dropped downstream
+                if Set([row.ALLELE_1, row.ALLELE_2]) != Set([ref, alt])
+                    alt, ref = row.ALLELE_1, row.ALLELE_2
                 end
             end
-            row.VARIANT_ID = info.variant_id
+            row.VARIANT_ID = string(chr, ":", pos, ":", ref, ":", alt)
         end
     end
-    # Write the variants that are not in the shared variants
+    # Update the bim file
     CSV.write(bim_file, bim, header=false, delim="\t")
-    return "OK"
 end
 
 """
@@ -110,11 +126,7 @@ function genotype_gvcf(gvcf_file,
     # Update bim file with the mapped alleles
     status = update_bim_with_mapped_alleles(tmp_prefix, shared_variants_plink)
     # If the individual has a non ref/alt variant from the genotyping arrays (i.e. rare) we will not integrate it
-    if status != "OK"
-        write(string(output_prefix, ".txt"), status)
-    else
-        write_new_bim_bed_fam(tmp_prefix, shared_variants_plink, output_prefix)
-    end
+    write_new_bim_bed_fam(tmp_prefix, shared_variants_plink, output_prefix)
     # Clean
     rm(tmp_dir; recursive=true)
     return 0
