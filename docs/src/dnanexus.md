@@ -29,18 +29,11 @@ dx login
 
 You will be prompted for your username and password.
 
-## Preparing the assets
-
-```bash
-docker save olivierlabayle/genomicc:main | gzip > assets/rap/genomicc.tar.gz
-```
-
 ## Uploading Assets
 
-1. Create an `assets` folder on the UKB RAP
+1. Create an `assets` folder online on the UKB RAP
 
-2. Bring the GenOMICC data in the assets folder
-
+2. Bring the GenOMICC assets in the present repository's `assets/rap/genomicc` folder
    - 
 
 3. Run:
@@ -52,7 +45,11 @@ dx upload -r assets/rap/ --destination $PROJECT_ID:/assets/
 
 3. Uploading the docker image
 
-The Docker iamge seems to be too big for `dx upload` and we need to use the [upload agent](https://documentation.dnanexus.com/downloads#installing-the-upload-agent) (`ua`):
+```bash
+docker save olivierlabayle/genomicc:main | gzip > assets/rap/genomicc.tar.gz
+```
+
+The Docker image seems to be too big for `dx upload` and we need to use the [upload agent](https://documentation.dnanexus.com/downloads#installing-the-upload-agent) (`ua`):
 
 ```bash
 export AUTH_TOKEN=XXX
