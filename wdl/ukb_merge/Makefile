@@ -9,7 +9,7 @@ check:
 local:
 	$(CROMWELL) run --inputs inputs.json $(WORKFLOW)
 
-app:
+compile:
 	$(DXCOMPILER) compile $(WORKFLOW) \
 		-archive \
 		-folder /workflows \
