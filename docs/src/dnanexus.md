@@ -33,28 +33,28 @@ You will be prompted for your username and password.
 
 1. Create an `assets` folder online on the UKB RAP
 
-2. Bring the GenOMICC assets in the present repository's `assets/rap/genomicc` folder
-   - 
+2. Bring the GenOMICC assets in the repository's `assets/rap/genomicc` folder
+   - genotypes
+   - imputed genotypes
+   - covariates
 
-3. Run:
-
-```bash
-export PROJECT_ID=project-J0pkqyQJpYQ133JG1p2J1qzv
-dx upload -r assets/rap/ --destination $PROJECT_ID:/assets/
-```
-
-3. Uploading the docker image
+Also bring in the docker image:
 
 ```bash
 docker save olivierlabayle/genomicc:main | gzip > assets/rap/genomicc.tar.gz
 ```
 
-The Docker image seems to be too big for `dx upload` and we need to use the [upload agent](https://documentation.dnanexus.com/downloads#installing-the-upload-agent) (`ua`):
+3. Upload to RAP
+
+Since this is a lot of data, we need to use the [upload agent](https://documentation.dnanexus.com/downloads#installing-the-upload-agent). Asumming `ua` is in your path, run:
 
 ```bash
+export PROJECT_ID=project-J0pkqyQJpYQ133JG1p2J1qzv
 export AUTH_TOKEN=XXX
-ua --project $PROJECT_ID$ --auth-token $AUTH_TOKEN$ --folder /assets assets/rap/genomicc.tar.gz
+ua --project $PROJECT_ID --auth-token $AUTH_TOKEN --folder /assets assets/rap/genomicc --recursive
 ```
+
+This will take a little while.
 
 ## Extract Datasets
 

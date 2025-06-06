@@ -1,3 +1,25 @@
 {
-    "merge_ukb_genomicc.name": "Melchior"
+    "merge_ukb_and_genomicc.bgen_filesets": [
+        {
+            "bgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPx5zQJykJV38XjBKFpyY89",
+            "bgi": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPvy8QJykJxvYqz5fvxFXpf",
+            "sample": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J0pqfg0JfkB2K16YJbgy613Q"
+        },
+        {
+            "bgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPx6K8JykJbKg0y8b316vZB",
+            "bgi": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPvy80JykJk187j5qQ43qp1",
+            "sample": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J0pqg18JfkBPbj64PgqFJbpJ"
+        },
+        {
+            "bgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPx59QJykJq1zKk15bV80X2",
+            "bgi": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPvy80JykJg61k82yYj0v4q",
+            "sample": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J0pqg48JfkBKpkvBkGk5ZY6b"
+        }
+    ],
+    "merge_ukb_and_genomicc.hesin_critical_table": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J0yjZFjJpYQPkxyP5vZ7fvq3",
+    "merge_ukb_and_genomicc.genomicc_genotypes": {
+        "bed": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J11K790JpYQ22b3kZZqkKgG0",
+        "bim": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J11K4FQJpYQ2J9G77ZbGvq21",
+        "fam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J11K798JpYQ0qbfpf52bF6xJ"
+    }
 }

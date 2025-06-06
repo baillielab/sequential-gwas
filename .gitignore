@@ -36,12 +36,14 @@ gwas_results/
 .nextflow.*
 trace*
 
+# Assets
 assets/topmed-api-token
 assets/GSA*
 assets/rap/genomicc
 assets/GRCh38.fa
 assets/resource*
 assets/rap/genomicc.tar.gz
+assets/rap/kgp
 
 sandbox.jl
 
@@ -50,3 +52,8 @@ build
 FlowOMMIC.so
 
 genomicc.sif
+
+# cromwell
+
+cromwell-executions/
+cromwell-workflow-logs/

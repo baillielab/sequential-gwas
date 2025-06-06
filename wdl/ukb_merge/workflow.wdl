@@ -1,76 +1,166 @@
-version 1.0 
+version 1.0
 
-import "liftover_genotypes.wdl" as liftover_genotypes
+struct BGENFileset {
+    File bgen
+    File bgi
+    File sample
+}
 
-workflow merge_ukb_genomicc {
+struct PLINKFileset {
+    File bed
+    File bim
+    File fam
+}
+
+workflow merge_ukb_and_genomicc {
     input {
-        Array[File]+ plink_beds
-        Array[File]+ plink_bims
-        Array[File]+ plink_fams
-        File ucsc_chain
-        File reference_fastagz
-        String split_par_build_code = "hg38"
-        Boolean output_autosomal = true
+        Array[BGENFileset]+ bgen_filesets
+        File hesin_critical_table
+        PLINKFileset genomicc_genotypes
     }
 
-    call liftover_genotypes.liftover_plink_beds { 
-        input: hello_and_goodbye_input = "sub world" 
+    scatter (bgen_fileset in bgen_filesets) {
+        call filter_ukb_chr {
+            input: 
+                bgen_file = bgen_fileset.bgen,
+                bgen_bgi_file = bgen_fileset.bgi,
+                bgen_sample_file = bgen_fileset.sample,
+                table_with_eids_to_exclude = hesin_critical_table,
+                genomicc_genotyped_bim = genomicc_genotypes.bim
+        }
+
+        call plink_fileset_to_string {
+            input:
+                plink_fileset = filter_ukb_chr.plink_fileset
+        }
+
     }
 
-    # call myTask { input: hello_and_goodbye.hello_output }
+    call merge_ukb_chrs {
+        input: 
+            plink_filesets = filter_ukb_chr.plink_fileset,
+            fileset_strings = plink_fileset_to_string.fileset_string
+    }
 
     output {
-        String main_output = hello_and_goodbye.hello_output
+        Array[PLINKFileset] plink_filesets = filter_ukb_chr.plink_fileset
+    }
+}
+
+task plink_fileset_to_string {
+    input {
+        PLINKFileset plink_fileset
+    }
+
+    command <<<
+        echo "~{plink_fileset.bed} ~{plink_fileset.bim} ~{plink_fileset.fam}"
+    >>>
+
+    output {
+        String fileset_string = read_string(stdout())
+    }
+}
+
+task merge_ukb_chrs {
+    input {
+        Array[PLINKFileset] plink_filesets
+        Array[String] fileset_strings
+    }
+
+    command <<<
+        # Create the merge list
+        echo "~{sep="\n" fileset_strings}" > merge_list.txt
+        # Merge filesets
+        plink2 \
+            --pmerge-list merge_list.txt bfile \
+            --make-bed \
+            --out ukb_all_chr
+    >>>
+
+    output {
+        PLINKFileset merged_plink_fileset = object {
+            bed: "ukb_all_chr.bed",
+            bim: "ukb_all_chr.bim",
+            fam: "ukb_all_chr.fam"
+        }
+        File merge_list = "merge_list.txt"
+    }
+
+    runtime {
+        docker: "olivierlabayle/genomicc:main"
+        dx_instance_type: "mem1_ssd1_x2"
     }
 }
 
 task filter_ukb_chr {
     input {
         File bgen_file
-        File bgen_bgi_gile
+        File bgen_bgi_file
         File bgen_sample_file
-        File docker_image
-        File samples_to_exclude
-        File variants_to_include
+        File table_with_eids_to_exclude
+        File genomicc_genotyped_bim
     }
 
-    command {
-        qctool \
-            -g ~{bgen_file} \
-            -s ~{bgen_sample_file} \
-            -excl-samples ~{samples_to_exclude} \
-            -incl-variants ~{variants_to_include} \
-            -og filtered.bgen
-    }
-}
+    String bgen_prefix = basename(bgen_file, ".bgen")
 
+    command <<<
+        # Extract genomicc genotyped locations
+        awk '{print $1, $4, $4}' ~{genomicc_genotyped_bim} > ranges_to_extract.txt
 
-task export_critical_table { 
-    input {
-        File dataset
-        File fieldsfile
-    }
+        # Extract sample IDs to exclude
+        awk -F',' 'NR==1 {for (i=1; i<=NF; i++) if ($i == "eid") col=i; next} {print $col}' ~{table_with_eids_to_exclude} | sort -u > samples_to_remove.txt
 
-    command {
-        dx extract_dataset ~{dataset} \
-        --fields-file ~{fieldsfile} \
-        -o="critical_table.csv" \
-        -icoding_option==RAW \
-        -iheader_style=UKB-FORMAT \
-        -ientity=hesin_critical \
-        -ifield_names_file_txt=~{fieldnames}
+        # Convert BGEN to PLINK, filtering both samples and variants
+        plink2 \
+            --bgen ~{bgen_file} ref-unknown \
+            --extract range ranges_to_extract.txt \
+            --remove samples_to_remove.txt \
+            --make-bed \
+            --out "~{bgen_prefix}.filtered"
+    >>>
+
+    output {
+        PLINKFileset plink_fileset = object {
+            bed: "${bgen_prefix}.filtered.bed",
+            bim: "${bgen_prefix}.filtered.bim",
+            fam: "${bgen_prefix}.filtered.fam"
+        }
+        String fileset_string = "${bgen_prefix}.filtered.bed\t${bgen_prefix}.filtered.bim\t${bgen_prefix}.filtered.fam"
     }
 
     runtime {
-        dx_app: object {
-            id: "applet-xxxx",
-            type: "app" 
-        }
-        dx_timeout: "4H"
-        dx_instance_type: "mem1_ssd1_v2_x2"
-    }
-
-    output {
-        File outfile = "critical.csv"
+        docker: "olivierlabayle/genomicc:main"
+        dx_instance_type: "mem1_ssd1_x8"
     }
 }
+
+
+# task export_critical_table { 
+#     input {
+#         File dataset
+#         File fieldsfile
+#     }
+
+#     command {
+#         dx extract_dataset ~{dataset} \
+#         --fields-file ~{fieldsfile} \
+#         -o="critical_table.csv" \
+#         -icoding_option==RAW \
+#         -iheader_style=UKB-FORMAT \
+#         -ientity=hesin_critical \
+#         -ifield_names_file_txt=~{fieldnames}
+#     }
+
+#     runtime {
+#         dx_app: object {
+#             id: "applet-xxxx",
+#             type: "app" 
+#         }
+#         dx_timeout: "4H"
+#         dx_instance_type: "mem1_ssd1_v2_x2"
+#     }
+
+#     output {
+#         File outfile = "critical.csv"
+#     }
+# }

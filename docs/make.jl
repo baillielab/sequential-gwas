@@ -18,7 +18,7 @@ makedocs(;
             "Prerequisites" => "prerequisites.md",
             "Combining Datasets" => "combining_datasets.md",
             "Genotypes Imputation" => "genotypes_imputation.md",
-            "Combining with UK Biobank" => "combining_with_ukb.md",
+            "Merging the GenOMICC and UK Biobank Cohorts" => "ukb_merge.md",
             "GWAS" => "gwas.md",
         ],
         "For Developpers" => [
