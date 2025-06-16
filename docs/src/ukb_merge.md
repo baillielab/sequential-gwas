@@ -1,5 +1,12 @@
 # Merging the GenOMICC and UK Biobank Cohorts
 
+This workflow yields combined:
+
+- genotypes in PLINK bed format: obtained by subsampling the TOPMed UKB imputed genotypes to keep the GenOMICC variants.
+- imputed genotypes in PLINK pgen format: ontained by merging UKB and GenOMICC TOPMed UKB imputed genotypes.
+- covariates containing the current age and sex of individuals
+- ancestry estimates: via the 1000 Genome Project
+
 ## Inputs
 
 This section describes the main inputs to the workflow, see further down for the associated Nextflow parameters.

@@ -91,16 +91,21 @@ jobs:
         uses: singularityhub/install-singularity@main
         with:
           singularity-version: '4.2.2'
+      - name: Download Cromwell
+        run: |
+          wget https://github.com/broadinstitute/cromwell/releases/download/90/cromwell-90.jar
+          mv cromwell-90.jar ${{ github.workspace }}/cromwell.jar
+      - uses: nf-core/setup-nextflow@v1.2.0
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
-      - uses: nf-core/setup-nextflow@v1.2.0
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
         env:
           CI_CONTAINER: ${{ matrix.container }}
+          CROMWELL_PATH: ${{ github.workspace }}/cromwell.jar
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v4
         with:

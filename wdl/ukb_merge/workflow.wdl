@@ -17,6 +17,10 @@ workflow merge_ukb_and_genomicc {
         Array[BGENFileset]+ bgen_filesets
         File hesin_critical_table
         PLINKFileset genomicc_genotypes
+        String qc_genotype_missing_rate = "0.02"
+        String qc_individual_missing_rate = "0.02"
+        String qc_hwe_p = "1e-10"
+        String qc_hwe_k = "0.001"
     }
 
     scatter (bgen_fileset in bgen_filesets) {
@@ -26,51 +30,41 @@ workflow merge_ukb_and_genomicc {
                 bgen_bgi_file = bgen_fileset.bgi,
                 bgen_sample_file = bgen_fileset.sample,
                 table_with_eids_to_exclude = hesin_critical_table,
-                genomicc_genotyped_bim = genomicc_genotypes.bim
+                genomicc_genotyped_bim = genomicc_genotypes.bim,
+                qc_genotype_missing_rate = qc_genotype_missing_rate,
+                qc_individual_missing_rate = qc_individual_missing_rate,
+                qc_hwe_p = qc_hwe_p,
+                qc_hwe_k = qc_hwe_k
         }
-
-        call plink_fileset_to_string {
-            input:
-                plink_fileset = filter_ukb_chr.plink_fileset
-        }
-
     }
 
+    scatter (set in filter_ukb_chr.plink_fileset) {
+        File bed_files = set.bed
+    }
+    
     call merge_ukb_chrs {
         input: 
             plink_filesets = filter_ukb_chr.plink_fileset,
-            fileset_strings = plink_fileset_to_string.fileset_string
+            bed_files = bed_files
     }
 
     output {
-        Array[PLINKFileset] plink_filesets = filter_ukb_chr.plink_fileset
-    }
-}
-
-task plink_fileset_to_string {
-    input {
-        PLINKFileset plink_fileset
-    }
-
-    command <<<
-        echo "~{plink_fileset.bed} ~{plink_fileset.bim} ~{plink_fileset.fam}"
-    >>>
-
-    output {
-        String fileset_string = read_string(stdout())
+        PLINKFileset merged_ukb_fileset = merge_ukb_chrs.merged_plink_fileset
     }
 }
 
 task merge_ukb_chrs {
     input {
         Array[PLINKFileset] plink_filesets
-        Array[String] fileset_strings
+        Array[File] bed_files
     }
 
     command <<<
-        # Create the merge list
-        echo "~{sep="\n" fileset_strings}" > merge_list.txt
         # Merge filesets
+        for f in ~{sep=" " bed_files}; do
+            echo "${f%.bed}"
+        done > merge_list.txt
+
         plink2 \
             --pmerge-list merge_list.txt bfile \
             --make-bed \
@@ -88,7 +82,7 @@ task merge_ukb_chrs {
 
     runtime {
         docker: "olivierlabayle/genomicc:main"
-        dx_instance_type: "mem1_ssd1_x2"
+        dx_instance_type: "mem1_ssd2_v2_x4"
     }
 }
 
@@ -99,6 +93,10 @@ task filter_ukb_chr {
         File bgen_sample_file
         File table_with_eids_to_exclude
         File genomicc_genotyped_bim
+        String qc_genotype_missing_rate
+        String qc_individual_missing_rate
+        String qc_hwe_p
+        String qc_hwe_k
     }
 
     String bgen_prefix = basename(bgen_file, ".bgen")
@@ -112,9 +110,12 @@ task filter_ukb_chr {
 
         # Convert BGEN to PLINK, filtering both samples and variants
         plink2 \
-            --bgen ~{bgen_file} ref-unknown \
+            --bgen ~{bgen_file} ref-unknown --sample ~{bgen_sample_file} \
             --extract range ranges_to_extract.txt \
             --remove samples_to_remove.txt \
+            --geno ~{qc_genotype_missing_rate} \
+            --mind ~{qc_individual_missing_rate} \
+            --hwe ~{qc_hwe_p} ~{qc_hwe_k} \
             --make-bed \
             --out "~{bgen_prefix}.filtered"
     >>>
@@ -125,12 +126,11 @@ task filter_ukb_chr {
             bim: "${bgen_prefix}.filtered.bim",
             fam: "${bgen_prefix}.filtered.fam"
         }
-        String fileset_string = "${bgen_prefix}.filtered.bed\t${bgen_prefix}.filtered.bim\t${bgen_prefix}.filtered.fam"
     }
 
     runtime {
         docker: "olivierlabayle/genomicc:main"
-        dx_instance_type: "mem1_ssd1_x8"
+        dx_instance_type: "mem1_ssd2_v2_x8"
     }
 }
 

@@ -25,5 +25,8 @@ TESTDIR = joinpath(PKGDIR, "test")
     include(joinpath(TESTDIR, "ukbmerge.jl"))
     # Test GWAS Workflow
     include(joinpath(TESTDIR, "gwas.jl"))
+
+    # Merging UKB and GenOMICC
+    include(joinpath(TESTDIR, "ukb_genomicc_merge.jl"))
 end
 
