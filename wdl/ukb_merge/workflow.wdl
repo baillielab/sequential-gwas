@@ -116,6 +116,7 @@ task filter_ukb_chr {
             --geno ~{qc_genotype_missing_rate} \
             --mind ~{qc_individual_missing_rate} \
             --hwe ~{qc_hwe_p} ~{qc_hwe_k} \
+            --max-alleles 2 \
             --make-bed \
             --out "~{bgen_prefix}.filtered"
     >>>
