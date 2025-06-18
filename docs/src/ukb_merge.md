@@ -47,7 +47,7 @@ where the `DX_COMPILER_PATH` and `PROJECT_ID` have to be set appropriately. The 
 Then, you can run the workflow with the following command
 
 ```bash
-dx run /workflows/merge_ukb_and_genomicc -f wdl/ukb_merge/inputs.dx.json
+dx run /workflows/merge_ukb_and_genomicc -f wdl/ukb_merge/inputs.dx.json --destination /ukb_merge_outputs/
 ```
 
 ## Outputs
