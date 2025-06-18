@@ -19,14 +19,14 @@ TESTDIR = joinpath(PKGDIR, "test")
     # Test Dataset Aggregation Workflow
     include(joinpath(TESTDIR, "combine_datasets_wgs.jl"))
     include(joinpath(TESTDIR, "combine_datasets_no_wgs.jl"))
+
     # Test Imputation Workflow
     include(joinpath(TESTDIR, "imputation.jl"))
-    # Test UKB Merge Workflow
-    include(joinpath(TESTDIR, "ukbmerge.jl"))
+
     # Test GWAS Workflow
     include(joinpath(TESTDIR, "gwas.jl"))
 
-    # Merging UKB and GenOMICC
+    # Test Merging UKB and GenOMICC
     include(joinpath(TESTDIR, "merge_ukb_genomicc.jl"))
 end
 
