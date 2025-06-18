@@ -15,7 +15,7 @@ if dorun
     @assert isfile(CROMWELL_PATH) "Cromwell JAR file not found at $CROMWELL_PATH"
 
     @testset "Test Array Genotypes Merging" begin
-        rc = run(`java $CROMWELL_CONF -jar $CROMWELL_PATH run wdl/ukb_merge/workflow.wdl --inputs $TESTDIR/assets/ukb_merge.json`)
+        rc = run(`java $CROMWELL_CONF -jar $CROMWELL_PATH run wdl/ukb_merge/workflow.wdl --inputs $TESTDIR/assets/ukb_merge.json --options $TESTDIR/assets/ukb_merge_options.json`)
         @test rc.exitcode == 0
     end
 end

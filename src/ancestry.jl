@@ -25,7 +25,7 @@ end
 function estimate_ancestry(genotypes_prefix, pedigree_file; output="ancestry.csv", threshold=0.8)
     # Write known ancestries to file
     fam = SequentialGWAS.read_fam(string(genotypes_prefix, ".fam"))
-    add_pedigree_info_and_write_to_file!(fam, pedigree_file, genotypes_prefix)
+    SequentialGWAS.add_pedigree_info_and_write_to_file!(fam, pedigree_file, genotypes_prefix)
     # Run admixture
     K = length(unique(fam.Superpopulation)) - 1
     J = max(1, nthreads() - 1)

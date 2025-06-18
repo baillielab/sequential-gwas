@@ -41,9 +41,7 @@ workflow merge_ukb_and_genomicc {
                 table_with_eids_to_exclude = hesin_critical_table,
                 genomicc_genotyped_bim = genomicc_genotypes.bim,
                 qc_genotype_missing_rate = qc_genotype_missing_rate,
-                qc_individual_missing_rate = qc_individual_missing_rate,
-                qc_hwe_p = qc_hwe_p,
-                qc_hwe_k = qc_hwe_k
+                qc_individual_missing_rate = qc_individual_missing_rate
         }
     }
 
@@ -82,14 +80,24 @@ workflow merge_ukb_and_genomicc {
             fam_2 = kgp_genotypes.fam
     }
 
+    call plink_qc as qc_ukb_kgp {
+        input:
+            docker_image = docker_image,
+            bed_file = merge_ukb_kgp.merged_plink_fileset.bed,
+            bim_file = merge_ukb_kgp.merged_plink_fileset.bim,
+            fam_file = merge_ukb_kgp.merged_plink_fileset.fam,
+            output_prefix = "ukb_kgp.merged.qc",
+            qc_genotype_missing_rate = qc_genotype_missing_rate
+    }
+
     call ld_prune as ld_prune_ukb_kgp {
         input:
             docker_image = docker_image,
             high_ld_regions = high_ld_regions,
-            bed_file = merge_ukb_kgp.merged_plink_fileset.bed,
-            bim_file = merge_ukb_kgp.merged_plink_fileset.bim,
-            fam_file = merge_ukb_kgp.merged_plink_fileset.fam,
-            output_prefix = "ukb_kgp.merged.ld_pruned",
+            bed_file = qc_ukb_kgp.qc_fileset.bed,
+            bim_file = qc_ukb_kgp.qc_fileset.bim,
+            fam_file = qc_ukb_kgp.qc_fileset.fam,
+            output_prefix = "ukb_kgp.merged.qc.ld_pruned",
             ip_values = ip_values,
             maf = maf
     }
@@ -105,12 +113,36 @@ workflow merge_ukb_and_genomicc {
             cpus = julia_threads
     }
 
+    call merge_genotypes_plink as merge_ukb_genomicc {
+        input:
+            docker_image = docker_image,
+            output_prefix = "ukb_genomicc.merged",
+            bed_1 = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.bed,
+            bim_1 = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.bim,
+            fam_1 = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.fam,
+            bed_2 = genomicc_genotypes.bed,
+            bim_2 = genomicc_genotypes.bim,
+            fam_2 = genomicc_genotypes.fam
+    }
+
+    call plink_qc as qc_ukb_genomicc {
+        input:
+            docker_image = docker_image,
+            bed_file = merge_ukb_genomicc.merged_plink_fileset.bed,
+            bim_file = merge_ukb_genomicc.merged_plink_fileset.bim,
+            fam_file = merge_ukb_genomicc.merged_plink_fileset.fam,
+            output_prefix = "ukb_genomicc.merged.qc",
+            qc_genotype_missing_rate = qc_genotype_missing_rate
+    }
+
     output {
         PLINKFileset merged_ukb_fileset = merge_ukb_chrs.merged_plink_fileset
         PLINKFileset ukb_unrelated_fileset = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset
         PLINKFileset ukb_kgp_merged_fileset = merge_ukb_kgp.merged_plink_fileset
         PLINKFileset ukb_kgp_ld_pruned_fileset = ld_prune_ukb_kgp.ld_pruned_fileset
         File ancestry_estimate = estimate_ukb_ancestry_from_kgp.ancestry_estimate
+        PLINKFileset ukb_genomicc_merged_fileset = merge_ukb_genomicc.merged_plink_fileset
+        PLINKFileset ukb_genomicc_qc_fileset = qc_ukb_genomicc.qc_fileset
     }
 }
 
@@ -160,8 +192,6 @@ task filter_ukb_chr {
         File genomicc_genotyped_bim
         String qc_genotype_missing_rate
         String qc_individual_missing_rate
-        String qc_hwe_p
-        String qc_hwe_k
     }
 
     String bgen_prefix = basename(bgen_file, ".bgen")
@@ -180,7 +210,6 @@ task filter_ukb_chr {
             --remove samples_to_remove.txt \
             --geno ~{qc_genotype_missing_rate} \
             --mind ~{qc_individual_missing_rate} \
-            --hwe ~{qc_hwe_p} ~{qc_hwe_k} \
             --max-alleles 2 \
             --make-bed \
             --out "~{bgen_prefix}.filtered"
@@ -350,6 +379,39 @@ task estimate_ukb_ancestry_from_kgp {
     }
 }
 
+task plink_qc {
+    input {
+        String docker_image
+        File bed_file
+        File bim_file
+        File fam_file
+        String output_prefix = "plink_qc"
+        String qc_genotype_missing_rate = "0.02"
+    }
+
+    command <<<
+        bed_prefix=$(dirname "~{bed_file}")/$(basename "~{bed_file}" .bed)
+
+        plink2 \
+            --bfile ${bed_prefix} \
+            --geno ~{qc_genotype_missing_rate} \
+            --make-bed \
+            --out ~{output_prefix}
+    >>>
+
+    output {
+        PLINKFileset qc_fileset = object {
+            bed: "${output_prefix}.bed",
+            bim: "${output_prefix}.bim",
+            fam: "${output_prefix}.fam"
+        }
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem1_ssd1_v2_x4"
+    }
+}
 
 # task export_critical_table { 
 #     input {
