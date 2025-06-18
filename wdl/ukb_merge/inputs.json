@@ -1,4 +1,5 @@
 {
+    "merge_ukb_and_genomicc.high_ld_regions": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J199PpjJpYQ3vypJx7PJg3gb",
     "merge_ukb_and_genomicc.bgen_filesets": [
         {
             "bgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPx5zQJykJV38XjBKFpyY89",
@@ -21,5 +22,10 @@
         "bed": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J11K790JpYQ22b3kZZqkKgG0",
         "bim": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J11K4FQJpYQ2J9G77ZbGvq21",
         "fam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J11K798JpYQ0qbfpf52bF6xJ"
+    },
+    "merge_ukb_and_genomicc.kgp_genotypes": {
+        "bed": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J198Fz0JpYQ5vBZ66Z2qfZ7Y",
+        "bim": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J198FzjJpYQ95qQ1PjzbjfkX",
+        "fam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J198Fz8JpYQ5Z14px5GZGyq0"
     }
 }

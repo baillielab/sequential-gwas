@@ -17,12 +17,18 @@ workflow merge_ukb_and_genomicc {
         String docker_image = "olivierlabayle/genomicc:main"
         Array[BGENFileset]+ bgen_filesets
         File hesin_critical_table
+        File high_ld_regions
         PLINKFileset genomicc_genotypes
         PLINKFileset kgp_genotypes
         String qc_genotype_missing_rate = "0.02"
         String qc_individual_missing_rate = "0.02"
         String qc_hwe_p = "1e-10"
         String qc_hwe_k = "0.001"
+        String ip_values = "1000 50 0.05"
+        String maf = "0.01"
+        String ancestry_threshold = "0.8"
+        String palyndromic_threshold = "0.02"
+        String julia_threads = "auto"
     }
 
     scatter (bgen_fileset in bgen_filesets) {
@@ -61,12 +67,50 @@ workflow merge_ukb_and_genomicc {
             kgp_bed = kgp_genotypes.bed,
             kgp_bim = kgp_genotypes.bim,
             kgp_fam = kgp_genotypes.fam,
-            palyndromic_threshold = "0.02"
+            palyndromic_threshold = palyndromic_threshold
+    }
+
+    call merge_genotypes_plink as merge_ukb_kgp {
+        input:
+            docker_image = docker_image,
+            output_prefix = "ukb_kgp.merged",
+            bed_1 = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.bed,
+            bim_1 = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.bim,
+            fam_1 = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.fam,
+            bed_2 = kgp_genotypes.bed,
+            bim_2 = kgp_genotypes.bim,
+            fam_2 = kgp_genotypes.fam
+    }
+
+    call ld_prune as ld_prune_ukb_kgp {
+        input:
+            docker_image = docker_image,
+            high_ld_regions = high_ld_regions,
+            bed_file = merge_ukb_kgp.merged_plink_fileset.bed,
+            bim_file = merge_ukb_kgp.merged_plink_fileset.bim,
+            fam_file = merge_ukb_kgp.merged_plink_fileset.fam,
+            output_prefix = "ukb_kgp.merged.ld_pruned",
+            ip_values = ip_values,
+            maf = maf
+    }
+
+    call estimate_ukb_ancestry_from_kgp {
+        input:
+            docker_image = docker_image,
+            bed_file = ld_prune_ukb_kgp.ld_pruned_fileset.bed,
+            bim_file = ld_prune_ukb_kgp.ld_pruned_fileset.bim,
+            fam_file = ld_prune_ukb_kgp.ld_pruned_fileset.fam,
+            output_filename = "ukb.ancestry_estimate.csv",
+            ancestry_threshold = ancestry_threshold,
+            cpus = julia_threads
     }
 
     output {
         PLINKFileset merged_ukb_fileset = merge_ukb_chrs.merged_plink_fileset
         PLINKFileset ukb_unrelated_fileset = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset
+        PLINKFileset ukb_kgp_merged_fileset = merge_ukb_kgp.merged_plink_fileset
+        PLINKFileset ukb_kgp_ld_pruned_fileset = ld_prune_ukb_kgp.ld_pruned_fileset
+        File ancestry_estimate = estimate_ukb_ancestry_from_kgp.ancestry_estimate
     }
 }
 
@@ -184,6 +228,120 @@ task align_ukb_variant_ids_with_kgp_and_keep_unrelated {
             bim: "ukb_unrelated.bim",
             fam: "ukb_unrelated.fam"
         }
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem1_ssd1_v2_x4"
+    }
+}
+
+task merge_genotypes_plink {
+    input {
+        String docker_image
+        String output_prefix = "merged_genotypes"
+        File bed_1
+        File bim_1
+        File fam_1
+        File bed_2
+        File bim_2
+        File fam_2
+    }
+
+    command <<<
+        bed_prefix_1=$(dirname "~{bed_1}")/$(basename "~{bed_1}" .bed)
+        bed_prefix_2=$(dirname "~{bed_2}")/$(basename "~{bed_2}" .bed)
+        plink \
+            --bfile ${bed_prefix_1} \
+            --bmerge ${bed_prefix_2} \
+            --output-chr chr26 \
+            --biallelic-only strict \
+            --make-bed \
+            --out ~{output_prefix}
+    >>>
+
+    output {
+        PLINKFileset merged_plink_fileset = object {
+            bed: "${output_prefix}.bed",
+            bim: "${output_prefix}.bim",
+            fam: "${output_prefix}.fam"
+        }
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem1_ssd2_v2_x4"
+    }
+}
+
+task ld_prune {
+    input {
+        String docker_image
+        File high_ld_regions
+        File bed_file
+        File bim_file
+        File fam_file
+        String output_prefix = "ld_pruned"
+        String ip_values = "1000 50 0.05"
+        String maf = "0.01"
+    }
+
+    command <<<
+        bed_prefix=$(dirname "~{bed_file}")/$(basename "~{bed_file}" .bed)
+
+        plink2 \
+            --bfile ${bed_prefix} \
+            --indep-pairwise ~{ip_values}
+        
+        plink2 \
+            --bfile ${bed_prefix} \
+            --extract plink2.prune.in \
+            --maf ~{maf} \
+            --make-bed \
+            --exclude range ~{high_ld_regions} \
+            --out ~{output_prefix}
+    >>>
+
+    output {
+        PLINKFileset ld_pruned_fileset = object {
+            bed: "${output_prefix}.bed",
+            bim: "${output_prefix}.bim",
+            fam: "${output_prefix}.fam"
+        }
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem1_ssd1_v2_x4"
+    }
+}
+
+task estimate_ukb_ancestry_from_kgp {
+    input {
+        String docker_image
+        File bed_file
+        File bim_file
+        File fam_file
+        String output_filename = "ukb.ancestry_estimate.csv"
+        String ancestry_threshold = "0.8"
+        String cpus = "auto"
+    }
+
+    command <<<
+        wget -O 20130606_g1k_3202_samples_ped_population.txt ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/20130606_g1k_3202_samples_ped_population.txt
+
+        bed_prefix=$(dirname "~{bed_file}")/$(basename "~{bed_file}" .bed)
+
+        julia --project=/opt/sequential-gwas --startup-file=no --threads=~{cpus} /opt/sequential-gwas/bin/seq-gwas.jl \
+            estimate-ancestry \
+            ${bed_prefix} \
+            20130606_g1k_3202_samples_ped_population.txt \
+            --output=~{output_filename} \
+            --threshold=~{ancestry_threshold}
+    >>>
+
+    output {
+        File ancestry_estimate = output_filename
     }
 
     runtime {

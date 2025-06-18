@@ -31,7 +31,7 @@ function estimate_ancestry(genotypes_prefix, pedigree_file; output="ancestry.csv
     J = max(1, nthreads() - 1)
     run(`admixture $(genotypes_prefix).bed $K --supervised -j$J -s 123`)
     # Read ancestry indices (admixture does not make it clear which ancestry is which Q column)
-    Q = readdlm(string(genotypes_prefix, ".$K.Q"))
+    Q = readdlm(string(basename(genotypes_prefix), ".$K.Q"))
     fam.MostLikelyAncestryIndex = argmax(Q, dims=2)[:, 1]
     fam.MostLikelyAncestryProba = Q[fam.MostLikelyAncestryIndex]
     # Map ancestry indices to populations using 1000 GP

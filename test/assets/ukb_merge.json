@@ -1,5 +1,7 @@
 {
-    "merge_ukb_and_genomicc.docker_image": "olivierlabayle/genomicc:main",
+    "merge_ukb_and_genomicc.julia_threads": "1",
+    "merge_ukb_and_genomicc.docker_image": "olivierlabayle/genomicc:local",
+    "merge_ukb_and_genomicc.high_ld_regions": "assets/exclude_b38.txt",
     "merge_ukb_and_genomicc.bgen_filesets": [
         {
             "bgen": "test/assets/ukb/imputed/ukb21007_c1_b0_v1.bgen",
