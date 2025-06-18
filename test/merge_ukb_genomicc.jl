@@ -3,11 +3,14 @@ module TestUKBGenOMICCMerge
 using Test
 using SequentialGWAS
 
+PKGDIR = pkgdir(SequentialGWAS)
+TESTDIR = joinpath(PKGDIR, "test")
+
+# End to End Workflow run
+
 dorun = isinteractive() || (haskey(ENV, "CI_CONTAINER") && ENV["CI_CONTAINER"] != "docker")
 
 if dorun
-    PKGDIR = pkgdir(SequentialGWAS)
-    TESTDIR = joinpath(PKGDIR, "test")
     CROMWELL_PATH, CROMWELL_CONF = haskey(ENV, "CROMWELL_PATH") ? (ENV["CROMWELL_PATH"], "") : ("/Users/olabayle/cromwell/cromwell-90.jar", "-Dconfig.file=conf/cromwell.mac.conf")
     @assert isfile(CROMWELL_PATH) "Cromwell JAR file not found at $CROMWELL_PATH"
 

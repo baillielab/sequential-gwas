@@ -14,9 +14,11 @@ struct PLINKFileset {
 
 workflow merge_ukb_and_genomicc {
     input {
+        String docker_image = "olivierlabayle/genomicc:main"
         Array[BGENFileset]+ bgen_filesets
         File hesin_critical_table
         PLINKFileset genomicc_genotypes
+        PLINKFileset kgp_genotypes
         String qc_genotype_missing_rate = "0.02"
         String qc_individual_missing_rate = "0.02"
         String qc_hwe_p = "1e-10"
@@ -25,7 +27,8 @@ workflow merge_ukb_and_genomicc {
 
     scatter (bgen_fileset in bgen_filesets) {
         call filter_ukb_chr {
-            input: 
+            input:
+                docker_image = docker_image,
                 bgen_file = bgen_fileset.bgen,
                 bgen_bgi_file = bgen_fileset.bgi,
                 bgen_sample_file = bgen_fileset.sample,
@@ -43,18 +46,33 @@ workflow merge_ukb_and_genomicc {
     }
     
     call merge_ukb_chrs {
-        input: 
+        input:
+            docker_image = docker_image,
             plink_filesets = filter_ukb_chr.plink_fileset,
             bed_files = bed_files
     }
 
+    call align_ukb_variant_ids_with_kgp_and_keep_unrelated {
+        input:
+            docker_image = docker_image,
+            ukb_bed = merge_ukb_chrs.merged_plink_fileset.bed,
+            ukb_bim = merge_ukb_chrs.merged_plink_fileset.bim,
+            ukb_fam = merge_ukb_chrs.merged_plink_fileset.fam,
+            kgp_bed = kgp_genotypes.bed,
+            kgp_bim = kgp_genotypes.bim,
+            kgp_fam = kgp_genotypes.fam,
+            palyndromic_threshold = "0.02"
+    }
+
     output {
         PLINKFileset merged_ukb_fileset = merge_ukb_chrs.merged_plink_fileset
+        PLINKFileset ukb_unrelated_fileset = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset
     }
 }
 
 task merge_ukb_chrs {
     input {
+        String docker_image
         Array[PLINKFileset] plink_filesets
         Array[File] bed_files
     }
@@ -66,7 +84,9 @@ task merge_ukb_chrs {
         done > merge_list.txt
 
         plink2 \
+            --max-alleles 2 \
             --pmerge-list merge_list.txt bfile \
+            --output-chr chr26 \
             --make-bed \
             --out ukb_all_chr
     >>>
@@ -81,13 +101,14 @@ task merge_ukb_chrs {
     }
 
     runtime {
-        docker: "olivierlabayle/genomicc:main"
+        docker: docker_image
         dx_instance_type: "mem1_ssd2_v2_x4"
     }
 }
 
 task filter_ukb_chr {
     input {
+        String docker_image
         File bgen_file
         File bgen_bgi_file
         File bgen_sample_file
@@ -130,8 +151,44 @@ task filter_ukb_chr {
     }
 
     runtime {
-        docker: "olivierlabayle/genomicc:main"
+        docker: docker_image
         dx_instance_type: "mem1_ssd2_v2_x8"
+    }
+}
+
+task align_ukb_variant_ids_with_kgp_and_keep_unrelated {
+    input {
+        String docker_image
+        File ukb_bed
+        File ukb_bim
+        File ukb_fam
+        File kgp_bed
+        File kgp_bim
+        File kgp_fam
+        String palyndromic_threshold = "0.02"
+    }
+
+    command <<<
+        ukb_bed_prefix=$(dirname "~{ukb_bed}")/$(basename "~{ukb_bed}" .bed)
+        kgp_bed_prefix=$(dirname "~{kgp_bed}")/$(basename "~{kgp_bed}" .bed)
+        julia --project=/opt/sequential-gwas --startup-file=no --threads=auto /opt/sequential-gwas/bin/seq-gwas.jl \
+            align-ukb-variant-ids-with-kgp-and-keep-unrelated \
+            ${ukb_bed_prefix} \
+            ${kgp_bed_prefix} \
+            --threshold=~{palyndromic_threshold}
+    >>>
+
+    output {
+        PLINKFileset ukb_unrelated_fileset = object {
+            bed: "ukb_unrelated.bed",
+            bim: "ukb_unrelated.bim",
+            fam: "ukb_unrelated.fam"
+        }
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem1_ssd1_v2_x4"
     }
 }
 

@@ -85,6 +85,32 @@ function cli_settings()
         "merge-regenie-chr-results"
             action = :command
             help = "Merges REGENIE results from different chromosomes."
+        
+        "align-ukb-variant-ids-with-kgp-and-keep-unrelated"
+            action = :command
+            help = "Format variant Ids as CHR:POS:REF:ALT and keep only unrelated individuals from UKB data."
+    end
+
+    @add_arg_table! s["align-ukb-variant-ids-with-kgp-and-keep-unrelated"] begin
+        "ukb-bed-prefix"
+            arg_type = String
+            required = true
+            help = "Prefix to UKB bed files."
+
+        "kgp-bed-prefix"
+            arg_type = String
+            required = true
+            help = "Prefix to KGP bed files."
+        
+        "--out-prefix"
+            arg_type = String
+            help = "Prefix to output files."
+            default = "ukb_unrelated"
+
+        "--threshold"
+            arg_type = Float64
+            help = "Threshold for palindromic variants."
+            default = 0.02
     end
 
     @add_arg_table! s["merge-regenie-chr-results"] begin
@@ -798,6 +824,13 @@ function julia_main()::Cint
         merge_regenie_chr_results(
             cmd_settings["input-prefix"];
             output=cmd_settings["output"]
+        )
+    elseif cmd == "align-ukb-variant-ids-with-kgp-and-keep-unrelated"
+        align_ukb_variant_ids_with_kgp_and_keep_unrelated(
+            cmd_settings["ukb-bed-prefix"],
+            cmd_settings["kgp-bed-prefix"];
+            out_prefix=cmd_settings["out-prefix"],
+            threshold=cmd_settings["threshold"]
         )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))

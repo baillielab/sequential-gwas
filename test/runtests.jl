@@ -27,6 +27,6 @@ TESTDIR = joinpath(PKGDIR, "test")
     include(joinpath(TESTDIR, "gwas.jl"))
 
     # Merging UKB and GenOMICC
-    include(joinpath(TESTDIR, "ukb_genomicc_merge.jl"))
+    include(joinpath(TESTDIR, "merge_ukb_genomicc.jl"))
 end
 

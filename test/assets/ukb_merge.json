@@ -1,19 +1,20 @@
 {
+    "merge_ukb_and_genomicc.docker_image": "olivierlabayle/genomicc:main",
     "merge_ukb_and_genomicc.bgen_filesets": [
         {
-            "bgen": "test/assets/ukb_imputed/ukb21007_c1_b0_v1.bgen",
-            "bgi": "test/assets/ukb_imputed/ukb21007_c1_b0_v1.bgen.bgi",
-            "sample": "test/assets/ukb_imputed/ukb21007_c1_b0_v1.sample"
+            "bgen": "test/assets/ukb/imputed/ukb21007_c1_b0_v1.bgen",
+            "bgi": "test/assets/ukb/imputed/ukb21007_c1_b0_v1.bgen.bgi",
+            "sample": "test/assets/ukb/imputed/ukb21007_c1_b0_v1.sample"
         },
         {
-            "bgen": "test/assets/ukb_imputed/ukb21007_c2_b0_v1.bgen",
-            "bgi": "test/assets/ukb_imputed/ukb21007_c2_b0_v1.bgen.bgi",
-            "sample": "test/assets/ukb_imputed/ukb21007_c2_b0_v1.sample"
+            "bgen": "test/assets/ukb/imputed/ukb21007_c2_b0_v1.bgen",
+            "bgi": "test/assets/ukb/imputed/ukb21007_c2_b0_v1.bgen.bgi",
+            "sample": "test/assets/ukb/imputed/ukb21007_c2_b0_v1.sample"
         },
         {
-            "bgen": "test/assets/ukb_imputed/ukb21007_c3_b0_v1.bgen",
-            "bgi": "test/assets/ukb_imputed/ukb21007_c3_b0_v1.bgen.bgi",
-            "sample": "test/assets/ukb_imputed/ukb21007_c3_b0_v1.sample"
+            "bgen": "test/assets/ukb/imputed/ukb21007_c3_b0_v1.bgen",
+            "bgi": "test/assets/ukb/imputed/ukb21007_c3_b0_v1.bgen.bgi",
+            "sample": "test/assets/ukb/imputed/ukb21007_c3_b0_v1.sample"
         }
     ],
     "merge_ukb_and_genomicc.hesin_critical_table": "test/assets/dnanexus/critical_table.csv",
@@ -21,5 +22,10 @@
         "bed": "test/assets/gwas/genotypes/genotypes.arrays_wgs.aggregated.bed",
         "bim": "test/assets/gwas/genotypes/genotypes.arrays_wgs.aggregated.bim",
         "fam": "test/assets/gwas/genotypes/genotypes.arrays_wgs.aggregated.fam"
+    },
+    "merge_ukb_and_genomicc.kgp_genotypes": {
+        "bed": "test/assets/kgp/bed_shared_genomicc/kgp.merged.unrelated.shared.bed",
+        "bim": "test/assets/kgp/bed_shared_genomicc/kgp.merged.unrelated.shared.bim",
+        "fam": "test/assets/kgp/bed_shared_genomicc/kgp.merged.unrelated.shared.fam"
     }
 }

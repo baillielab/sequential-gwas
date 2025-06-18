@@ -38,6 +38,7 @@ include("covariates.jl")
 include("gwas_plots.jl")
 include("gvcf_genotyping.jl")
 include("imputation.jl")
+include("merge_ukb_genomicc.jl")
 
 export julia_main
 
