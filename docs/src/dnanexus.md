@@ -1,6 +1,6 @@
 # Working with DNANexus
 
-Perhaps surprisingly, most of the interactions with the UK Biobank RAP is made  directly from your local machine using the dx-toolkit.
+Most of the interactions with the UK Biobank RAP is made directly from your local machine using the dx-toolkit.
 
 ## Installing Dependencies
 
@@ -16,8 +16,7 @@ If you want to check the workflow syntax and run the `make check` operations, yo
 
 ### Cromwell
 
-To create apps you will need [cromwell](https://cromwell.readthedocs.io/en/stable/tutorials/FiveMinuteIntro/) as well.
-
+To run [WDL](https://openwdl.org/) workflows locally you will need [cromwell](https://cromwell.readthedocs.io/en/stable/tutorials/FiveMinuteIntro/) as well. If you are planning to extend the capabilities of this package, [this page](https://github.com/dnanexus/dxCompiler/blob/develop/doc/ExpertOptions.md) will be of interest.
 
 ## Logging in
 

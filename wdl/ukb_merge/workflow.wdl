@@ -261,7 +261,7 @@ task align_ukb_variant_ids_with_kgp_and_keep_unrelated {
 
     runtime {
         docker: docker_image
-        dx_instance_type: "mem1_ssd1_v2_x4"
+        dx_instance_type: "mem1_ssd1_v2_x8"
     }
 }
 
@@ -341,7 +341,7 @@ task ld_prune {
 
     runtime {
         docker: docker_image
-        dx_instance_type: "mem1_ssd1_v2_x4"
+        dx_instance_type: "mem1_ssd1_v2_x8"
     }
 }
 
@@ -375,7 +375,7 @@ task estimate_ukb_ancestry_from_kgp {
 
     runtime {
         docker: docker_image
-        dx_instance_type: "mem1_ssd1_v2_x4"
+        dx_instance_type: "mem1_ssd1_v2_x16"
     }
 }
 
@@ -409,7 +409,7 @@ task plink_qc {
 
     runtime {
         docker: docker_image
-        dx_instance_type: "mem1_ssd1_v2_x4"
+        dx_instance_type: "mem1_ssd1_v2_x8"
     }
 }
 
