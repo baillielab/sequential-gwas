@@ -19,7 +19,7 @@
             "sample": "test/assets/ukb/imputed/ukb21007_c3_b0_v1.sample"
         }
     ],
-    "merge_ukb_and_genomicc.hesin_critical_table": "test/assets/dnanexus/critical_table.csv",
+    "merge_ukb_and_genomicc.hesin_critical_table": "test/assets/ukb/critical_table.csv",
     "merge_ukb_and_genomicc.genomicc_genotypes": {
         "bed": "test/assets/gwas/genotypes/genotypes.arrays_wgs.aggregated.bed",
         "bim": "test/assets/gwas/genotypes/genotypes.arrays_wgs.aggregated.bim",

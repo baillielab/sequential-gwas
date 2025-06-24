@@ -23,33 +23,37 @@
 #     run(`admixture ${out_prefix}_pruned.bed $k`)
 # end
 
+
 function align_ukb_variant_ids_with_kgp_and_keep_unrelated(ukb_bed_prefix, kgp_bed_prefix; out_prefix="ukb_unrelated", threshold=0.02)
     tmpdir = mktempdir()
-    # Load KGP Info
-    run(`plink2 --bfile $kgp_bed_prefix --freq counts --out $kgp_bed_prefix`)
-    kgp_info = SequentialGWAS.get_kgp_ref_alt(kgp_bed_prefix)
-    # Load UKB variant info
-    run(`plink2 --bfile $ukb_bed_prefix --freq counts --out $ukb_bed_prefix`)
-    ukb_info = SequentialGWAS.load_variants_info(ukb_bed_prefix)
-    # Format the chromosome and set the action column
-    SequentialGWAS.set_new_columns!(ukb_info, kgp_info; threshold=threshold)
-    # Make sure no variant needs to be flipped: I think (hope) UKB data is already properly aligned to the + strand
-    @assert isempty(findall(startswith("FLIP"), ukb_info.ACTION)) "Some variants need to be flipped in UKB data, not sure if this is expected."
-    # Write variants to keep
-    variants_to_keep = ukb_info.NEW_VARIANT_ID[findall(startswith("KEEP"), ukb_info.ACTION)]
-    variant_to_keep_file = joinpath(tmpdir, "variants_to_keep.txt")
+    # Load KGP variants info
+    kgp_bim = SequentialGWAS.read_bim(string(kgp_bed_prefix, ".bim"))
+    kgp_variant_ids_map = Dict((chr, loc) => v_id for (chr, loc, v_id) in zip(kgp_bim.CHR_CODE, kgp_bim.BP_COORD, kgp_bim.VARIANT_ID))
+    # Load UKB variants info
+    ukb_bim = SequentialGWAS.read_bim(string(ukb_bed_prefix, ".bim"))
+    # Map variant IDs to KGP if possible, otherwise they will be dropped
+    unmapped_ids = Set()
+    ukb_bim.VARIANT_ID = map(zip(ukb_bim.CHR_CODE, ukb_bim.BP_COORD, ukb_bim.VARIANT_ID)) do (chr, loc, ukb_v_id)
+        if haskey(kgp_variant_ids_map, (chr, loc))
+            kgp_variant_ids_map[(chr, loc)]
+        else
+            push!(unmapped_ids, ukb_v_id)
+            ukb_v_id
+        end
+    end
+    # Write variants to drop
+    variant_to_drop_file = joinpath(tmpdir, "variants_to_drop.txt")
     CSV.write(
-        variant_to_keep_file, 
-        DataFrame(VARIANT_ID=variants_to_keep),
+        variant_to_drop_file, 
+        DataFrame(VARIANT_ID=collect(unmapped_ids)),
         header=false
     )
-    # Write new bim file, replace missing by chr:bp:all1:all2, they will be dropped downstream
-    new_bim = DataFrames.select(ukb_info, :CHR_CODE, :NEW_VARIANT_ID, :POSITION, :BP_COORD, :ALLELE_1, :ALLELE_2)
-    new_bim.CHR_CODE = replace.(new_bim.CHR_CODE, "chr" => "") # KING does not like `chr` 
+    # Write new bim file
+    ukb_bim.CHR_CODE = replace.(ukb_bim.CHR_CODE, "chr" => "") # KING does not like `chr` 
     new_bim_file = joinpath(tmpdir, "new.bim")
     CSV.write(
         new_bim_file,
-        new_bim, 
+        ukb_bim, 
         header=false, 
         delim="\t"
     )
@@ -59,11 +63,11 @@ function align_ukb_variant_ids_with_kgp_and_keep_unrelated(ukb_bed_prefix, kgp_b
     run(`plink2 --bed $ukb_bed_prefix.bed \
     --bim $new_bim_file \
     --fam $ukb_bed_prefix.fam \
-    --extract $variant_to_keep_file \
+    --exclude $variant_to_drop_file \
     --keep kingunrelated.txt \
     --output-chr chr26 \
     --make-bed \
     --out $out_prefix`
     )
-
+    return 0
 end
