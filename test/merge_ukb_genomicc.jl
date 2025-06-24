@@ -14,11 +14,18 @@ TESTDIR = joinpath(PKGDIR, "test")
 dorun = isinteractive() || (haskey(ENV, "CI_CONTAINER") && ENV["CI_CONTAINER"] == "docker")
 
 if dorun
-    CROMWELL_PATH, CROMWELL_CONF = haskey(ENV, "CROMWELL_PATH") ? (ENV["CROMWELL_PATH"], "") : ("/Users/olabayle/cromwell/cromwell-90.jar", "-Dconfig.file=conf/cromwell.mac.conf")
-    @assert isfile(CROMWELL_PATH) "Cromwell JAR file not found at $CROMWELL_PATH"
+    cmd_args = haskey(ENV, "CROMWELL_PATH") ?
+        ["-jar", ENV["CROMWELL_PATH"]] :
+        ["-Dconfig.file=conf/cromwell.mac.conf", "-jar", "/Users/olabayle/cromwell/cromwell-90.jar"]
 
     @testset "Test Array Genotypes Merging" begin
-        rc = run(`java $CROMWELL_CONF -jar $CROMWELL_PATH run wdl/ukb_merge/workflow.wdl --inputs $TESTDIR/assets/ukb_merge.json --options $TESTDIR/assets/ukb_merge_options.json`)
+        cmd = Cmd([
+            "java", cmd_args...,
+            "run", "wdl/ukb_merge/workflow.wdl",
+            "--inputs", joinpath(TESTDIR, "assets", "ukb_merge.json"),
+            "--options", joinpath(TESTDIR, "assets", "ukb_merge_options.json")
+        ])
+        rc = run(cmd)
         @test rc.exitcode == 0
 
         results_dirs = readdir("ukb_genomicc_merge_results/merge_ukb_and_genomicc/", join=true)
@@ -92,6 +99,7 @@ if dorun
         @test length(ukb_genomicc_merged_fam.IID) > length(ukb_unrelated_fam.IID)
     end
 end
+
 end
 
 true

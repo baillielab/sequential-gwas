@@ -80,10 +80,6 @@ jobs:
           - singularity
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin' # See 'Supported distributions' for available options
-          java-version: '21' # See 'Supported versions' for available options
       - name: Set Swap Space
         uses: pierotofy/set-swap-space@master
         with:
