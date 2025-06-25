@@ -1,24 +1,42 @@
 version 1.0
 
+struct PGENFileset {
+    String chr
+    File pgen
+    File psam
+    File pvar
+}
+
 struct BGENFileset {
+    String chr
     File bgen
     File bgi
     File sample
 }
 
 struct PLINKFileset {
+    String chr
     File bed
     File bim
     File fam
 }
 
+struct BCFFileset {
+    String chr
+    File bcf
+    File csi
+}
+
 workflow merge_ukb_and_genomicc {
+    # Inputs
+
     input {
         String docker_image = "olivierlabayle/genomicc:main"
         Array[BGENFileset]+ bgen_filesets
         File hesin_critical_table
         File high_ld_regions
         PLINKFileset genomicc_genotypes
+        Array[PGENFileset]+ genomicc_pgen_filesets
         PLINKFileset kgp_genotypes
         String qc_genotype_missing_rate = "0.02"
         String qc_individual_missing_rate = "0.02"
@@ -35,6 +53,7 @@ workflow merge_ukb_and_genomicc {
         call filter_ukb_chr {
             input:
                 docker_image = docker_image,
+                chr = bgen_fileset.chr,
                 bgen_file = bgen_fileset.bgen,
                 bgen_bgi_file = bgen_fileset.bgi,
                 bgen_sample_file = bgen_fileset.sample,
@@ -85,6 +104,7 @@ workflow merge_ukb_and_genomicc {
         input:
             docker_image = docker_image,
             high_ld_regions = high_ld_regions,
+            chr = merge_ukb_kgp.plink_fileset.chr,
             bed_file = merge_ukb_kgp.plink_fileset.bed,
             bim_file = merge_ukb_kgp.plink_fileset.bim,
             fam_file = merge_ukb_kgp.plink_fileset.fam,
@@ -104,11 +124,14 @@ workflow merge_ukb_and_genomicc {
             cpus = julia_threads
     }
 
+    # Merging GenOMICC genotypes with UKB matched genotypes (from imputed)
+
     call merge_genotypes_plink as merge_ukb_genomicc {
         input:
             docker_image = docker_image,
             output_prefix = "ukb_genomicc.merged",
             qc_genotype_missing_rate = qc_genotype_missing_rate,
+            chr = "all",
             bed_1 = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.bed,
             bim_1 = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.bim,
             fam_1 = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.fam,
@@ -116,6 +139,36 @@ workflow merge_ukb_and_genomicc {
             bim_2 = genomicc_genotypes.bim,
             fam_2 = genomicc_genotypes.fam
     }
+
+    # Merging GenOMICC and UKB imputed genotypes
+
+    scatter (bgen_fileset in bgen_filesets) {
+        call bgen_to_vcf as ukb_bgen_to_vcf {
+            input:
+                docker_image = docker_image,
+                output_prefix = "ukb.imputed",
+                chr = bgen_fileset.chr,
+                bgen_file = bgen_fileset.bgen,
+                bgen_bgi_file = bgen_fileset.bgi,
+                bgen_sample_file = bgen_fileset.sample,
+                table_with_eids_to_exclude = hesin_critical_table,
+                qc_genotype_missing_rate = qc_genotype_missing_rate,
+                qc_individual_missing_rate = qc_individual_missing_rate
+        }
+    }
+
+    scatter (pgen_fileset in genomicc_pgen_filesets) {
+        call genomicc_pgen_to_bcf as genomicc_pgen_to_bcf {
+            input:
+                docker_image = docker_image,
+                output_prefix = "genomicc.imputed",
+                chr = pgen_fileset.chr,
+                pgen_file = pgen_fileset.pgen,
+                psam_file = pgen_fileset.psam,
+                pvar_file = pgen_fileset.pvar
+        }
+    }
+    # Outputs
 
     output {
         Array[PLINKFileset] filtered_ukb_chr = filter_ukb_chr.plink_fileset
@@ -125,6 +178,8 @@ workflow merge_ukb_and_genomicc {
         PLINKFileset ukb_kgp_ld_pruned_fileset = ld_prune_ukb_kgp.ld_pruned_fileset
         File ancestry_estimate = estimate_ukb_ancestry_from_kgp.ancestry_estimate
         PLINKFileset ukb_genomicc_merged_fileset = merge_ukb_genomicc.plink_fileset
+        Array[BCFFileset] ukb_bcf_files = ukb_bgen_to_vcf.bcf_fileset
+        Array[BCFFileset] genomicc_bcf_files = genomicc_pgen_to_bcf.bcf_fileset
     }
 }
 
@@ -151,6 +206,7 @@ task merge_ukb_chrs {
 
     output {
         PLINKFileset plink_fileset = object {
+            chr: "all",
             bed: "ukb_all_chr.bed",
             bim: "ukb_all_chr.bim",
             fam: "ukb_all_chr.fam"
@@ -167,6 +223,7 @@ task merge_ukb_chrs {
 task filter_ukb_chr {
     input {
         String docker_image
+        String chr
         File bgen_file
         File bgen_bgi_file
         File bgen_sample_file
@@ -201,6 +258,7 @@ task filter_ukb_chr {
 
     output {
         PLINKFileset plink_fileset = object {
+            chr: chr,
             bed: "${bgen_prefix}.filtered.bed",
             bim: "${bgen_prefix}.filtered.bim",
             fam: "${bgen_prefix}.filtered.fam"
@@ -237,6 +295,7 @@ task align_ukb_variant_ids_with_kgp_and_keep_unrelated {
 
     output {
         PLINKFileset ukb_unrelated_fileset = object {
+            chr: "all",
             bed: "ukb_unrelated.bed",
             bim: "ukb_unrelated.bim",
             fam: "ukb_unrelated.fam"
@@ -254,6 +313,7 @@ task merge_genotypes_plink {
         String docker_image
         String output_prefix = "merged_genotypes"
         String qc_genotype_missing_rate = "0.02"
+        String chr = "all"
         File bed_1
         File bim_1
         File fam_1
@@ -282,6 +342,7 @@ task merge_genotypes_plink {
 
     output {
         PLINKFileset plink_fileset = object {
+            chr: chr,
             bed: "${output_prefix}.bed",
             bim: "${output_prefix}.bim",
             fam: "${output_prefix}.fam"
@@ -298,6 +359,7 @@ task ld_prune {
     input {
         String docker_image
         File high_ld_regions
+        String chr
         File bed_file
         File bim_file
         File fam_file
@@ -324,6 +386,7 @@ task ld_prune {
 
     output {
         PLINKFileset ld_pruned_fileset = object {
+            chr: chr,
             bed: "${output_prefix}.bed",
             bim: "${output_prefix}.bim",
             fam: "${output_prefix}.fam"
@@ -367,6 +430,88 @@ task estimate_ukb_ancestry_from_kgp {
     runtime {
         docker: docker_image
         dx_instance_type: "mem1_ssd1_v2_x16"
+    }
+}
+
+task bgen_to_vcf {
+    input {
+        String docker_image
+        String output_prefix
+        String chr
+        File bgen_file
+        File bgen_bgi_file
+        File bgen_sample_file
+        File table_with_eids_to_exclude
+        String qc_genotype_missing_rate = "0.02"
+        String qc_individual_missing_rate = "0.02"
+
+    }
+
+    command <<<
+        # Extract sample IDs to exclude
+        awk -F',' 'NR==1 {for (i=1; i<=NF; i++) if ($i == "eid") col=i; next} {print $col "\t" $col}' ~{table_with_eids_to_exclude} | sort -u > samples_to_remove.txt
+
+        plink2 \
+            --bgen ~{bgen_file} ref-unknown \
+            --sample ~{bgen_sample_file} \
+            --set-all-var-ids @:#:\$1:\$2 \
+            --geno ~{qc_genotype_missing_rate} \
+            --mind ~{qc_individual_missing_rate} \
+            --output-chr chr26 \
+            --export bcf \
+            --out "~{output_prefix}.chr_~{chr}"
+
+        mamba run -n bcftools_env bcftools index "~{output_prefix}.chr_~{chr}.bcf"
+    >>>
+
+    output {
+        BCFFileset bcf_fileset = object {
+            chr: chr,
+            bcf: "${output_prefix}.chr_${chr}.bcf",
+            csi: "${output_prefix}.chr_${chr}.bcf.csi"
+        }
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem1_ssd2_v2_x8"
+    }
+}
+
+task genomicc_pgen_to_bcf {
+    input {
+        String docker_image
+        String output_prefix
+        String chr
+        File pgen_file
+        File psam_file
+        File pvar_file
+    }
+
+    command <<<
+        pgen_prefix=$(dirname "~{pgen_file}")/$(basename "~{pgen_file}" .pgen)
+
+        plink2 \
+            --pfile ${pgen_prefix} \
+            --set-all-var-ids @:#:\$1:\$2 \
+            --output-chr chr26 \
+            --export bcf \
+            --out "~{output_prefix}.chr_~{chr}"
+        
+        mamba run -n bcftools_env bcftools index "~{output_prefix}.chr_~{chr}.bcf"
+    >>>
+
+    output {
+        BCFFileset bcf_fileset = object {
+            chr: chr,
+            bcf: "${output_prefix}.chr_${chr}.bcf",
+            csi: "${output_prefix}.chr_${chr}.bcf.csi"
+        }
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem1_ssd2_v2_x8"
     }
 }
 

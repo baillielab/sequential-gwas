@@ -2,16 +2,19 @@
     "merge_ukb_and_genomicc.high_ld_regions": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J199PpjJpYQ3vypJx7PJg3gb",
     "merge_ukb_and_genomicc.bgen_filesets": [
         {
+            "chr": "1",
             "bgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPx5zQJykJV38XjBKFpyY89",
             "bgi": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPvy8QJykJxvYqz5fvxFXpf",
             "sample": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J0pqfg0JfkB2K16YJbgy613Q"
         },
         {
+            "chr": "2",
             "bgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPx6K8JykJbKg0y8b316vZB",
             "bgi": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPvy80JykJk187j5qQ43qp1",
             "sample": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J0pqg18JfkBPbj64PgqFJbpJ"
         },
         {
+            "chr": "3",
             "bgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPx59QJykJq1zKk15bV80X2",
             "bgi": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPvy80JykJg61k82yYj0v4q",
             "sample": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J0pqg48JfkBKpkvBkGk5ZY6b"
@@ -19,13 +22,15 @@
     ],
     "merge_ukb_and_genomicc.hesin_critical_table": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J0yjZFjJpYQPkxyP5vZ7fvq3",
     "merge_ukb_and_genomicc.genomicc_genotypes": {
+        "chr": "all",
         "bed": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J11K790JpYQ22b3kZZqkKgG0",
         "bim": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J11K4FQJpYQ2J9G77ZbGvq21",
         "fam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J11K798JpYQ0qbfpf52bF6xJ"
     },
     "merge_ukb_and_genomicc.kgp_genotypes": {
-        "bed": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J198Fz0JpYQ5vBZ66Z2qfZ7Y",
-        "bim": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J198FzjJpYQ95qQ1PjzbjfkX",
-        "fam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J198Fz8JpYQ5Z14px5GZGyq0"
+        "chr": "all",
+        "bed": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1GXyJ0JpYQ4vzXYXPX593KV",
+        "bim": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1GXyJ8JpYQJ0B8VQfyf9X2V",
+        "fam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1GXyGjJpYQ4vzXYXPX593KP"
     }
 }
