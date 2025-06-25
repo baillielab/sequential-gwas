@@ -31,19 +31,19 @@
     "___": {
       "bed": {
         "$dnanexus_link": {
-          "id": "file-J198Fz0JpYQ5vBZ66Z2qfZ7Y",
+          "id": "file-J1GXyJ0JpYQ4vzXYXPX593KV",
           "project": "project-J0pkqyQJpYQ133JG1p2J1qzv"
         }
       },
       "bim": {
         "$dnanexus_link": {
-          "id": "file-J198FzjJpYQ95qQ1PjzbjfkX",
+          "id": "file-J1GXyJ8JpYQJ0B8VQfyf9X2V",
           "project": "project-J0pkqyQJpYQ133JG1p2J1qzv"
         }
       },
       "fam": {
         "$dnanexus_link": {
-          "id": "file-J198Fz8JpYQ5Z14px5GZGyq0",
+          "id": "file-J1GXyGjJpYQ4vzXYXPX593KP",
           "project": "project-J0pkqyQJpYQ133JG1p2J1qzv"
         }
       }
@@ -97,17 +97,17 @@
   }],
   "stage-common.kgp_genotypes___dxfiles": [{
     "$dnanexus_link": {
-      "id": "file-J198Fz0JpYQ5vBZ66Z2qfZ7Y",
+      "id": "file-J1GXyJ0JpYQ4vzXYXPX593KV",
       "project": "project-J0pkqyQJpYQ133JG1p2J1qzv"
     }
   }, {
     "$dnanexus_link": {
-      "id": "file-J198FzjJpYQ95qQ1PjzbjfkX",
+      "id": "file-J1GXyJ8JpYQJ0B8VQfyf9X2V",
       "project": "project-J0pkqyQJpYQ133JG1p2J1qzv"
     }
   }, {
     "$dnanexus_link": {
-      "id": "file-J198Fz8JpYQ5Z14px5GZGyq0",
+      "id": "file-J1GXyGjJpYQ4vzXYXPX593KP",
       "project": "project-J0pkqyQJpYQ133JG1p2J1qzv"
     }
   }],
