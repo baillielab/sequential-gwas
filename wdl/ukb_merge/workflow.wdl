@@ -168,6 +168,22 @@ workflow merge_ukb_and_genomicc {
                 pvar_file = pgen_fileset.pvar
         }
     }
+
+    scatter (ukb_genomicc_pair in zip(ukb_bgen_to_vcf.bcf_fileset, genomicc_pgen_to_bcf.bcf_fileset)) {
+        call merge_genomicc_ukb_bcfs_and_convert_to_pgen {
+            input:
+                docker_image = docker_image,
+                genomicc_chr = ukb_genomicc_pair.right.chr,
+                genomicc_bcf = ukb_genomicc_pair.right.bcf,
+                genomicc_csi = ukb_genomicc_pair.right.csi,
+                ukb_chr = ukb_genomicc_pair.left.chr,
+                ukb_bcf = ukb_genomicc_pair.left.bcf,
+                ukb_csi = ukb_genomicc_pair.left.csi,
+                qc_genotype_missing_rate = qc_genotype_missing_rate,
+                output_prefix = "genomicc_ukb.merged.imputed"
+        }
+    }
+
     # Outputs
 
     output {
@@ -180,6 +196,7 @@ workflow merge_ukb_and_genomicc {
         PLINKFileset ukb_genomicc_merged_fileset = merge_ukb_genomicc.plink_fileset
         Array[BCFFileset] ukb_bcf_files = ukb_bgen_to_vcf.bcf_fileset
         Array[BCFFileset] genomicc_bcf_files = genomicc_pgen_to_bcf.bcf_fileset
+        Array[PGENFileset] genomicc_ukb_pgen_filesets = merge_genomicc_ukb_bcfs_and_convert_to_pgen.pgen_fileset
     }
 }
 
@@ -506,6 +523,58 @@ task genomicc_pgen_to_bcf {
             chr: chr,
             bcf: "${output_prefix}.chr_${chr}.bcf",
             csi: "${output_prefix}.chr_${chr}.bcf.csi"
+        }
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem1_ssd2_v2_x8"
+    }
+}
+
+task merge_genomicc_ukb_bcfs_and_convert_to_pgen {
+    input {
+        String docker_image
+
+        String genomicc_chr
+        File genomicc_bcf
+        File genomicc_csi
+
+        String ukb_chr
+        File ukb_bcf
+        File ukb_csi
+
+        String qc_genotype_missing_rate = "0.02"
+        String output_prefix = "genomicc_ukb.merged.imputed"
+    }
+
+    command <<<
+        if [[ "~{genomicc_chr}" != "~{ukb_chr}" ]]; then
+            echo "GenOMICC and UKB chr files do not match. Make sure both input arrays have the same order." >&2
+            exit 1
+        fi
+
+        # Merge BCF files
+        mamba run -n bcftools_env bcftools merge \
+            --output-type=b \
+            --output="~{output_prefix}.chr_~{ukb_chr}.bcf" \
+            --write-index=csi \
+            ~{genomicc_bcf} ~{ukb_bcf}
+
+        # Convert merged BCF to PGEN format
+        plink2 \
+            --bcf "~{output_prefix}.chr_~{ukb_chr}.bcf" \
+            --geno ~{qc_genotype_missing_rate} \
+            --make-pgen \
+            --out "~{output_prefix}.chr_~{ukb_chr}"
+    >>>
+
+    output {
+        PGENFileset pgen_fileset = object {
+            chr: ukb_chr,
+            pgen: "${output_prefix}.chr_~{ukb_chr}.pgen",
+            psam: "${output_prefix}.chr_~{ukb_chr}.psam",
+            pvar: "${output_prefix}.chr_~{ukb_chr}.pvar"
         }
     }
 
