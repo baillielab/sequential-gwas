@@ -55,31 +55,31 @@ ua --project $PROJECT_ID --auth-token $AUTH_TOKEN --folder /assets assets/rap/ -
 At this point, it seems impossible (or very difficult) to extract phenotypes from a WDL workflow because the source dataset is not a regular file (see [this](https://community.ukbiobank.ac.uk/hc/en-gb/community/posts/16019555833117-How-do-I-call-the-table-exporter-applet-from-my-WDL) or [that](https://community.ukbiobank.ac.uk/hc/en-gb/community/posts/16019577183901-I-would-like-to-access-phenotype-data-from-within-a-WDL-task-using-a-python-script-How-do-I-localize-the-database-file-as-an-input-to-the-task-I-m-getting-a-wrong-type-error)). We thus have to first run a native DNA Nexus workflow to extract some preliminary data from the source dataset. First we build the workflow:
 
 ```bash
-dx build export_covariates
+dx build rap_workflows/export_covariates
 ```
 
 Then run it (replace the `DATASET_RECORD_ID` with the one corresponding to your project):
 
 ```bash
 DATASET_RECORD_ID=record-J0pqJxjJZF8G55f99FF11JJ9
-dx run -y /export_covariates \
---destination /export_covariates_outputs/ \
+dx run -y \
 -istage-J0vx360JpYQ0Jg1QJ5Zv0PFx.dataset_or_cohort_or_dashboard=$DATASET_RECORD_ID \
 -istage-J0vx360JpYQ0Jg1QJ5Zv0PFx.field_names_file_txt=/assets/hesin_critical_fields.txt \
 -istage-J0ygjB0JpYQJg4b985gqYkx6.dataset_or_cohort_or_dashboard=$DATASET_RECORD_ID \
--istage-J0ygjB0JpYQJg4b985gqYkx6.field_names_file_txt=/assets/main_fields.txt
+-istage-J0ygjB0JpYQJg4b985gqYkx6.field_names_file_txt=/assets/main_fields.txt \
+/export_covariates
 ```
 
 You can monitor the workflow on the RAP, once finished you should have two outputs in the `/export_covariates_outputs` folder: `` and ``.
 
 ## 3. Merging Cohorts
 
-First you need to compile the WDL workflow and upload it to the RAP, this can be done by the following:
+First you need to compile the WDL workflow and upload it to the RAP, this can be done with the following:
 
 ```bash
 export DX_COMPILER_PATH=/Users/olabayle/dxCompiler/dxCompiler-2.13.0.jar
 export PROJECT_ID=project-J0pkqyQJpYQ133JG1p2J1qzv
-java -jar $DX_COMPILER_PATH compile wdl/ukb_merge/workflow.wdl -f -project $PROJECT_ID -folder /workflows -inputs wdl/ukb_merge/inputs.json
+java -jar $DX_COMPILER_PATH compile rap_workflows/ukb_merge/workflow.wdl -f -project $PROJECT_ID -folder /workflows -inputs rap_workflows/ukb_merge/inputs.json
 ```
 
 where the `DX_COMPILER_PATH` and `PROJECT_ID` have to be set appropriately. The compiler might output some warnings like `missing input for non-optional parameter` but you can ignore these.
@@ -87,7 +87,8 @@ where the `DX_COMPILER_PATH` and `PROJECT_ID` have to be set appropriately. The 
 Then, you can run the workflow with the following command
 
 ```bash
-dx run /workflows/merge_ukb_and_genomicc -f wdl/ukb_merge/inputs.dx.json --destination /ukb_merge_outputs/
+dx run -y \
+-f rap_workflows/ukb_merge/inputs.dx.json \
+--destination /ukb_merge_outputs/ \
+/workflows/merge_ukb_and_genomicc
 ```
-
-## Outputs

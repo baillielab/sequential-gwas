@@ -20,7 +20,7 @@
             "sample": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J0pqfyQJfkBFpPvP031Ygq8P"
         }
     ],
-    "merge_ukb_and_genomicc.hesin_critical_table": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J0yjZFjJpYQPkxyP5vZ7fvq3",
+    "merge_ukb_and_genomicc.hesin_critical_table": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1Kbzg8Jyy8KbzX0pk5pZjPz",
     "merge_ukb_and_genomicc.genomicc_genotypes": {
         "chr": "all",
         "bed": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J11K790JpYQ22b3kZZqkKgG0",
@@ -30,21 +30,21 @@
         "merge_ukb_and_genomicc.genomicc_pgen_filesets": [
         {
             "chr": "20",
-            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:",
-            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:",
-            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:"
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KV0FQJpYQ36JpvxGZ2Jqqk",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KV04QJpYQBxQPvK56Qg6y5",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KV0G0JpYQKyg0KqPxkk2PF"
         },
         {
             "chr": "21",
-            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:",
-            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:",
-            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:"
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KV040JpYQ3v03Pxp50fpJK",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KV0FjJpYQ5bPPyP77j806x",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KV05jJpYQ1Z3Fz0gVv0qBv"
         },
         {
             "chr": "22",
-            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:",
-            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:",
-            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:"
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KQzyjJpYQ88231Xfv7QK98",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KQzq8JpYQ0XJFJgY44Vf2f",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KV00jJpYQ1xJFvkG53FQxp"
         }
     ],
     "merge_ukb_and_genomicc.kgp_genotypes": {

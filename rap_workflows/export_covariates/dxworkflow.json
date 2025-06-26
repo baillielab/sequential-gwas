@@ -7,7 +7,7 @@
       "id": "stage-J0vx360JpYQ0Jg1QJ5Zv0PFx",
       "name": "export_critical",
       "executable": "app-table-exporter/2.0.82",
-      "folder": "/outputs",
+      "folder": "/export_covariates_outputs",
       "input": {
         "dataset_or_cohort_or_dashboard": {
           "$dnanexus_link": "record-J0pqJxjJZF8G55f99FF11JJ9"
@@ -25,7 +25,7 @@
       "id": "stage-J0ygjB0JpYQJg4b985gqYkx6",
       "name": "export_covariates",
       "executable": "app-table-exporter/2.0.82",
-      "folder": "/outputs",
+      "folder": "/export_covariates_outputs",
       "input": {
         "dataset_or_cohort_or_dashboard": {
           "$dnanexus_link": "record-J0pqJxjJZF8G55f99FF11JJ9"

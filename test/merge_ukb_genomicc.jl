@@ -21,7 +21,7 @@ if dorun
     @testset "Test Array Genotypes Merging" begin
         cmd = Cmd([
             "java", cmd_args...,
-            "run", "wdl/ukb_merge/workflow.wdl",
+            "run", "rap_workflows/ukb_merge/workflow.wdl",
             "--inputs", joinpath(TESTDIR, "assets", "ukb_merge.json"),
             "--options", joinpath(TESTDIR, "assets", "ukb_merge_options.json")
         ])
