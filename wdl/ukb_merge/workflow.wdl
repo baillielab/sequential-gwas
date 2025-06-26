@@ -265,6 +265,7 @@ task filter_ukb_chr {
             --extract range ranges_to_extract.txt \
             --remove samples_to_remove.txt \
             --set-all-var-ids @:#:\$1:\$2 \
+            --snps-only \
             --geno ~{qc_genotype_missing_rate} \
             --mind ~{qc_individual_missing_rate} \
             --output-chr chr26 \
@@ -285,6 +286,11 @@ task filter_ukb_chr {
     runtime {
         docker: docker_image
         dx_instance_type: "mem1_ssd2_v2_x8"
+    }
+
+    meta {
+        authors: ["Olivier Labayle"]
+        description: "Filters a UKB BGEN chromosome file to be later merged with the GenOMICC genotyped dataset:\n- Variants: Only keep bi-allelic SNPs with genotype frequency higher than `qc_genotype_missing_rate` and matching the GenOMICC regions.\n- Samples: Exclude samples that have been critically ill and listed in `table_with_eids_to_exclude` and those with missing genotype rate higher than `qc_individual_missing_rate`."
     }
 }
 
@@ -471,14 +477,19 @@ task bgen_to_vcf {
         plink2 \
             --bgen ~{bgen_file} ref-unknown \
             --sample ~{bgen_sample_file} \
-            --set-all-var-ids @:#:\$1:\$2 \
             --geno ~{qc_genotype_missing_rate} \
             --mind ~{qc_individual_missing_rate} \
             --output-chr chr26 \
             --export bcf \
-            --out "~{output_prefix}.chr_~{chr}"
+            --out "~{output_prefix}.chr_~{chr}.temp"
 
-        mamba run -n bcftools_env bcftools index "~{output_prefix}.chr_~{chr}.bcf"
+        mamba run -n bcftools_env bcftools index "~{output_prefix}.chr_~{chr}.temp.bcf"
+        mamba run -n bcftools_env bcftools norm \
+            -m -both \
+            --output-type=b \
+            --output="~{output_prefix}.chr_~{chr}.bcf" \
+            --write-index=csi \
+            "~{output_prefix}.chr_~{chr}.temp.bcf"
     >>>
 
     output {
@@ -510,12 +521,17 @@ task genomicc_pgen_to_bcf {
 
         plink2 \
             --pfile ${pgen_prefix} \
-            --set-all-var-ids @:#:\$1:\$2 \
             --output-chr chr26 \
             --export bcf \
-            --out "~{output_prefix}.chr_~{chr}"
+            --out "~{output_prefix}.chr_~{chr}.temp"
         
-        mamba run -n bcftools_env bcftools index "~{output_prefix}.chr_~{chr}.bcf"
+        mamba run -n bcftools_env bcftools index "~{output_prefix}.chr_~{chr}.temp.bcf"
+        mamba run -n bcftools_env bcftools norm \
+            -m -both \
+            --output-type=b \
+            --output="~{output_prefix}.chr_~{chr}.bcf" \
+            --write-index=csi \
+            "~{output_prefix}.chr_~{chr}.temp.bcf"
     >>>
 
     output {
