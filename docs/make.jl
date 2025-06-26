@@ -19,7 +19,6 @@ makedocs(;
             "UKB RAP" => "rap_prerequisites.md",
         ],
         "Workflows" => [
-            "Prerequisites" => "prerequisites.md",
             "Combining Datasets" => "combining_datasets.md",
             "Genotypes Imputation" => "genotypes_imputation.md",
             "Merging the GenOMICC and UK Biobank Cohorts" => "ukb_merge.md",
