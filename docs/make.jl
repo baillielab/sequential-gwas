@@ -17,7 +17,7 @@ makedocs(;
         "Prereuisistes" => [
             "ODAP" => "odap_prerequisites.md",
             "UKB RAP" => "rap_prerequisites.md",
-        ]
+        ],
         "Workflows" => [
             "Prerequisites" => "prerequisites.md",
             "Combining Datasets" => "combining_datasets.md",

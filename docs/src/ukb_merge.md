@@ -7,6 +7,8 @@ This workflow yields combined:
 - covariates containing the current age and sex of individuals
 - ancestry estimates: via the 1000 Genome Project
 
+It is assumed that you have installed the required dependencies as explained in [Working with the UKB RAP](@ref).
+
 ## 1. Uploading Inputs
 
 This section describes the main inputs to the workflow that need to be uploaded to the RAP. I recommend deviating as little as possible from the following instructions to make sure things run smoothly afterwards. In this section we will populate the `assets/rap` folder in this repository that we will then upload to the RAP using the upload agent.
@@ -60,19 +62,17 @@ Then run it (replace the `DATASET_RECORD_ID` with the one corresponding to your 
 
 ```bash
 DATASET_RECORD_ID=record-J0pqJxjJZF8G55f99FF11JJ9
-dx run /export_covariates \
+dx run -y /export_covariates \
 --destination /export_covariates_outputs/ \
 -istage-J0vx360JpYQ0Jg1QJ5Zv0PFx.dataset_or_cohort_or_dashboard=$DATASET_RECORD_ID \
--istage-J0vx360JpYQ0Jg1QJ5Zv0PFx.field_names_file_txt=/assets/main_fields.txt \
+-istage-J0vx360JpYQ0Jg1QJ5Zv0PFx.field_names_file_txt=/assets/hesin_critical_fields.txt \
 -istage-J0ygjB0JpYQJg4b985gqYkx6.dataset_or_cohort_or_dashboard=$DATASET_RECORD_ID \
--istage-J0ygjB0JpYQJg4b985gqYkx6.field_names_file_txt=/assets/hesin_critical_fields.txt
+-istage-J0ygjB0JpYQJg4b985gqYkx6.field_names_file_txt=/assets/main_fields.txt
 ```
 
-## Workflow Parameters
+You can monitor the workflow on the RAP, once finished you should have two outputs in the `/export_covariates_outputs` folder: `` and ``.
 
-In `wdl/ukb_merge/inputs.json`, find and replace all instances of the project-ID with your own.
-
-## Running The Workflow
+## 3. Merging Cohorts
 
 First you need to compile the WDL workflow and upload it to the RAP, this can be done by the following:
 
