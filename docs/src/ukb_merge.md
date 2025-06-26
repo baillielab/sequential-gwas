@@ -7,26 +7,66 @@ This workflow yields combined:
 - covariates containing the current age and sex of individuals
 - ancestry estimates: via the 1000 Genome Project
 
-## Inputs
+## 1. Uploading Inputs
 
-This section describes the main inputs to the workflow, see further down for the associated Nextflow parameters.
+This section describes the main inputs to the workflow that need to be uploaded to the RAP. I recommend deviating as little as possible from the following instructions to make sure things run smoothly afterwards. In this section we will populate the `assets/rap` folder in this repository that we will then upload to the RAP using the upload agent.
+
+In particular we need to populate the `genomicc` and `kgp` subfolders as displayed below. The `hesin_critical_fields.txt` and `main_fields.txt` should already be present.
+
+![rap_assets_level_1](assets/rap_assets_level_1.png)
 
 ### GenOMICC Data
 
-For this workflow, genotypes, imputed genotypes are required. They will be the respective outputs of the [Combining Datasets](@ref) and [Genotypes Imputation](@ref) workflows.
+We will need the following GenOMICC data, at the present time, the name of the file does not matter since it seems impossible to reference a file by its path on the RAP, instead we will have to use file IDs: 
 
-You will also need two covariates files:
+- genotypes: Output by [Combining Datasets](@ref).
+- covariates: 
+  - General covariates provided by Dominique, it should contain an `age_years` and a `sex` column.
+  - Inferred covariates output by [Combining Datasets](@ref) containing ancestry estimates.
+- imputed genotypes: Output by [Genotypes Imputation](@ref).
 
-- The `COVARIATES` file contains the usual covariates information including phenotypes and is typically provided by Dominique on a per project basis. Unfortunately, at this point, the specifications for this file have not been clearly defined. The columns of the file I have received are: `genotype_file_id`, `age_years`, `sex`, `case_or_control`, `cohort`, `severe_cohort_primary_diagnosis`, `isaric_cohort_max_severity_score`.
-- An optional `INFERRED_COVARIATES` contains covariates information that is inferred from the genetic datasets during the [Combining Datasets](@ref) workflow. This is the case for ancestry estimates for instance.
+I recommend to organise them as follows:
+
+![rap_assets_genomicc](assets/rap_assets_genomicc.png)
+
+!!! note "Imputed Genotypes"
+    Keep the imputed genotypes organised in chromosomes. Only 3 chromosomes are presented above for readability but all 22 chromosomes should be in the folder.
 
 ### 1000 Genome Project
 
-You will also need the 1000 Ggenome Project genotypes in plink format, this is typically output by the [Combining Datasets](@ref) workflow, but can also be obtained by running the yet undocumented Nextflow `KGP` workflow in this repository.
+You will also need the 1000 Genome Project genotypes in plink format, filtered to keep only variants matching the GenOMICC genotyped variants. This is an output of the [Combining Datasets](@ref) workflow. They can be organised as follows:
 
-### UK Biobank data
+![rap_assets_kgp](assets/rap_assets_kgp.png)
 
-The UK-Biobank data is on the RAP, there is nothing you need to do but to setup your account and follow the instructions in the [Working with DNANexus](@ref) section.
+### Uploading the data
+
+Since this is a lot of data, we need to use the [upload agent](https://documentation.dnanexus.com/downloads#installing-the-upload-agent). Asumming `ua` is in your path, run:
+
+```bash
+export PROJECT_ID=PPP
+export AUTH_TOKEN=XXX
+ua --project $PROJECT_ID --auth-token $AUTH_TOKEN --folder /assets assets/rap/ --recursive
+```
+
+## 2. Extracting Phenotypes
+
+At this point, it seems impossible (or very difficult) to extract phenotypes from a WDL workflow because the source dataset is not a regular file (see [this](https://community.ukbiobank.ac.uk/hc/en-gb/community/posts/16019555833117-How-do-I-call-the-table-exporter-applet-from-my-WDL) or [that](https://community.ukbiobank.ac.uk/hc/en-gb/community/posts/16019577183901-I-would-like-to-access-phenotype-data-from-within-a-WDL-task-using-a-python-script-How-do-I-localize-the-database-file-as-an-input-to-the-task-I-m-getting-a-wrong-type-error)). We thus have to first run a native DNA Nexus workflow to extract some preliminary data from the source dataset. First we build the workflow:
+
+```bash
+dx build export_covariates
+```
+
+Then run it (replace the `DATASET_RECORD_ID` with the one corresponding to your project):
+
+```bash
+DATASET_RECORD_ID=record-J0pqJxjJZF8G55f99FF11JJ9
+dx run /export_covariates \
+--destination /export_covariates_outputs/ \
+-istage-J0vx360JpYQ0Jg1QJ5Zv0PFx.dataset_or_cohort_or_dashboard=$DATASET_RECORD_ID \
+-istage-J0vx360JpYQ0Jg1QJ5Zv0PFx.field_names_file_txt=/assets/main_fields.txt \
+-istage-J0ygjB0JpYQJg4b985gqYkx6.dataset_or_cohort_or_dashboard=$DATASET_RECORD_ID \
+-istage-J0ygjB0JpYQJg4b985gqYkx6.field_names_file_txt=/assets/hesin_critical_fields.txt
+```
 
 ## Workflow Parameters
 

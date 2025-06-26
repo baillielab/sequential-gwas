@@ -1,4 +1,4 @@
-# Prerequisites
+# Working with ODAP
 
 ## Platform: ODAP
 
