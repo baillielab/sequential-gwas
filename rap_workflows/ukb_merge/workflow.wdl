@@ -47,6 +47,7 @@ workflow merge_ukb_and_genomicc {
         String ancestry_threshold = "0.8"
         String palyndromic_threshold = "0.02"
         String julia_threads = "auto"
+        String julia_use_sysimage = "true"
     }
 
     scatter (bgen_fileset in bgen_filesets) {
@@ -84,7 +85,9 @@ workflow merge_ukb_and_genomicc {
             kgp_bed = kgp_genotypes.bed,
             kgp_bim = kgp_genotypes.bim,
             kgp_fam = kgp_genotypes.fam,
-            palyndromic_threshold = palyndromic_threshold
+            palyndromic_threshold = palyndromic_threshold,
+            julia_threads = julia_threads,
+            julia_use_sysimage = julia_use_sysimage
     }
 
     call merge_genotypes_plink as merge_ukb_kgp {
@@ -121,7 +124,8 @@ workflow merge_ukb_and_genomicc {
             fam_file = ld_prune_ukb_kgp.ld_pruned_fileset.fam,
             output_filename = "ukb.ancestry_estimate.csv",
             ancestry_threshold = ancestry_threshold,
-            cpus = julia_threads
+            julia_threads = julia_threads,
+            julia_use_sysimage = julia_use_sysimage
     }
 
     # Merging GenOMICC genotypes with UKB matched genotypes (from imputed)
@@ -304,12 +308,21 @@ task align_ukb_variant_ids_with_kgp_and_keep_unrelated {
         File kgp_bim
         File kgp_fam
         String palyndromic_threshold = "0.02"
+        String julia_threads = "auto"
+        String julia_use_sysimage = "true"
     }
 
     command <<<
+        julia_cmd="julia --project=/opt/sequential-gwas --startup-file=no"
+        if [[ "~{julia_use_sysimage}" == "true" ]]; then
+            julia_cmd+=" --sysimage=/opt/sequential-gwas/FlowOMMIC.so"
+        fi
+        if [[ "~{julia_threads}" == "auto" ]]; then
+            julia_cmd+=" --threads=auto"
+        fi
         ukb_bed_prefix=$(dirname "~{ukb_bed}")/$(basename "~{ukb_bed}" .bed)
         kgp_bed_prefix=$(dirname "~{kgp_bed}")/$(basename "~{kgp_bed}" .bed)
-        julia --project=/opt/sequential-gwas --startup-file=no --threads=auto /opt/sequential-gwas/bin/seq-gwas.jl \
+        ${julia_cmd} /opt/sequential-gwas/bin/seq-gwas.jl \
             align-ukb-variant-ids-with-kgp-and-keep-unrelated \
             ${ukb_bed_prefix} \
             ${kgp_bed_prefix} \
@@ -430,15 +443,24 @@ task estimate_ukb_ancestry_from_kgp {
         File fam_file
         String output_filename = "ukb.ancestry_estimate.csv"
         String ancestry_threshold = "0.8"
-        String cpus = "auto"
+        String julia_threads = "auto"
+        String julia_use_sysimage = "true"
     }
 
     command <<<
+        julia_cmd="julia --project=/opt/sequential-gwas --startup-file=no"
+        if [[ "~{julia_use_sysimage}" == "true" ]]; then
+            julia_cmd+=" --sysimage=/opt/sequential-gwas/FlowOMMIC.so"
+        fi
+        if [[ "~{julia_threads}" == "auto" ]]; then
+            julia_cmd+=" --threads=auto"
+        fi
+
         wget -O 20130606_g1k_3202_samples_ped_population.txt ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/20130606_g1k_3202_samples_ped_population.txt
 
         bed_prefix=$(dirname "~{bed_file}")/$(basename "~{bed_file}" .bed)
 
-        julia --project=/opt/sequential-gwas --startup-file=no --threads=~{cpus} /opt/sequential-gwas/bin/seq-gwas.jl \
+        ${julia_cmd} /opt/sequential-gwas/bin/seq-gwas.jl \
             estimate-ancestry \
             ${bed_prefix} \
             20130606_g1k_3202_samples_ped_population.txt \

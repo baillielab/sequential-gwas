@@ -1,5 +1,6 @@
 {
     "merge_ukb_and_genomicc.julia_threads": "1",
+    "merge_ukb_and_genomicc.julia_use_sysimage": "false",
     "merge_ukb_and_genomicc.docker_image": "olivierlabayle/genomicc:local",
     "merge_ukb_and_genomicc.high_ld_regions": "assets/exclude_b38.txt",
     "merge_ukb_and_genomicc.bgen_filesets": [
