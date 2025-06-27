@@ -50,6 +50,8 @@ workflow merge_ukb_and_genomicc {
         String julia_use_sysimage = "true"
     }
 
+    call download_reference_genome {}
+
     scatter (bgen_fileset in bgen_filesets) {
         call filter_ukb_chr {
             input:
@@ -157,7 +159,8 @@ workflow merge_ukb_and_genomicc {
                 bgen_sample_file = bgen_fileset.sample,
                 table_with_eids_to_exclude = hesin_critical_table,
                 qc_genotype_missing_rate = qc_genotype_missing_rate,
-                qc_individual_missing_rate = qc_individual_missing_rate
+                qc_individual_missing_rate = qc_individual_missing_rate,
+                reference_genome = download_reference_genome.reference_genome
         }
     }
 
@@ -169,7 +172,8 @@ workflow merge_ukb_and_genomicc {
                 chr = pgen_fileset.chr,
                 pgen_file = pgen_fileset.pgen,
                 psam_file = pgen_fileset.psam,
-                pvar_file = pgen_fileset.pvar
+                pvar_file = pgen_fileset.pvar,
+                reference_genome = download_reference_genome.reference_genome
         }
     }
 
@@ -489,7 +493,7 @@ task bgen_to_vcf {
         File table_with_eids_to_exclude
         String qc_genotype_missing_rate = "0.02"
         String qc_individual_missing_rate = "0.02"
-
+        File reference_genome
     }
 
     command <<<
@@ -508,6 +512,8 @@ task bgen_to_vcf {
         mamba run -n bcftools_env bcftools index "~{output_prefix}.chr_~{chr}.temp.bcf"
         mamba run -n bcftools_env bcftools norm \
             -m -both \
+            -f ~{reference_genome} \
+            --check-ref wx \
             --output-type=b \
             --output="~{output_prefix}.chr_~{chr}.bcf" \
             --write-index=csi \
@@ -536,6 +542,7 @@ task genomicc_pgen_to_bcf {
         File pgen_file
         File psam_file
         File pvar_file
+        File reference_genome
     }
 
     command <<<
@@ -550,6 +557,8 @@ task genomicc_pgen_to_bcf {
         mamba run -n bcftools_env bcftools index "~{output_prefix}.chr_~{chr}.temp.bcf"
         mamba run -n bcftools_env bcftools norm \
             -m -both \
+            -f ~{reference_genome} \
+            --check-ref wx \
             --output-type=b \
             --output="~{output_prefix}.chr_~{chr}.bcf" \
             --write-index=csi \
@@ -619,6 +628,22 @@ task merge_genomicc_ukb_bcfs_and_convert_to_pgen {
     runtime {
         docker: docker_image
         dx_instance_type: "mem1_ssd2_v2_x8"
+    }
+}
+
+task download_reference_genome {
+
+    command <<<
+
+        wget -O Homo_sapiens_assembly38.fasta https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta
+    >>>
+
+    output {
+        File reference_genome = "Homo_sapiens_assembly38.fasta"
+    }
+
+    runtime {
+        dx_instance_type: "mem1_ssd1_v2_x2"
     }
 }
 
