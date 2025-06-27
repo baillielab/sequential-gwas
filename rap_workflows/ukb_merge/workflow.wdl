@@ -213,9 +213,9 @@ task merge_ukb_chrs {
             echo "${f%.bed}"
         done > merge_list.txt
 
-        plink2 \
-            --max-alleles 2 \
-            --pmerge-list merge_list.txt bfile \
+        plink \
+            --biallelic-only \
+            --merge-list merge_list.txt \
             --output-chr chr26 \
             --make-bed \
             --out ukb_all_chr
