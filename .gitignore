@@ -44,6 +44,7 @@ assets/GRCh38.fa
 assets/resource*
 assets/rap/genomicc.tar.gz
 assets/rap/kgp
+assets/rap/Homo_sapiens_assembly38.fasta
 
 sandbox.jl
 

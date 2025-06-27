@@ -5,6 +5,12 @@
       "project": "project-J0pkqyQJpYQ133JG1p2J1qzv"
     }
   },
+  "stage-common.reference_genome": {
+    "$dnanexus_link": {
+      "id": "file-J1P7fQjJpYQ1F9654pqpK5F9",
+      "project": "project-J0pkqyQJpYQ133JG1p2J1qzv"
+    }
+  },
   "stage-common.genomicc_pgen_filesets": {
     "___": [{
       "chr": "20",

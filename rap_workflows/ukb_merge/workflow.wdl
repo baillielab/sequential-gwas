@@ -48,9 +48,9 @@ workflow merge_ukb_and_genomicc {
         String palyndromic_threshold = "0.02"
         String julia_threads = "auto"
         String julia_use_sysimage = "true"
+        File reference_genome
     }
 
-    call download_reference_genome {}
 
     scatter (bgen_fileset in bgen_filesets) {
         call filter_ukb_chr {
@@ -160,7 +160,7 @@ workflow merge_ukb_and_genomicc {
                 table_with_eids_to_exclude = hesin_critical_table,
                 qc_genotype_missing_rate = qc_genotype_missing_rate,
                 qc_individual_missing_rate = qc_individual_missing_rate,
-                reference_genome = download_reference_genome.reference_genome
+                reference_genome = reference_genome
         }
     }
 
@@ -173,7 +173,7 @@ workflow merge_ukb_and_genomicc {
                 pgen_file = pgen_fileset.pgen,
                 psam_file = pgen_fileset.psam,
                 pvar_file = pgen_fileset.pvar,
-                reference_genome = download_reference_genome.reference_genome
+                reference_genome = reference_genome
         }
     }
 
@@ -628,22 +628,6 @@ task merge_genomicc_ukb_bcfs_and_convert_to_pgen {
     runtime {
         docker: docker_image
         dx_instance_type: "mem1_ssd2_v2_x8"
-    }
-}
-
-task download_reference_genome {
-
-    command <<<
-
-        wget -O Homo_sapiens_assembly38.fasta https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta
-    >>>
-
-    output {
-        File reference_genome = "Homo_sapiens_assembly38.fasta"
-    }
-
-    runtime {
-        dx_instance_type: "mem1_ssd1_v2_x2"
     }
 }
 

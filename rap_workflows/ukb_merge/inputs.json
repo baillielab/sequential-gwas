@@ -1,5 +1,6 @@
 {
     "merge_ukb_and_genomicc.high_ld_regions": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J199PpjJpYQ3vypJx7PJg3gb",
+    "merge_ukb_and_genomicc.reference_genome": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1P7fQjJpYQ1F9654pqpK5F9",
     "merge_ukb_and_genomicc.bgen_filesets": [
         {
             "chr": "20",

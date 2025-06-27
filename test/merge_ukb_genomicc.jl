@@ -18,6 +18,12 @@ if dorun
         ["-jar", ENV["CROMWELL_PATH"]] :
         ["-Dconfig.file=conf/cromwell.mac.conf", "-jar", "/Users/olabayle/cromwell/cromwell-90.jar"]
 
+    # Download the reference genome if not already present
+    reference_genome_path = joinpath(PKGDIR, "assets", "rap", "Homo_sapiens_assembly38.fasta")
+    if !isfile(reference_genome_path)
+        run(`wget -O $reference_genome_path https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta`)
+    end
+
     @testset "Test Array Genotypes Merging" begin
         cmd = Cmd([
             "java", cmd_args...,

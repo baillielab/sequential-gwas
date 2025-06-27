@@ -40,6 +40,14 @@ You will also need the 1000 Genome Project genotypes in plink format, filtered t
 
 ![rap_assets_kgp](assets/rap_assets_kgp.png)
 
+### Other Assets
+
+We also need the reference genome, which can be downloaded in the `assets/rap` folder with:
+
+```bash
+wget -O assets/rap/Homo_sapiens_assembly38.fasta https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.fasta
+```
+
 ### Uploading the data
 
 Since this is a lot of data, we need to use the [upload agent](https://documentation.dnanexus.com/downloads#installing-the-upload-agent). Asumming `ua` is in your path, run:
