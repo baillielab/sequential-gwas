@@ -47,3 +47,36 @@ docker run -it --rm sequential-gwas /opt/miniforge3/bin/mamba run -n regenie_env
 ```
 
 (If running on MacOS with arm platform, add: `--platform linux/amd64`)
+
+
+## UKB RAP
+
+### Cloud Workstation
+
+To debug errors, it may be useful to run the code interactively, for this, you can use the [Cloud Workstation](https://documentation.dnanexus.com/developer/cloud-workstation). This [tutorial](https://academy.dnanexus.com/interactivecloudcomputing/cloudworkstation) may also be useful. To start an instance:
+
+```bash
+dx run \
+  --instance-type mem1_ssd1_v2_x16 \
+  -imax_session_length="10h" \
+  -y \
+  --ssh app-cloud_workstation
+```
+
+To import one or multiple files:
+
+```bash
+dx download file-J1P9y88JjZjXfq4Y5gYBxk86 file-J1P9y88JjZjbX18xFZ38qY2P
+```
+
+Then you can download the docker image enter a container:
+
+```bash
+docker run -it --rm -v $PWD:/mnt/data olivierlabayle/genomicc:main /bin/bash
+```
+
+The current directory is mounted to `/mnt/data`. From there, work as usual, for instance to start a Julia REPL:
+
+```bash
+julia --project=/opt/sequential-gwas --sysimage=/opt/sequential-gwas/FlowOMMIC.so --startup-file=no
+```

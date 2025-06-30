@@ -9,6 +9,31 @@ using DataFrames
 PKGDIR = pkgdir(SequentialGWAS)
 TESTDIR = joinpath(PKGDIR, "test")
 
+@testset "Test misc functions" begin
+    # Test format_chromosome! function
+    bim = DataFrame(
+        CHR_CODE=["chr1", "chr2", "chr3"],
+        BP_COORD=[1000, 2000, 3000],
+        VARIANT_ID=["rs1", "rs2", "rs3"]
+    )
+    SequentialGWAS.format_chromosome!(bim)
+    @test all(bim.CHR_CODE .== ["1", "2", "3"])
+    
+    bim = DataFrame(
+        CHR_CODE=[1, 2, 3],
+        BP_COORD=[1000, 2000, 3000],
+        VARIANT_ID=["rsX1", "rsY1", "rsM1"]
+    )
+    SequentialGWAS.format_chromosome!(bim)
+    @test all(bim.CHR_CODE .== ["1", "2", "3"])
+
+    # Test update_variant_ids_with_map! function
+    variant_ids_map = Dict(("1", 1000) => "rs1_kgp", ("2", 2000) => "rs2_kgp")
+    unmapped_ids = SequentialGWAS.update_variant_ids_with_map!(bim, variant_ids_map)
+    @test all(bim.VARIANT_ID .== ["rs1_kgp", "rs2_kgp", "rsM1"])
+    @test unmapped_ids == Set(["rsM1"])
+end
+
 # End to End Workflow run
 
 dorun = isinteractive() || (haskey(ENV, "CI_CONTAINER") && ENV["CI_CONTAINER"] == "docker")

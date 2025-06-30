@@ -23,24 +23,36 @@
 #     run(`admixture ${out_prefix}_pruned.bed $k`)
 # end
 
+format_chromosome!(bim) =
+    bim.CHR_CODE = replace.(string.(bim.CHR_CODE), "chr" => "")
+
+function update_variant_ids_with_map!(bim, variant_ids_map)
+    unmapped_ids = Set()
+    bim.VARIANT_ID = map(zip(bim.CHR_CODE, bim.BP_COORD, bim.VARIANT_ID)) do (chr, loc, old_id)
+        if haskey(variant_ids_map, (chr, loc))
+            variant_ids_map[(chr, loc)]
+        else
+            push!(unmapped_ids, old_id)
+            old_id
+        end
+    end
+    return unmapped_ids
+end
 
 function align_ukb_variant_ids_with_kgp_and_keep_unrelated(ukb_bed_prefix, kgp_bed_prefix; out_prefix="ukb_unrelated", threshold=0.02)
     tmpdir = mktempdir()
     # Load KGP variants info
     kgp_bim = SequentialGWAS.read_bim(string(kgp_bed_prefix, ".bim"))
+    format_chromosome!(kgp_bim)
+
     kgp_variant_ids_map = Dict((chr, loc) => v_id for (chr, loc, v_id) in zip(kgp_bim.CHR_CODE, kgp_bim.BP_COORD, kgp_bim.VARIANT_ID))
     # Load UKB variants info
     ukb_bim = SequentialGWAS.read_bim(string(ukb_bed_prefix, ".bim"))
+    format_chromosome!(ukb_bim)
+
     # Map variant IDs to KGP if possible, otherwise they will be dropped
-    unmapped_ids = Set()
-    ukb_bim.VARIANT_ID = map(zip(ukb_bim.CHR_CODE, ukb_bim.BP_COORD, ukb_bim.VARIANT_ID)) do (chr, loc, ukb_v_id)
-        if haskey(kgp_variant_ids_map, (chr, loc))
-            kgp_variant_ids_map[(chr, loc)]
-        else
-            push!(unmapped_ids, ukb_v_id)
-            ukb_v_id
-        end
-    end
+    unmapped_ids = update_variant_ids_with_map!(ukb_bim, kgp_variant_ids_map)
+
     # Write variants to drop
     variant_to_drop_file = joinpath(tmpdir, "variants_to_drop.txt")
     CSV.write(
@@ -49,7 +61,6 @@ function align_ukb_variant_ids_with_kgp_and_keep_unrelated(ukb_bed_prefix, kgp_b
         header=false
     )
     # Write new bim file
-    ukb_bim.CHR_CODE = replace.(ukb_bim.CHR_CODE, "chr" => "") # KING does not like `chr` 
     new_bim_file = joinpath(tmpdir, "new.bim")
     CSV.write(
         new_bim_file,
