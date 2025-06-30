@@ -51,6 +51,15 @@ workflow merge_ukb_and_genomicc {
         File reference_genome
     }
 
+    # Index Reference Genome
+
+    call index_reference_genome {
+        input:
+            docker_image = docker_image,
+            reference_genome = reference_genome
+    }
+
+    # Filter UKB BGEN files by chromosome to keep only variants in GenOMICC and exclude critical samples
 
     scatter (bgen_fileset in bgen_filesets) {
         call filter_ukb_chr {
@@ -71,12 +80,16 @@ workflow merge_ukb_and_genomicc {
         File bed_files = set.bed
     }
     
+    # Merge al lchromosomes together
+
     call merge_ukb_chrs {
         input:
             docker_image = docker_image,
             plink_filesets = filter_ukb_chr.plink_fileset,
             bed_files = bed_files
     }
+
+    # Make variant IDs consistent with KGP and keep only unrelated individuals
 
     call align_ukb_variant_ids_with_kgp_and_keep_unrelated {
         input:
@@ -92,6 +105,8 @@ workflow merge_ukb_and_genomicc {
             julia_use_sysimage = julia_use_sysimage
     }
 
+    # Merging KGP genotypes with UKB genotypes for ancestry estimation
+
     call merge_genotypes_plink as merge_ukb_kgp {
         input:
             docker_image = docker_image,
@@ -105,6 +120,8 @@ workflow merge_ukb_and_genomicc {
             fam_2 = kgp_genotypes.fam
     }
 
+    # LD Pruning of the merged UKB and KGP genotypes
+
     call ld_prune as ld_prune_ukb_kgp {
         input:
             docker_image = docker_image,
@@ -117,6 +134,8 @@ workflow merge_ukb_and_genomicc {
             ip_values = ip_values,
             maf = maf
     }
+
+    # Estimate ancestry from the LD-pruned UKB and KGP genotypes
 
     call estimate_ukb_ancestry_from_kgp {
         input:
@@ -160,7 +179,8 @@ workflow merge_ukb_and_genomicc {
                 table_with_eids_to_exclude = hesin_critical_table,
                 qc_genotype_missing_rate = qc_genotype_missing_rate,
                 qc_individual_missing_rate = qc_individual_missing_rate,
-                reference_genome = reference_genome
+                reference_genome = reference_genome,
+                reference_genome_index = index_reference_genome.reference_genome_index
         }
     }
 
@@ -173,7 +193,8 @@ workflow merge_ukb_and_genomicc {
                 pgen_file = pgen_fileset.pgen,
                 psam_file = pgen_fileset.psam,
                 pvar_file = pgen_fileset.pvar,
-                reference_genome = reference_genome
+                reference_genome = reference_genome,
+                reference_genome_index = index_reference_genome.reference_genome_index
         }
     }
 
@@ -494,6 +515,7 @@ task bgen_to_vcf {
         String qc_genotype_missing_rate = "0.02"
         String qc_individual_missing_rate = "0.02"
         File reference_genome
+        File reference_genome_index
     }
 
     command <<<
@@ -543,6 +565,7 @@ task genomicc_pgen_to_bcf {
         File psam_file
         File pvar_file
         File reference_genome
+        File reference_genome_index
     }
 
     command <<<
@@ -628,6 +651,29 @@ task merge_genomicc_ukb_bcfs_and_convert_to_pgen {
     runtime {
         docker: docker_image
         dx_instance_type: "mem1_ssd2_v2_x8"
+    }
+}
+
+task index_reference_genome {
+    input {
+        String docker_image
+        File reference_genome
+    }
+
+    String reference_genome_filename = basename(reference_genome)
+
+    command <<<
+        mamba run -n bcftools_env samtools faidx ~{reference_genome}
+        mv ~{reference_genome}.fai ~{reference_genome_filename}.fai
+    >>>
+
+    output {
+        File reference_genome_index = "${reference_genome_filename}.fai"
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem1_ssd1_v2_x4"
     }
 }
 
