@@ -69,7 +69,7 @@ To import one or multiple files:
 dx download file-J1P9y88JjZjXfq4Y5gYBxk86 file-J1P9y88JjZjbX18xFZ38qY2P
 ```
 
-Then you can download the docker image enter a container:
+Then you can download the docker image and enter a container:
 
 ```bash
 docker run -it --rm -v $PWD:/mnt/data olivierlabayle/genomicc:main /bin/bash
@@ -79,4 +79,10 @@ The current directory is mounted to `/mnt/data`. From there, work as usual, for 
 
 ```bash
 julia --project=/opt/sequential-gwas --sysimage=/opt/sequential-gwas/FlowOMMIC.so --startup-file=no
+```
+
+Finally, when you are finished, terminate the job with the appropriate job-id:
+
+```bash
+dx terminate job-J1V4870JpYQP94jgb33y45qP
 ```

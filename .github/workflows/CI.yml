@@ -102,8 +102,6 @@ jobs:
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
       - uses: julia-actions/julia-runtest@v1
         env:
           CI_CONTAINER: ${{ matrix.container }}

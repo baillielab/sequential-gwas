@@ -527,6 +527,7 @@ task bgen_to_vcf {
             --sample ~{bgen_sample_file} \
             --geno ~{qc_genotype_missing_rate} \
             --mind ~{qc_individual_missing_rate} \
+            --ref-from-fa ~{reference_genome} \
             --output-chr chr26 \
             --export bcf \
             --out "~{output_prefix}.chr_~{chr}.temp"
@@ -573,6 +574,7 @@ task genomicc_pgen_to_bcf {
 
         plink2 \
             --pfile ${pgen_prefix} \
+            --ref-from-fa ~{reference_genome} \
             --output-chr chr26 \
             --export bcf \
             --out "~{output_prefix}.chr_~{chr}.temp"
