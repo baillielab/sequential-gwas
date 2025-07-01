@@ -78,7 +78,7 @@ docker run -it --rm -v $PWD:/mnt/data olivierlabayle/genomicc:main /bin/bash
 The current directory is mounted to `/mnt/data`. From there, work as usual, for instance to start a Julia REPL:
 
 ```bash
-julia --project=/opt/genomicc-workflows --sysimage=/opt/genomicc-workflows/FlowOMMIC.so --startup-file=no
+julia --project=/opt/genomicc-workflows --sysimage=/opt/genomicc-workflows/GenomiccWorkflows.so --startup-file=no
 ```
 
 Finally, when you are finished, terminate the job with the appropriate job-id:

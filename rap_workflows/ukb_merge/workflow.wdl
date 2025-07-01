@@ -340,7 +340,7 @@ task align_ukb_variants_with_kgp_and_keep_unrelated {
     command <<<
         julia_cmd="julia --project=/opt/genomicc-workflows --startup-file=no"
         if [[ "~{julia_use_sysimage}" == "true" ]]; then
-            julia_cmd+=" --sysimage=/opt/genomicc-workflows/FlowOMMIC.so"
+            julia_cmd+=" --sysimage=/opt/genomicc-workflows/GenomiccWorkflows.so"
         fi
         if [[ "~{julia_threads}" == "auto" ]]; then
             julia_cmd+=" --threads=auto"
@@ -475,7 +475,7 @@ task estimate_ukb_ancestry_from_kgp {
     command <<<
         julia_cmd="julia --project=/opt/genomicc-workflows --startup-file=no"
         if [[ "~{julia_use_sysimage}" == "true" ]]; then
-            julia_cmd+=" --sysimage=/opt/genomicc-workflows/FlowOMMIC.so"
+            julia_cmd+=" --sysimage=/opt/genomicc-workflows/GenomiccWorkflows.so"
         fi
         if [[ "~{julia_threads}" == "auto" ]]; then
             julia_cmd+=" --threads=auto"

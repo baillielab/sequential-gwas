@@ -2,7 +2,7 @@
 CurrentModule = GenomiccWorkflows
 ```
 
-# FlowOMICC
+# GenOMICC Workflows
 
 ## Purpose
 

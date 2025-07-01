@@ -13,14 +13,14 @@ In order to run the workflows in this repository only 2 software need to be inst
 
 ## Importing Into ODAP
 
-In order to upload the current state of the code, or a specific version of FlowOMICC into ODAP, we currently proceed via a shared folder with Dominique.
+In order to upload the current state of the code, or a specific version of `genomicc-workflows` into ODAP, we currently proceed via a shared folder with Dominique.
 
 ### Locally
 
 The following assumes a specific git tag corresponding to a release for which a matching docker image exists, but the steps can be adapted to any need.
 
 ```bash
-export FLOWOMICC_TAG="main"
+export genomicc_workflows_tag="main"
 ```
 
 In the shared folder.
@@ -29,14 +29,14 @@ In the shared folder.
 
 ```bash
 git clone git@github.com:baillielab/genomicc-workflows.git
-git checkout $FLOWOMICC_TAG
+git checkout $genomicc_workflows_tag
 ```
 
 2. Download and save the docker image
    
 ```bash
-docker pull --platform linux/amd64 olivierlabayle/genomicc:$FLOWOMICC_TAG
-docker save olivierlabayle/genomicc:$FLOWOMICC_TAG | gzip > genomicc-workflows/genomicc.tar.gz
+docker pull --platform linux/amd64 olivierlabayle/genomicc:$genomicc_workflows_tag
+docker save olivierlabayle/genomicc:$genomicc_workflows_tag | gzip > genomicc-workflows/genomicc.tar.gz
 ```
 
 Then ask Dominique to uplaod the folder to ODAP.

@@ -9,7 +9,7 @@ using PackageCompiler
 # )
 
 create_sysimage(["GenomiccWorkflows"], 
-    sysimage_path="FlowOMMIC.so", 
+    sysimage_path="GenomiccWorkflows.so", 
     include_transitive_dependencies=false, 
     cpu_target=PackageCompiler.default_app_cpu_target()
 )

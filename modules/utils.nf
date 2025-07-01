@@ -3,7 +3,7 @@ def get_prefix(file){
 }
 
 def get_julia_cmd(cpus){
-    def sysimageFile = new File("/opt/genomicc-workflows/FlowOMMIC.so")
+    def sysimageFile = new File("/opt/genomicc-workflows/GenomiccWorkflows.so")
     if (workflow.profile == "dev") {
         return "julia --project=/opt/genomicc-workflows --startup-file=no --threads=${cpus} /opt/genomicc-workflows/bin/seq-gwas.jl"
     }

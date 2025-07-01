@@ -50,7 +50,7 @@ sandbox.jl
 
 build
 
-FlowOMMIC.so
+GenomiccWorkflows.so
 
 genomicc.sif
 

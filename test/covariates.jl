@@ -25,7 +25,7 @@ TESTDIR = joinpath(PKGDIR, "test")
         "--min-group-size", string(min_group_size)
     ])
     expected_logs = [
-        (:info, "Running FlowOMICC: make-gwas-groups"),
+        (:info, "Running GenOMICC Workflows: make-gwas-groups"),
         (:info, "Skipping group AFR because it has fewer than 100 individuals."),
         (:info, "Skipping group EAS because it has fewer than 100 individuals.")
     ]
