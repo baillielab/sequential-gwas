@@ -1,4 +1,4 @@
-name = "SequentialGWAS"
+name = "GenomiccWorkflows"
 uuid = "60113979-12f4-4738-9cbb-b1f052251c35"
 authors = ["Olivier Labayle <olabayle@gmail.com> and contributors"]
 version = "1.0.0-DEV"

@@ -1,1 +1,1 @@
-using SequentialGWAS; julia_main()
+using GenomiccWorkflows; julia_main()

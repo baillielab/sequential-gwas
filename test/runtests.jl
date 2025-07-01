@@ -1,14 +1,14 @@
-using SequentialGWAS
+using GenomiccWorkflows
 using Test
 using Aqua
 
-PKGDIR = pkgdir(SequentialGWAS)
+PKGDIR = pkgdir(GenomiccWorkflows)
 TESTDIR = joinpath(PKGDIR, "test")
 
-@testset "SequentialGWAS.jl" begin
+@testset "GenOMICC Workflows" begin
     # Code quality
     @testset "Code quality (Aqua.jl)" begin
-        Aqua.test_all(SequentialGWAS)
+        Aqua.test_all(GenomiccWorkflows)
     end
 
     # Unit Tests

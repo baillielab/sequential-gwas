@@ -1,12 +1,12 @@
 module TestCovariates
 
 using Test
-using SequentialGWAS
+using GenomiccWorkflows
 using DataFrames
 using CSV
 using YAML
 
-PKGDIR = pkgdir(SequentialGWAS)
+PKGDIR = pkgdir(GenomiccWorkflows)
 TESTDIR = joinpath(PKGDIR, "test")
 
 @testset "Test make-gwas-groups" begin

@@ -110,11 +110,11 @@ function map_sample_ids_to_platform(wgs_samples_file,
     # because platforms are given the following priority: WGS > GSA-MD-48v4-0_A1 > GSA-MD-24v3-0_A1 
     sample_id_to_platform = Dict()
     for file in (release_r8_fam, release_2021_2023_fam)
-        for iid in SequentialGWAS.read_fam(file).IID
+        for iid in GenomiccWorkflows.read_fam(file).IID
             sample_id_to_platform[iid] = "GSA-MD-24v3-0_A1"
         end
     end
-    for iid in SequentialGWAS.read_fam(release_2024_now_fam).IID
+    for iid in GenomiccWorkflows.read_fam(release_2024_now_fam).IID
         sample_id_to_platform[iid] = "GSA-MD-48v4-0_A1"
     end
     for iid in readlines(wgs_samples_file)
@@ -260,7 +260,7 @@ function make_gwas_groups(
         inferred_covariates_file=inferred_covariates_file
     )
     # Define required phenotypes
-    SequentialGWAS.define_phenotypes!(covariates, required_phenotype_variables)
+    GenomiccWorkflows.define_phenotypes!(covariates, required_phenotype_variables)
     # Only keep non-missing
     all_variables = vcat(required_covariate_variables, required_phenotype_variables)
     all_variables = haskey(variables, "groupby") ? vcat(all_variables, variables["groupby"]) : all_variables

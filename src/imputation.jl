@@ -1,5 +1,5 @@
 function write_sample_batches(prefix; output_prefix="genomicc", samples_per_file=5_000)
-    fam = SequentialGWAS.read_fam(string(prefix, ".fam"))
+    fam = GenomiccWorkflows.read_fam(string(prefix, ".fam"))
     return map(Iterators.partition(1:nrow(fam), samples_per_file)) do indices
         filename = string(output_prefix, ".samples_", indices[1], "_", indices[end], ".keep")
         CSV.write(filename, fam[indices, [:FID, :IID]], delim=' ', header=false)
@@ -7,7 +7,7 @@ function write_sample_batches(prefix; output_prefix="genomicc", samples_per_file
 end
 
 function write_chromosome_list(genotypes_prefix; output_prefix="genomicc")
-    bim = SequentialGWAS.read_bim(string(genotypes_prefix, ".bim"))
+    bim = GenomiccWorkflows.read_bim(string(genotypes_prefix, ".bim"))
     open(string(output_prefix, ".chromosomes.txt"), "w") do io
         for chr in unique(bim.CHR_CODE)
             println(io, chr)
@@ -128,7 +128,7 @@ function send_to_topmed_and_write_job_id(channel, token, password; refresh_rate=
     for (jobname, group) in channel
         job_details = send_job_to_topmed(group, jobname, token, password;r2=r2)
         job_id = job_details["id"]
-        status = SequentialGWAS.wait_for_completion(token, job_id; rate=refresh_rate)
+        status = GenomiccWorkflows.wait_for_completion(token, job_id; rate=refresh_rate)
         write(string(output_prefix, ".", job_id, ".txt"), job_id)
     end
 end
@@ -163,15 +163,15 @@ function get_md5_dict(md5_file)
 end
 
 function download_topmed_file(job_id, token_file, file_info; md5_file=nothing, refresh_rate=360)
-    token = SequentialGWAS.get_token(token_file)
-    status = SequentialGWAS.wait_for_completion(token, job_id; rate=refresh_rate)
+    token = GenomiccWorkflows.get_token(token_file)
+    status = GenomiccWorkflows.wait_for_completion(token, job_id; rate=refresh_rate)
     jobname = status["name"]
     file_dict = open(JSON.parse, file_info)
-    output_file = SequentialGWAS._download_topmed_file(file_dict, token, jobname; refresh_rate=refresh_rate)
+    output_file = GenomiccWorkflows._download_topmed_file(file_dict, token, jobname; refresh_rate=refresh_rate)
     
     # Check hash for zip files
     if endswith(file_dict["filename"], "zip")
-        expected_hash = SequentialGWAS.get_md5_dict(md5_file)[file_dict["filename"]]
+        expected_hash = GenomiccWorkflows.get_md5_dict(md5_file)[file_dict["filename"]]
         hash_to_file = readchomp(`md5sum $output_file`)
         file_hash = first(split(hash_to_file, " "))
         file_hash == expected_hash ||
@@ -196,7 +196,7 @@ function impute(genotypes_prefix, token_file;
     token = get_token(token_file)
     # Split the bed file into smaller VCF files for each chromosome
     # Group files into a channel for submission
-    vcf_files_channel = SequentialGWAS.get_vcf_files_channel(genotypes_prefix)
+    vcf_files_channel = GenomiccWorkflows.get_vcf_files_channel(genotypes_prefix)
     # Send for submission and download, maximum 3 concurrent tasks running at once on topmed
     tasks = [
         Threads.@spawn send_to_topmed_and_write_job_id(

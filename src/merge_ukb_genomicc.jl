@@ -36,7 +36,7 @@ end
 function align_ukb_variants_with_kgp_and_keep_unrelated(ukb_bed_prefix, kgp_bed_prefix; out_prefix="ukb_unrelated", threshold=0.02)
     tmpdir = mktempdir()
     # Load KGP variants info
-    kgp_bim = SequentialGWAS.read_bim(string(kgp_bed_prefix, ".bim"))
+    kgp_bim = GenomiccWorkflows.read_bim(string(kgp_bed_prefix, ".bim"))
     format_chromosome!(kgp_bim)
 
     # Create a map of variant IDs from KGP
@@ -44,7 +44,7 @@ function align_ukb_variants_with_kgp_and_keep_unrelated(ukb_bed_prefix, kgp_bed_
         zip(kgp_bim.CHR_CODE, kgp_bim.BP_COORD, kgp_bim.VARIANT_ID, kgp_bim.ALLELE_1, kgp_bim.ALLELE_2))
 
     # Load UKB variants info
-    ukb_bim = SequentialGWAS.read_bim(string(ukb_bed_prefix, ".bim"))
+    ukb_bim = GenomiccWorkflows.read_bim(string(ukb_bed_prefix, ".bim"))
     format_chromosome!(ukb_bim)
 
     # Map variant IDs to KGP if possible, otherwise they will be dropped

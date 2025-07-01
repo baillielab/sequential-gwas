@@ -1,5 +1,5 @@
 ```@meta
-CurrentModule = SequentialGWAS
+CurrentModule = GenomiccWorkflows
 ```
 
 # FlowOMICC

@@ -32,7 +32,7 @@ function make_report(;kwargs...)
         return string(args_string, "\n", script_string)
     end
     Literate.markdown(
-        joinpath(pkgdir(SequentialGWAS), "src", "report_template.jl"), 
+        joinpath(pkgdir(GenomiccWorkflows), "src", "report_template.jl"), 
         ".", 
         name="report", 
         flavor=Literate.CommonMarkFlavor(), 

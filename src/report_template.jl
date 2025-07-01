@@ -1,4 +1,4 @@
-using SequentialGWAS #hide
+using GenomiccWorkflows #hide
 using CSV #hide
 using DataFrames #hide
 using MarkdownTables #hide

@@ -1,12 +1,12 @@
 module TestArrayGenotypesmerging
 
 using Test
-using SequentialGWAS
+using GenomiccWorkflows
 using DataFrames
 using CSV
 using DelimitedFiles
 
-PKGDIR = pkgdir(SequentialGWAS)
+PKGDIR = pkgdir(GenomiccWorkflows)
 TESTDIR = joinpath(PKGDIR, "test")
 RESULTS_DIR = joinpath(PKGDIR, "results_no_wgs")
 
@@ -29,11 +29,11 @@ RESULTS_DIR = joinpath(PKGDIR, "results_no_wgs")
     run(cmd)
 
     # Basic checks, complete checks are implemented in `combine_datasets_wgs.jl`
-    fam = SequentialGWAS.read_fam(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.fam"))
+    fam = GenomiccWorkflows.read_fam(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.fam"))
     nindividuals = nrow(fam)
     @test fam.IID == fam.FID
     @test nindividuals > 1000
-    @test nrow(SequentialGWAS.read_bim(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.bim"))) > 100
+    @test nrow(GenomiccWorkflows.read_bim(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.bim"))) > 100
     @test isfile(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.bed"))
     covariates = CSV.read(joinpath(RESULTS_DIR, "covariates.inferred.csv"), DataFrame)
     @test Set(covariates.PLATFORM) == Set(["GSA-MD-24v3-0_A1", "GSA-MD-48v4-0_A1"])

@@ -121,7 +121,7 @@ function pca_qc(input_prefix, ancestry_file;
         iqr_factor=iqr_factor, 
         npcs=npcs
     )
-    SequentialGWAS.plot_pca(string(input_prefix, ".eigenvec"), ancestry_file; outprefix=string(input_prefix, ".before_pca_qc"))
+    GenomiccWorkflows.plot_pca(string(input_prefix, ".eigenvec"), ancestry_file; outprefix=string(input_prefix, ".before_pca_qc"))
     # Exclude outliers, run PCA and loadings and plot again to verify the effect of the operation
     plink2_exclude(outliers, input_prefix, output_prefix)
     plink2_pca(output_prefix, output_prefix; npcs=npcs, approx=pca_approx)

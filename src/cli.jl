@@ -3,7 +3,7 @@ function cli_settings()
         description="SeqGWAS",
         add_version = true,
         commands_are_required = false,
-        version=string(pkgversion(SequentialGWAS))
+        version=string(pkgversion(GenomiccWorkflows))
     )
 
     @add_arg_table! s begin

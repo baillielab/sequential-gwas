@@ -1,11 +1,11 @@
 module TestRelatedness
 
 using Test
-using SequentialGWAS
+using GenomiccWorkflows
 using CSV
 using DataFrames
 
-TESTDIR = joinpath(pkgdir(SequentialGWAS), "test")
+TESTDIR = joinpath(pkgdir(GenomiccWorkflows), "test")
 
 @testset "Test kgp_unrelated_individuals" begin
     pedigree_file = joinpath(TESTDIR, "assets", "kgp", "20130606_g1k_3202_samples_ped_population.txt")

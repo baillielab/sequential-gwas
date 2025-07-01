@@ -1,14 +1,14 @@
-using SequentialGWAS
+using GenomiccWorkflows
 using Documenter
 
-DocMeta.setdocmeta!(SequentialGWAS, :DocTestSetup, :(using SequentialGWAS); recursive=true)
+DocMeta.setdocmeta!(GenomiccWorkflows, :DocTestSetup, :(using GenomiccWorkflows); recursive=true)
 
 makedocs(;
-    modules=[SequentialGWAS],
+    modules=[GenomiccWorkflows],
     authors="Olivier Labayle <olabayle@gmail.com> and contributors",
-    sitename="SequentialGWAS.jl",
+    sitename="GenOMICC Workflows",
     format=Documenter.HTML(;
-        canonical="https://baillielab.github.io/SequentialGWAS.jl",
+        canonical="https://baillielab.github.io/genomicc-workflows/stable/",
         edit_link="main",
         assets=String[],
     ),

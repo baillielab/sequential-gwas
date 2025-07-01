@@ -1,12 +1,12 @@
 module TestGWAS
 
 using Test
-using SequentialGWAS
+using GenomiccWorkflows
 using DataFrames
 using CSV
 using DelimitedFiles
 
-PKGDIR = pkgdir(SequentialGWAS)
+PKGDIR = pkgdir(GenomiccWorkflows)
 TESTDIR = joinpath(PKGDIR, "test")
 
 @testset "Test GWAS by groups" begin

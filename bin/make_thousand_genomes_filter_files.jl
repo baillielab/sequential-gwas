@@ -12,7 +12,7 @@ Arguments:
 - OUTDIR: Where the files will be output
 - P: Number of 1000GP individuals to keep per ancestry/gender
 =#
-using SequentialGWAS
+using GenomiccWorkflows
 using DataFrames
 using CSV
 
@@ -36,7 +36,7 @@ CSV.write(subpop_file, subpop, delim="\t", header=false)
 
 # Write VCF subsets
 
-map_file_genomic = DataFrame(SequentialGWAS.read_map(MAP_FILE_GENOMIC), [:CHR, :ID, :POS, :BP])
+map_file_genomic = DataFrame(GenomiccWorkflows.read_map(MAP_FILE_GENOMIC), [:CHR, :ID, :POS, :BP])
 map_file_genomic.CHR .= "chr" .* string.(map_file_genomic.CHR)
 map_file_genomic.BP_START = map_file_genomic.BP .- 10
 map_file_genomic.BP_END = map_file_genomic.BP .+ 10

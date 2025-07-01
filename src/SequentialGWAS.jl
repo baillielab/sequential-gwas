@@ -1,4 +1,4 @@
-module SequentialGWAS
+module GenomiccWorkflows
 
 using CSV
 using DataFrames

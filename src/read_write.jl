@@ -73,7 +73,7 @@ function files_matching_prefix(prefix)
 end
 
 function write_chromosomes(input_prefix; output="chromosomes.txt")
-    chrs = SequentialGWAS.read_bim(string(input_prefix, ".bim")).CHR_CODE |> unique |> sort
+    chrs = GenomiccWorkflows.read_bim(string(input_prefix, ".bim")).CHR_CODE |> unique |> sort
     open(output, "w") do io
         for chr in chrs
             println(io, chr)

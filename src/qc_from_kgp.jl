@@ -1,6 +1,6 @@
 
 function get_kgp_ref_alt(kgp)
-    kgp_info = SequentialGWAS.load_variants_info(kgp)
+    kgp_info = GenomiccWorkflows.load_variants_info(kgp)
     kgp_ref_alt = Dict()
     for variant_id in kgp_info.VARIANT_ID
         chr, pos, ref, alt = split(variant_id, ":")
@@ -159,7 +159,7 @@ function generate_files_from_actions(outdir, prefixes_and_bims)
 end
 
 function load_variants_info(prefix)
-    bim = SequentialGWAS.read_bim(string(prefix, ".bim"))
+    bim = GenomiccWorkflows.read_bim(string(prefix, ".bim"))
     afreq = CSV.read(string(prefix, ".acount"), DataFrame)
     alt_freqs = Dict(
         zip(afreq.ID, afreq.ALT_CTS ./ afreq.OBS_CT)
@@ -199,10 +199,10 @@ function generate_qc_extraction_files_from_kgp(
     threshold=0.02
     )
     # Load the KGP dataset
-    release_r8_info = SequentialGWAS.load_variants_info(release_r8)
-    release_2021_2023_info = SequentialGWAS.load_variants_info(release_2021_2023)
-    release_2024_now_info = SequentialGWAS.load_variants_info(release_2024_now)
-    kgp_info = SequentialGWAS.get_kgp_ref_alt(kgp)
+    release_r8_info = GenomiccWorkflows.load_variants_info(release_r8)
+    release_2021_2023_info = GenomiccWorkflows.load_variants_info(release_2021_2023)
+    release_2024_now_info = GenomiccWorkflows.load_variants_info(release_2024_now)
+    kgp_info = GenomiccWorkflows.get_kgp_ref_alt(kgp)
 
     # Format the chromosome and set the action column
     set_new_columns!(release_r8_info, kgp_info; threshold=threshold)
@@ -217,9 +217,9 @@ function generate_qc_extraction_files_from_kgp(
     generate_files_from_actions(outdir, prefixes_and_bims)
     # Write samples to drop from each release, the order is important here, it indicates the priority of the release
     prefixes_and_fams = (
-        release_2024_now = (basename(release_2024_now), SequentialGWAS.read_fam(string(release_2024_now, ".fam"))),
-        release_2021_2023 = (basename(release_2021_2023), SequentialGWAS.read_fam(string(release_2021_2023, ".fam"))),
-        release_r8 = (basename(release_r8), SequentialGWAS.read_fam(string(release_r8, ".fam"))),
+        release_2024_now = (basename(release_2024_now), GenomiccWorkflows.read_fam(string(release_2024_now, ".fam"))),
+        release_2021_2023 = (basename(release_2021_2023), GenomiccWorkflows.read_fam(string(release_2021_2023, ".fam"))),
+        release_r8 = (basename(release_r8), GenomiccWorkflows.read_fam(string(release_r8, ".fam"))),
     )
     write_release_samples_to_drop(prefixes_and_fams, wgs_samples_file)
 end

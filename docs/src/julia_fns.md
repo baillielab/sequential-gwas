@@ -1,5 +1,5 @@
 # Index of Julia Functions
 
 ```@autodocs
-Modules = [SequentialGWAS, SequentialGWAS.OneTimeChecks]
+Modules = [GenomiccWorkflows, GenomiccWorkflows.OneTimeChecks]
 ```
