@@ -97,6 +97,7 @@ Then, you can run the workflow with the following command
 ```bash
 dx run -y \
 -f rap_workflows/ukb_merge/inputs.dx.json \
+--priority high \
 --destination /ukb_merge_outputs/ \
 /workflows/merge_ukb_and_genomicc
 ```

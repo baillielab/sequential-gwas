@@ -22,16 +22,21 @@ TESTDIR = joinpath(PKGDIR, "test")
     bim = DataFrame(
         CHR_CODE=[1, 2, 3],
         BP_COORD=[1000, 2000, 3000],
-        VARIANT_ID=["rsX1", "rsY1", "rsM1"]
+        VARIANT_ID=["rsX1", "rsY1", "rsM1"],
+        ALLELE_1=["A", "G", "C"],
+        ALLELE_2=["C", "T", "G"]
     )
     SequentialGWAS.format_chromosome!(bim)
     @test all(bim.CHR_CODE .== ["1", "2", "3"])
 
     # Test update_variant_ids_with_map! function
-    variant_ids_map = Dict(("1", 1000) => "rs1_kgp", ("2", 2000) => "rs2_kgp")
+    variant_ids_map = Dict(
+        ("1", 1000) => ("rs1_kgp", Set(["A", "C"])), 
+        ("2", 2000) => ("rs2_kgp", Set(["G", "C"]))
+    )
     unmapped_ids = SequentialGWAS.update_variant_ids_with_map!(bim, variant_ids_map)
-    @test all(bim.VARIANT_ID .== ["rs1_kgp", "rs2_kgp", "rsM1"])
-    @test unmapped_ids == Set(["rsM1"])
+    @test all(bim.VARIANT_ID .== ["rs1_kgp", "rsY1", "rsM1"])
+    @test unmapped_ids == Set(["rsM1", "rsY1"])
 end
 
 # End to End Workflow run
