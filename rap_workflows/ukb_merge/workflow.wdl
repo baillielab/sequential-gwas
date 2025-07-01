@@ -338,16 +338,16 @@ task align_ukb_variants_with_kgp_and_keep_unrelated {
     }
 
     command <<<
-        julia_cmd="julia --project=/opt/sequential-gwas --startup-file=no"
+        julia_cmd="julia --project=/opt/genomicc-workflows --startup-file=no"
         if [[ "~{julia_use_sysimage}" == "true" ]]; then
-            julia_cmd+=" --sysimage=/opt/sequential-gwas/FlowOMMIC.so"
+            julia_cmd+=" --sysimage=/opt/genomicc-workflows/FlowOMMIC.so"
         fi
         if [[ "~{julia_threads}" == "auto" ]]; then
             julia_cmd+=" --threads=auto"
         fi
         ukb_bed_prefix=$(dirname "~{ukb_bed}")/$(basename "~{ukb_bed}" .bed)
         kgp_bed_prefix=$(dirname "~{kgp_bed}")/$(basename "~{kgp_bed}" .bed)
-        ${julia_cmd} /opt/sequential-gwas/bin/seq-gwas.jl \
+        ${julia_cmd} /opt/genomicc-workflows/bin/seq-gwas.jl \
             align-ukb-variants-with-kgp-and-keep-unrelated \
             ${ukb_bed_prefix} \
             ${kgp_bed_prefix} \
@@ -473,9 +473,9 @@ task estimate_ukb_ancestry_from_kgp {
     }
 
     command <<<
-        julia_cmd="julia --project=/opt/sequential-gwas --startup-file=no"
+        julia_cmd="julia --project=/opt/genomicc-workflows --startup-file=no"
         if [[ "~{julia_use_sysimage}" == "true" ]]; then
-            julia_cmd+=" --sysimage=/opt/sequential-gwas/FlowOMMIC.so"
+            julia_cmd+=" --sysimage=/opt/genomicc-workflows/FlowOMMIC.so"
         fi
         if [[ "~{julia_threads}" == "auto" ]]; then
             julia_cmd+=" --threads=auto"
@@ -485,7 +485,7 @@ task estimate_ukb_ancestry_from_kgp {
 
         bed_prefix=$(dirname "~{bed_file}")/$(basename "~{bed_file}" .bed)
 
-        ${julia_cmd} /opt/sequential-gwas/bin/seq-gwas.jl \
+        ${julia_cmd} /opt/genomicc-workflows/bin/seq-gwas.jl \
             estimate-ancestry \
             ${bed_prefix} \
             20130606_g1k_3202_samples_ped_population.txt \

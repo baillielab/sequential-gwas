@@ -16,7 +16,7 @@ process LiftOver {
         input_prefix = get_prefix(map_file)
         output_prefix = "${input_prefix}.liftedOver"
         """
-        /opt/miniforge3/bin/mamba run -n liftover_env python /opt/sequential-gwas/bin/liftover.py \
+        /opt/miniforge3/bin/mamba run -n liftover_env python /opt/genomicc-workflows/bin/liftover.py \
             -m ${map_file} \
             -o ${input_prefix}.liftover_temp \
             -c ${chain_file}

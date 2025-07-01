@@ -5,12 +5,12 @@ RUN apt-get clean \
 
 # Create Julia Sysimage
 
-COPY . /opt/sequential-gwas
+COPY . /opt/genomicc-workflows
 
-RUN cd /opt/sequential-gwas \
+RUN cd /opt/genomicc-workflows \
     && julia --project --startup-file=no -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
 
-RUN cd /opt/sequential-gwas \
+RUN cd /opt/genomicc-workflows \
     && julia --project --startup-file=no --threads=auto bin/make_sysimage.jl
 
 

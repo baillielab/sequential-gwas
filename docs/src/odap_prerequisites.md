@@ -28,7 +28,7 @@ In the shared folder.
 1. Clone the repository or the relevant commit or tag:
 
 ```bash
-git clone git@github.com:baillielab/sequential-gwas.git
+git clone git@github.com:baillielab/genomicc-workflows.git
 git checkout $FLOWOMICC_TAG
 ```
 
@@ -36,7 +36,7 @@ git checkout $FLOWOMICC_TAG
    
 ```bash
 docker pull --platform linux/amd64 olivierlabayle/genomicc:$FLOWOMICC_TAG
-docker save olivierlabayle/genomicc:$FLOWOMICC_TAG | gzip > sequential-gwas/genomicc.tar.gz
+docker save olivierlabayle/genomicc:$FLOWOMICC_TAG | gzip > genomicc-workflows/genomicc.tar.gz
 ```
 
 Then ask Dominique to uplaod the folder to ODAP.

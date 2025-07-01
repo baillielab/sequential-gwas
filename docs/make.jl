@@ -33,6 +33,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/baillielab/sequential-gwas",
+    repo="github.com/baillielab/genomicc-workflows",
     devbranch="main",
 )

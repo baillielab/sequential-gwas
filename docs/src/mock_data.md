@@ -22,7 +22,7 @@ Since the covariates are not sensitive, the newly created odap identifier is sim
 To run, on ODAP, assuming:
 
 - The data output by Dominique is in `/odp-beefgs/a015/linked_data/preqc/array-pre-imputation/` and mounted in the singularity container in `/mnt/data`
-- The repo is mounted in `/mnt/sequential-gwas` (This is not necessary anymore once the code is in the container, just need to point to `/opt/sequential-gwas`)
+- The repo is mounted in `/mnt/genomicc-workflows` (This is not necessary anymore once the code is in the container, just need to point to `/opt/genomicc-workflows`)
 
 ```bash
 singularity shell --bind /odp-beefgs/a015/linked_data/preqc/array-pre-imputation/:/mnt/data PATH_TO_SINGULARITY_IMAGE
@@ -30,7 +30,7 @@ singularity shell --bind /odp-beefgs/a015/linked_data/preqc/array-pre-imputation
 
 Then run 
 ```bash
-JULIA_DEPOT_PATH=$JULIA_DEPOT_PATH:/root/.julia julia --project=/opt/sequential-gwas /opt/sequential-gwas/bin/seq-gwas.jl
+JULIA_DEPOT_PATH=$JULIA_DEPOT_PATH:/root/.julia julia --project=/opt/genomicc-workflows /opt/genomicc-workflows/bin/seq-gwas.jl
 ```
 
 I also manually:
