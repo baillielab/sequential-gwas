@@ -86,12 +86,12 @@ function cli_settings()
             action = :command
             help = "Merges REGENIE results from different chromosomes."
         
-        "align-ukb-variant-ids-with-kgp-and-keep-unrelated"
+        "align-ukb-variants-with-kgp-and-keep-unrelated"
             action = :command
             help = "Format variant Ids as CHR:POS:REF:ALT and keep only unrelated individuals from UKB data."
     end
 
-    @add_arg_table! s["align-ukb-variant-ids-with-kgp-and-keep-unrelated"] begin
+    @add_arg_table! s["align-ukb-variants-with-kgp-and-keep-unrelated"] begin
         "ukb-bed-prefix"
             arg_type = String
             required = true
@@ -825,8 +825,8 @@ function julia_main()::Cint
             cmd_settings["input-prefix"];
             output=cmd_settings["output"]
         )
-    elseif cmd == "align-ukb-variant-ids-with-kgp-and-keep-unrelated"
-        align_ukb_variant_ids_with_kgp_and_keep_unrelated(
+    elseif cmd == "align-ukb-variants-with-kgp-and-keep-unrelated"
+        align_ukb_variants_with_kgp_and_keep_unrelated(
             cmd_settings["ukb-bed-prefix"],
             cmd_settings["kgp-bed-prefix"];
             out_prefix=cmd_settings["out-prefix"],

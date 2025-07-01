@@ -91,7 +91,7 @@ workflow merge_ukb_and_genomicc {
 
     # Make variant IDs consistent with KGP and keep only unrelated individuals
 
-    call align_ukb_variant_ids_with_kgp_and_keep_unrelated {
+    call align_ukb_variants_with_kgp_and_keep_unrelated {
         input:
             docker_image = docker_image,
             ukb_bed = merge_ukb_chrs.plink_fileset.bed,
@@ -112,9 +112,9 @@ workflow merge_ukb_and_genomicc {
             docker_image = docker_image,
             output_prefix = "ukb_kgp.merged",
             qc_genotype_missing_rate = qc_genotype_missing_rate,
-            bed_1 = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.bed,
-            bim_1 = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.bim,
-            fam_1 = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.fam,
+            bed_1 = align_ukb_variants_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.bed,
+            bim_1 = align_ukb_variants_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.bim,
+            fam_1 = align_ukb_variants_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.fam,
             bed_2 = kgp_genotypes.bed,
             bim_2 = kgp_genotypes.bim,
             fam_2 = kgp_genotypes.fam
@@ -157,9 +157,9 @@ workflow merge_ukb_and_genomicc {
             output_prefix = "ukb_genomicc.merged",
             qc_genotype_missing_rate = qc_genotype_missing_rate,
             chr = "all",
-            bed_1 = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.bed,
-            bim_1 = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.bim,
-            fam_1 = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.fam,
+            bed_1 = align_ukb_variants_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.bed,
+            bim_1 = align_ukb_variants_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.bim,
+            fam_1 = align_ukb_variants_with_kgp_and_keep_unrelated.ukb_unrelated_fileset.fam,
             bed_2 = genomicc_genotypes.bed,
             bim_2 = genomicc_genotypes.bim,
             fam_2 = genomicc_genotypes.fam
@@ -218,7 +218,7 @@ workflow merge_ukb_and_genomicc {
     output {
         Array[PLINKFileset] filtered_ukb_chr = filter_ukb_chr.plink_fileset
         PLINKFileset merged_ukb_fileset = merge_ukb_chrs.plink_fileset
-        PLINKFileset ukb_unrelated_fileset = align_ukb_variant_ids_with_kgp_and_keep_unrelated.ukb_unrelated_fileset
+        PLINKFileset ukb_unrelated_fileset = align_ukb_variants_with_kgp_and_keep_unrelated.ukb_unrelated_fileset
         PLINKFileset ukb_kgp_merged_fileset = merge_ukb_kgp.plink_fileset
         PLINKFileset ukb_kgp_ld_pruned_fileset = ld_prune_ukb_kgp.ld_pruned_fileset
         File ancestry_estimate = estimate_ukb_ancestry_from_kgp.ancestry_estimate
@@ -323,7 +323,7 @@ task filter_ukb_chr {
     }
 }
 
-task align_ukb_variant_ids_with_kgp_and_keep_unrelated {
+task align_ukb_variants_with_kgp_and_keep_unrelated {
     input {
         String docker_image
         File ukb_bed
@@ -348,7 +348,7 @@ task align_ukb_variant_ids_with_kgp_and_keep_unrelated {
         ukb_bed_prefix=$(dirname "~{ukb_bed}")/$(basename "~{ukb_bed}" .bed)
         kgp_bed_prefix=$(dirname "~{kgp_bed}")/$(basename "~{kgp_bed}" .bed)
         ${julia_cmd} /opt/sequential-gwas/bin/seq-gwas.jl \
-            align-ukb-variant-ids-with-kgp-and-keep-unrelated \
+            align-ukb-variants-with-kgp-and-keep-unrelated \
             ${ukb_bed_prefix} \
             ${kgp_bed_prefix} \
             --threshold=~{palyndromic_threshold}

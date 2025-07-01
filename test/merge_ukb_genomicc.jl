@@ -96,7 +96,7 @@ if dorun
         merged_chr_fam = SequentialGWAS.read_fam(joinpath(merged_ukb_chr_dir, "ukb_all_chr.fam"))
 
         # Test variant Ids alignement and filterting of unrelated individuals
-        kgp_qc_dir = joinpath(results_dir, "call-align_ukb_variant_ids_with_kgp_and_keep_unrelated", "execution")
+        kgp_qc_dir = joinpath(results_dir, "call-align_ukb_variants_with_kgp_and_keep_unrelated", "execution")
         ukb_unrelated_bim = SequentialGWAS.read_bim(joinpath(kgp_qc_dir, "ukb_unrelated.bim"))
         ## One variant is dropped because it is not in the KGP dataset
         @test 9694126 ∉ ukb_unrelated_bim.BP_COORD
