@@ -7,8 +7,8 @@
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 [![Aqua](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
-The purpose of this project is to provide an end-to-end reproducible GWAS pipeline for the GenOMICC project. 
+This repository hosts a set of workflows to work with the GenOMICC cohort.
 
-## High Level Workflow Preview
+## Useful Links
 
-TBD
+- [Documentation](https://baillielab.github.io/genomicc-workflows/stable/)
