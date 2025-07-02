@@ -89,6 +89,37 @@ function cli_settings()
         "align-ukb-variants-with-kgp-and-keep-unrelated"
             action = :command
             help = "Format variant Ids as CHR:POS:REF:ALT and keep only unrelated individuals from UKB data."
+
+        "merge-ukb-genomicc-covariates"
+            action = :command
+            help = "Merges UKB and GenOMICC covariates files."
+    end
+
+    @add_arg_table! s["merge-ukb-genomicc-covariates"] begin
+        "genomicc-covariates"
+            arg_type = String
+            required = true
+            help = "Path to GenOMICC covariates file."
+
+        "genomicc-inferred-covariates"
+            arg_type = String
+            required = true
+            help = "Path to GenOMICC inferred covariates file."
+
+        "ukb-covariates"
+            arg_type = String
+            required = true
+            help = "Path to UKB covariates file."
+
+        "ukb-inferred-covariates"
+            arg_type = String
+            required = true
+            help = "Path to UKB inferred covariates file."
+
+        "--output-file"
+            arg_type = String
+            help = "Output file name."
+            default = "ukb_genomicc.covariates.csv"
     end
 
     @add_arg_table! s["align-ukb-variants-with-kgp-and-keep-unrelated"] begin
@@ -831,6 +862,14 @@ function julia_main()::Cint
             cmd_settings["kgp-bed-prefix"];
             out_prefix=cmd_settings["out-prefix"],
             threshold=cmd_settings["threshold"]
+        )
+    elseif cmd == "merge-ukb-genomicc-covariates"
+        merge_ukb_genomicc_covariates(
+            cmd_settings["genomicc-covariates"],
+            cmd_settings["genomicc-inferred-covariates"],
+            cmd_settings["ukb-covariates"],
+            cmd_settings["ukb-inferred-covariates"];
+            output_file=cmd_settings["output-file"]
         )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))

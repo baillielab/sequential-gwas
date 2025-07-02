@@ -88,39 +88,65 @@ function align_ukb_variants_with_kgp_and_keep_unrelated(ukb_bed_prefix, kgp_bed_
     return 0
 end
 
-function read_covariate_and_lowercase_id(filepath; id_column=:IID)
+function read_covariate_and_lowercase_id(filepath; id_columns=[:FID, :IID])
     covariates = CSV.read(filepath, DataFrame)
-    covariates[!, id_column] = lowercase.(covariates[!, id_column])
+    for id_column in id_columns
+        covariates[!, id_column] = lowercase.(covariates[!, id_column])
+    end
     return covariates
 end
 
 function merge_ukb_genomicc_covariates(
-    genomicc_covariates,
-    genomicc_inferred_covariates,
-    ukb_covariates,
-    ukb_inferred_covariates;
+    genomicc_covariates_file,
+    genomicc_inferred_covariates_file,
+    ukb_covariates_file,
+    ukb_inferred_covariates_file;
     output_file="ukb_genomicc.covariates.csv"
     )
 
-    genomicc_covariates = "assets/rap/genomicc/covariates/a015_covariates.csv"
-    genomicc_inferred_covariates = "assets/rap/genomicc/covariates/inferred_covariates.csv"
-
-    ukb_covariates = "assets/rap/ukb/covariates/ukb_covariates.csv"
-    ukb_inferred_covariates = ""
-
     # Process GenOMICC covariates
-    genomicc_covariates = CSV.read(genomicc_covariates, DataFrame, select=[:genotype_file_id, :age_years, :sex])
-    covariates[!, genotype_file_id] = lowercase.(covariates[!, genotype_file_id])
-
-    genomicc_covariates = read_covariate_and_lowercase_id(genomicc_covariates; id_column=:genotype_file_id) 
-    CSV.read(genomicc_covariates, DataFrame)
-
-    genomicc_inferred_covariates = read_covariate_and_lowercase_id(genomicc_inferred_covariates, id_column=:IID)
+    genomicc_covariates = read_covariate_and_lowercase_id(genomicc_covariates_file; id_columns=[:genotype_file_id]) 
+    genomicc_inferred_covariates = read_covariate_and_lowercase_id(genomicc_inferred_covariates_file, id_columns=[:FID, :IID])
     genomicc_all_covariates = innerjoin(
         genomicc_covariates, 
         genomicc_inferred_covariates, 
         on=:genotype_file_id => :IID,
     )
-    
-
+    DataFrames.select!(genomicc_all_covariates,
+        :genotype_file_id => :FID,
+        :genotype_file_id => :IID,
+        :age_years => process_genomicc_age => :AGE,
+        :sex => process_genomicc_sexes => :SEX,
+        :ANCESTRY_ESTIMATE,
+        :AFR,
+        :SAS,
+        :EAS,
+        :AMR,
+        :EUR
+    )
+    # Process UKB covariates
+    ukb_covariates = read_covariate_and_lowercase_id(ukb_covariates_file; id_columns=[:eid])
+    ukb_inferred_covariates = read_covariate_and_lowercase_id(ukb_inferred_covariates_file, id_columns=[:FID, :IID])
+    ukb_all_covariates = innerjoin(
+        ukb_covariates,
+        ukb_inferred_covariates,
+        on=:eid => :IID
+    )
+    DataFrames.select!(ukb_all_covariates,
+        :eid => :FID,
+        :eid => :IID,
+        Symbol("34-0.0") => process_ukb_age => :AGE,
+        Symbol("22001-0.0") => :SEX,
+        :ANCESTRY_ESTIMATE,
+        :AFR,
+        :SAS,
+        :EAS,
+        :AMR,
+        :EUR
+    )
+    # Concatenate both datasets
+    all_covariates = vcat(genomicc_all_covariates, ukb_all_covariates)
+    # Write to output file
+    CSV.write(output_file, all_covariates, delim="\t")
+    return 0
 end

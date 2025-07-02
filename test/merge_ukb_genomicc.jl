@@ -39,6 +39,54 @@ TESTDIR = joinpath(PKGDIR, "test")
     @test unmapped_ids == Set(["rsM1", "rsY1"])
 end
 
+@testset "Test merge_ukb_genomicc_covariates" begin
+    tmpdir = mktempdir()
+    output_file = joinpath(tmpdir, "ukb_genomicc.covariates.csv")
+    genomicc_covariates_file = joinpath("test", "assets", "genomicc", "mock.covariates.csv")
+    genomicc_inferred_covariates_file = joinpath("test", "assets", "genomicc", "inferred_covariates.csv")
+    ukb_covariates_file = joinpath("test", "assets", "ukb", "covariates_table.csv")
+    ukb_inferred_covariates_file = joinpath(tmpdir, "inferred_covariates.ukb.csv")
+    # Make UKB inferred covariates (ancestry estimates and downsample to mimic loss of samples)
+    ukb_covariates = CSV.read(ukb_covariates_file, DataFrame)
+    n = nrow(ukb_covariates)
+    ukb_inferred_covariates = DataFrame(
+        FID = ukb_covariates.eid,
+        IID = ukb_covariates.eid,
+        ANCESTRY_ESTIMATE = rand(["AFR", "SAS", "EAS", "AMR", "EUR"], n),
+        AFR = rand(n),
+        SAS = rand(n),
+        EAS = rand(n),
+        AMR = rand(n),
+        EUR = rand(n)
+    )
+    ukb_inferred_covariates = ukb_inferred_covariates[1:15, :]
+    CSV.write(ukb_inferred_covariates_file, ukb_inferred_covariates)
+    # Merge covariates
+    copy!(ARGS, [
+        "merge-ukb-genomicc-covariates",
+        genomicc_covariates_file,
+        genomicc_inferred_covariates_file,
+        ukb_covariates_file,
+        ukb_inferred_covariates_file,
+        "--output-file", output_file
+    ])
+    julia_main()
+    merged_covariates = CSV.read(output_file, DataFrame)
+    @test nrow(merged_covariates) == 15 + 12000
+    @test names(merged_covariates) == ["FID", "IID", "AGE", "SEX", "ANCESTRY_ESTIMATE", "AFR", "SAS", "EAS", "AMR", "EUR"]
+    @test eltype(merged_covariates.AGE) == Int
+    @test Set(merged_covariates.SEX) == Set([0, 1, missing])
+    @test Set(merged_covariates.ANCESTRY_ESTIMATE) == union(
+        Set(ukb_inferred_covariates.ANCESTRY_ESTIMATE), 
+        Set(genomicc_inferred_covariates.ANCESTRY_ESTIMATE)
+    )
+    for col in [:AFR, :SAS, :EAS, :AMR, :EUR]
+        @test eltype(merged_covariates[!, col]) == Float64
+    end
+    @test merged_covariates.FID == merged_covariates.IID
+    @test merged_covariates.FID == lowercase.(merged_covariates.FID)
+end
+
 # End to End Workflow run
 
 dorun = isinteractive() || (haskey(ENV, "CI_CONTAINER") && ENV["CI_CONTAINER"] == "docker")

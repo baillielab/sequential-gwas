@@ -1,4 +1,4 @@
-function process_age(ages)
+function process_genomicc_age(ages)
     int_ages = map(ages) do age
         if age == "NA"
             return missing
@@ -10,7 +10,7 @@ function process_age(ages)
     return coalesce.(int_ages, μ)
 end
 
-function process_sexes(sexes)
+function process_genomicc_sexes(sexes)
     return map(sexes) do sex
         if sex == "Male"
             return 1
@@ -58,6 +58,13 @@ function process_cohort(cohorts)
     replace(cohorts, "NA" => missing, "severe" => "genomicc")
 end
 
+function process_ukb_age(years_of_birth)
+    current_year = year(Dates.now())
+    ages = current_year .- years_of_birth
+    μ = round(Int, mean(skipmissing(ages)))
+    return coalesce.(ages, μ)
+end
+
 function read_and_process_covariates(covariates_file, required_covariate_variables;
     inferred_covariates_file=nothing
     )
@@ -70,8 +77,8 @@ function read_and_process_covariates(covariates_file, required_covariate_variabl
     DataFrames.select!(covariates,
         :genotype_file_id => :FID,
         :genotype_file_id => :IID,
-        :age_years => process_age => :AGE,
-        :sex => process_sexes => :SEX,
+        :age_years => process_genomicc_age => :AGE,
+        :sex => process_genomicc_sexes => :SEX,
         :severe_cohort_primary_diagnosis => process_primary_diagnosis => :GENOMICC_PRIMARY_DIAGNOSIS,
         :cohort => process_cohort => :COHORT,
         :case_or_control,

@@ -32,12 +32,20 @@ workflow merge_ukb_and_genomicc {
 
     input {
         String docker_image = "olivierlabayle/genomicc:main"
-        Array[BGENFileset]+ bgen_filesets
+
+        Array[BGENFileset]+ ukb_bgen_filesets
+        File ukb_covariates
         File hesin_critical_table
-        File high_ld_regions
+
         PLINKFileset genomicc_genotypes
         Array[PGENFileset]+ genomicc_pgen_filesets
+        File genomicc_covariates
+        File genomicc_inferred_covariates
+
         PLINKFileset kgp_genotypes
+
+        File high_ld_regions
+        File reference_genome
         String qc_genotype_missing_rate = "0.02"
         String qc_individual_missing_rate = "0.02"
         String qc_hwe_p = "1e-10"
@@ -48,7 +56,6 @@ workflow merge_ukb_and_genomicc {
         String palyndromic_threshold = "0.02"
         String julia_threads = "auto"
         String julia_use_sysimage = "true"
-        File reference_genome
     }
 
     # Index Reference Genome
@@ -61,7 +68,7 @@ workflow merge_ukb_and_genomicc {
 
     # Filter UKB BGEN files by chromosome to keep only variants in GenOMICC and exclude critical samples
 
-    scatter (bgen_fileset in bgen_filesets) {
+    scatter (bgen_fileset in ukb_bgen_filesets) {
         call filter_ukb_chr {
             input:
                 docker_image = docker_image,
@@ -167,7 +174,7 @@ workflow merge_ukb_and_genomicc {
 
     # Merging GenOMICC and UKB imputed genotypes
 
-    scatter (bgen_fileset in bgen_filesets) {
+    scatter (bgen_fileset in ukb_bgen_filesets) {
         call bgen_to_vcf as ukb_bgen_to_vcf {
             input:
                 docker_image = docker_image,
@@ -213,6 +220,18 @@ workflow merge_ukb_and_genomicc {
         }
     }
 
+    # Merge covariates
+
+    call merge_genomicc_ukb_covariates {
+        input:
+            docker_image = docker_image,
+            genomicc_covariates = genomicc_covariates,
+            genomicc_inferred_covariates = genomicc_inferred_covariates,
+            ukb_covariates = ukb_covariates,
+            ukb_inferred_covariates = estimate_ukb_ancestry_from_kgp.ancestry_estimate,
+            output_file = "ukb_genomicc.covariates.csv"
+    }
+
     # Outputs
 
     output {
@@ -226,6 +245,7 @@ workflow merge_ukb_and_genomicc {
         Array[BCFFileset] ukb_bcf_files = ukb_bgen_to_vcf.bcf_fileset
         Array[BCFFileset] genomicc_bcf_files = genomicc_pgen_to_bcf.bcf_fileset
         Array[PGENFileset] genomicc_ukb_pgen_filesets = merge_genomicc_ukb_bcfs_and_convert_to_pgen.pgen_fileset
+        File merged_covariates = merge_genomicc_ukb_covariates.merged_covariates
     }
 }
 
@@ -679,32 +699,31 @@ task index_reference_genome {
     }
 }
 
-# task export_critical_table { 
-#     input {
-#         File dataset
-#         File fieldsfile
-#     }
+task merge_genomicc_ukb_covariates {
+    input {
+        String docker_image
+        File genomicc_covariates
+        File genomicc_inferred_covariates
+        File ukb_covariates
+        File ukb_inferred_covariates
+        String output_file = "ukb_genomicc.covariates.csv"
+    }
 
-#     command {
-#         dx extract_dataset ~{dataset} \
-#         --fields-file ~{fieldsfile} \
-#         -o="critical_table.csv" \
-#         -icoding_option==RAW \
-#         -iheader_style=UKB-FORMAT \
-#         -ientity=hesin_critical \
-#         -ifield_names_file_txt=~{fieldnames}
-#     }
+    command <<<
+        julia --project=/opt/genomicc-workflows --startup-file=no /opt/genomicc-workflows/bin/merge_ukb_genomicc.jl \
+            ~{genomicc_covariates} \
+            ~{genomicc_inferred_covariates} \
+            ~{ukb_covariates} \
+            ~{ukb_inferred_covariates} \
+            --output-file ~{output_file}
+    >>>
 
-#     runtime {
-#         dx_app: object {
-#             id: "applet-xxxx",
-#             type: "app" 
-#         }
-#         dx_timeout: "4H"
-#         dx_instance_type: "mem1_ssd1_v2_x2"
-#     }
+    output {
+        File merged_covariates = output_file
+    }
 
-#     output {
-#         File outfile = "critical.csv"
-#     }
-# }
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem1_ssd1_v2_x4"
+    }
+}

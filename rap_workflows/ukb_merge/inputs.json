@@ -1,7 +1,7 @@
 {
     "merge_ukb_and_genomicc.high_ld_regions": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J199PpjJpYQ3vypJx7PJg3gb",
     "merge_ukb_and_genomicc.reference_genome": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1P7fQjJpYQ1F9654pqpK5F9",
-    "merge_ukb_and_genomicc.bgen_filesets": [
+    "merge_ukb_and_genomicc.ukb_bgen_filesets": [
         {
             "chr": "20",
             "bgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPx07jJykJvzB285f72YyqK",
@@ -21,6 +21,7 @@
             "sample": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J0pqfyQJfkBFpPvP031Ygq8P"
         }
     ],
+    "merge_ukb_and_genomicc.ukb_covariates": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1Kf8G8JffPg8xYF3xZpq5K1",
     "merge_ukb_and_genomicc.hesin_critical_table": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1Kbzg8Jyy8KbzX0pk5pZjPz",
     "merge_ukb_and_genomicc.genomicc_genotypes": {
         "chr": "all",
@@ -48,6 +49,8 @@
             "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KV00jJpYQ1xJFvkG53FQxp"
         }
     ],
+    "merge_ukb_and_genomicc.genomicc_covariates": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J10644QJpYQ0qbfpf52ZqPfB",
+    "merge_ukb_and_genomicc.genomicc_inferred_covariates": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J106448JpYQ9KBGKQx1zB577",
     "merge_ukb_and_genomicc.kgp_genotypes": {
         "chr": "all",
         "bed": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1GXyJ0JpYQ4vzXYXPX593KV",
