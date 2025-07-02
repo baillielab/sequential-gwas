@@ -100,10 +100,10 @@ function merge_ukb_genomicc_covariates(
     genomicc_covariates_file,
     genomicc_inferred_covariates_file,
     ukb_covariates_file,
-    ukb_inferred_covariates_file;
+    ukb_inferred_covariates_file,
+    file_with_eids_to_exclude,;
     output_file="ukb_genomicc.covariates.csv"
     )
-
     # Process GenOMICC covariates
     genomicc_covariates = read_covariate_and_lowercase_id(genomicc_covariates_file; id_columns=[:genotype_file_id]) 
     genomicc_inferred_covariates = read_covariate_and_lowercase_id(genomicc_inferred_covariates_file, id_columns=[:FID, :IID])
@@ -124,7 +124,9 @@ function merge_ukb_genomicc_covariates(
         :AMR,
         :EUR
     )
+    genomicc_all_covariates.COHORT = fill(:GENOMICC, nrow(genomicc_all_covariates))
     # Process UKB covariates
+    table_with_eids_to_exclude = CSV.read(file_with_eids_to_exclude, DataFrame, select=[:eid])
     ukb_covariates = read_covariate_and_lowercase_id(ukb_covariates_file; id_columns=[:eid])
     ukb_inferred_covariates = read_covariate_and_lowercase_id(ukb_inferred_covariates_file, id_columns=[:FID, :IID])
     ukb_all_covariates = innerjoin(
@@ -132,21 +134,39 @@ function merge_ukb_genomicc_covariates(
         ukb_inferred_covariates,
         on=:eid => :IID
     )
+    filter!(:eid => ∉(table_with_eids_to_exclude.eid), ukb_all_covariates)
     DataFrames.select!(ukb_all_covariates,
         :eid => :FID,
         :eid => :IID,
         Symbol("34-0.0") => process_ukb_age => :AGE,
         Symbol("22001-0.0") => :SEX,
-        :ANCESTRY_ESTIMATE,
+        :Superpopulation => :ANCESTRY_ESTIMATE,
         :AFR,
         :SAS,
         :EAS,
         :AMR,
         :EUR
     )
+    ukb_all_covariates.COHORT = fill(:UKB, nrow(ukb_all_covariates))
     # Concatenate both datasets
     all_covariates = vcat(genomicc_all_covariates, ukb_all_covariates)
     # Write to output file
     CSV.write(output_file, all_covariates, delim="\t")
     return 0
+end
+
+
+function make_ukb_genomicc_merge_report(;kwargs...)
+    function prepend_args(script_string)
+        args_string = join((string(key, " = \"", arg, "\" #hide") for (key, arg) in kwargs), "\n")
+        return string(args_string, "\n", script_string)
+    end
+    Literate.markdown(
+        joinpath(pkgdir(GenomiccWorkflows), "src", "report_ukb_genomicc_merge_template.jl"), 
+        ".", 
+        name="report", 
+        flavor=Literate.CommonMarkFlavor(), 
+        execute=true,
+        preprocess=prepend_args
+    )
 end

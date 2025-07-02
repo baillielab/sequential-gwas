@@ -22,5 +22,5 @@ Furthermore, because the manifest files are too big to be version controlled, va
 This has been done using the following command:
 
 ```bash
-julia --project --startup-file=no bin/seq-gwas.jl snps-to-flip --help
+julia --project --startup-file=no bin/genomicc.jl snps-to-flip --help
 ```

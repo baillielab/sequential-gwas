@@ -46,13 +46,14 @@ end
     genomicc_inferred_covariates_file = joinpath("test", "assets", "genomicc", "inferred_covariates.csv")
     ukb_covariates_file = joinpath("test", "assets", "ukb", "covariates_table.csv")
     ukb_inferred_covariates_file = joinpath(tmpdir, "inferred_covariates.ukb.csv")
+    file_with_eids_to_exclude = joinpath(TESTDIR, "assets", "ukb", "critical_table.csv")
     # Make UKB inferred covariates (ancestry estimates and downsample to mimic loss of samples)
     ukb_covariates = CSV.read(ukb_covariates_file, DataFrame)
     n = nrow(ukb_covariates)
     ukb_inferred_covariates = DataFrame(
         FID = ukb_covariates.eid,
         IID = ukb_covariates.eid,
-        ANCESTRY_ESTIMATE = rand(["AFR", "SAS", "EAS", "AMR", "EUR"], n),
+        Superpopulation = rand(["AFR", "SAS", "EAS", "AMR", "EUR"], n),
         AFR = rand(n),
         SAS = rand(n),
         EAS = rand(n),
@@ -68,18 +69,17 @@ end
         genomicc_inferred_covariates_file,
         ukb_covariates_file,
         ukb_inferred_covariates_file,
+        file_with_eids_to_exclude,
         "--output-file", output_file
     ])
     julia_main()
     merged_covariates = CSV.read(output_file, DataFrame)
-    @test nrow(merged_covariates) == 15 + 12000
-    @test names(merged_covariates) == ["FID", "IID", "AGE", "SEX", "ANCESTRY_ESTIMATE", "AFR", "SAS", "EAS", "AMR", "EUR"]
+    @test nrow(merged_covariates) == 14 + 12000 # ukb19 is dropped because in critical_table.csv
+    @test names(merged_covariates) == ["FID", "IID", "AGE", "SEX", "ANCESTRY_ESTIMATE", "AFR", "SAS", "EAS", "AMR", "EUR", "COHORT"]
+    @test Set(merged_covariates.COHORT) == Set(["GENOMICC", "UKB"])
     @test eltype(merged_covariates.AGE) == Int
     @test Set(merged_covariates.SEX) == Set([0, 1, missing])
-    @test Set(merged_covariates.ANCESTRY_ESTIMATE) == union(
-        Set(ukb_inferred_covariates.ANCESTRY_ESTIMATE), 
-        Set(genomicc_inferred_covariates.ANCESTRY_ESTIMATE)
-    )
+    @test Set(merged_covariates.ANCESTRY_ESTIMATE) == Set(["AFR", "SAS", "EAS", "AMR", "EUR"])
     for col in [:AFR, :SAS, :EAS, :AMR, :EUR]
         @test eltype(merged_covariates[!, col]) == Float64
     end
@@ -181,6 +181,16 @@ if dorun
         @test length(ukb_genomicc_merged_bim.VARIANT_ID) <= length(ukb_unrelated_bim.VARIANT_ID)
         ukb_genomicc_merged_fam = GenomiccWorkflows.read_fam(joinpath(ukb_genomicc_merged_dir, "ukb_genomicc.merged.fam"))
         @test length(ukb_genomicc_merged_fam.IID) > length(ukb_unrelated_fam.IID)
+
+        # Test merging covariates
+        ukb_genomicc_covariates_file = joinpath(results_dir, "call-merge_genomicc_ukb_covariates", "execution", "ukb_genomicc.covariates.csv")
+        ukb_genomicc_covariates = CSV.read(ukb_genomicc_covariates_file, DataFrame)
+        @test names(ukb_genomicc_covariates) == ["FID", "IID", "AGE", "SEX", "ANCESTRY_ESTIMATE", "AFR", "SAS", "EAS", "AMR", "EUR", "COHORT"]
+        @test length(filter(startswith("ukb"), ukb_genomicc_covariates.IID)) > 0
+        @test length(filter(startswith("odap"), ukb_genomicc_covariates.IID)) > 0
+
+        # Test report generation
+        @test isfile(joinpath(results_dir, "call-make_report", "execution", "report.md"))
     end
 end
 

@@ -30,7 +30,7 @@ singularity shell --bind /odp-beefgs/a015/linked_data/preqc/array-pre-imputation
 
 Then run 
 ```bash
-JULIA_DEPOT_PATH=$JULIA_DEPOT_PATH:/root/.julia julia --project=/opt/genomicc-workflows /opt/genomicc-workflows/bin/seq-gwas.jl
+JULIA_DEPOT_PATH=$JULIA_DEPOT_PATH:/root/.julia julia --project=/opt/genomicc-workflows /opt/genomicc-workflows/bin/genomicc.jl
 ```
 
 I also manually:

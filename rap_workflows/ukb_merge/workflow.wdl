@@ -229,7 +229,32 @@ workflow merge_ukb_and_genomicc {
             genomicc_inferred_covariates = genomicc_inferred_covariates,
             ukb_covariates = ukb_covariates,
             ukb_inferred_covariates = estimate_ukb_ancestry_from_kgp.ancestry_estimate,
-            output_file = "ukb_genomicc.covariates.csv"
+            table_with_eids_to_exclude = hesin_critical_table,
+            output_file = "ukb_genomicc.covariates.csv",
+            julia_threads = julia_threads,
+            julia_use_sysimage = julia_use_sysimage
+    }
+
+    # Make Report
+
+    scatter (set in merge_genomicc_ukb_bcfs_and_convert_to_pgen.pgen_fileset) {
+        File ukb_genomicc_merged_imputed_pvar_files = set.pvar
+        File ukb_genomicc_merged_imputed_psam_files = set.psam
+    }
+
+    call make_report {
+        input:
+            docker_image = docker_image,
+            ukb_kgp_merged_bed = merge_ukb_kgp.plink_fileset.bed,
+            ukb_kgp_merged_bim = merge_ukb_kgp.plink_fileset.bim,
+            ukb_kgp_merged_fam = merge_ukb_kgp.plink_fileset.fam,
+            ukb_genomicc_merged_imputed_pvar = ukb_genomicc_merged_imputed_pvar_files,
+            ukb_genomicc_merged_imputed_psam = ukb_genomicc_merged_imputed_psam_files,
+            ukb_genomicc_merged_bim = merge_ukb_genomicc.plink_fileset.bim,
+            ukb_genomicc_merged_fam = merge_ukb_genomicc.plink_fileset.fam,
+            merged_covariates = merge_genomicc_ukb_covariates.merged_covariates,
+            julia_threads = julia_threads,
+            julia_use_sysimage = julia_use_sysimage
     }
 
     # Outputs
@@ -246,6 +271,7 @@ workflow merge_ukb_and_genomicc {
         Array[BCFFileset] genomicc_bcf_files = genomicc_pgen_to_bcf.bcf_fileset
         Array[PGENFileset] genomicc_ukb_pgen_filesets = merge_genomicc_ukb_bcfs_and_convert_to_pgen.pgen_fileset
         File merged_covariates = merge_genomicc_ukb_covariates.merged_covariates
+        File report = make_report.report
     }
 }
 
@@ -367,7 +393,7 @@ task align_ukb_variants_with_kgp_and_keep_unrelated {
         fi
         ukb_bed_prefix=$(dirname "~{ukb_bed}")/$(basename "~{ukb_bed}" .bed)
         kgp_bed_prefix=$(dirname "~{kgp_bed}")/$(basename "~{kgp_bed}" .bed)
-        ${julia_cmd} /opt/genomicc-workflows/bin/seq-gwas.jl \
+        ${julia_cmd} /opt/genomicc-workflows/bin/genomicc.jl \
             align-ukb-variants-with-kgp-and-keep-unrelated \
             ${ukb_bed_prefix} \
             ${kgp_bed_prefix} \
@@ -505,7 +531,7 @@ task estimate_ukb_ancestry_from_kgp {
 
         bed_prefix=$(dirname "~{bed_file}")/$(basename "~{bed_file}" .bed)
 
-        ${julia_cmd} /opt/genomicc-workflows/bin/seq-gwas.jl \
+        ${julia_cmd} /opt/genomicc-workflows/bin/genomicc.jl \
             estimate-ancestry \
             ${bed_prefix} \
             20130606_g1k_3202_samples_ped_population.txt \
@@ -706,15 +732,28 @@ task merge_genomicc_ukb_covariates {
         File genomicc_inferred_covariates
         File ukb_covariates
         File ukb_inferred_covariates
+        File table_with_eids_to_exclude
         String output_file = "ukb_genomicc.covariates.csv"
+        String julia_threads = "auto"
+        String julia_use_sysimage = "true"
     }
 
     command <<<
-        julia --project=/opt/genomicc-workflows --startup-file=no /opt/genomicc-workflows/bin/merge_ukb_genomicc.jl \
+        julia_cmd="julia --project=/opt/genomicc-workflows --startup-file=no"
+        if [[ "~{julia_use_sysimage}" == "true" ]]; then
+            julia_cmd+=" --sysimage=/opt/genomicc-workflows/GenomiccWorkflows.so"
+        fi
+        if [[ "~{julia_threads}" == "auto" ]]; then
+            julia_cmd+=" --threads=auto"
+        fi
+
+        ${julia_cmd} /opt/genomicc-workflows/bin/genomicc.jl \
+            merge-ukb-genomicc-covariates \
             ~{genomicc_covariates} \
             ~{genomicc_inferred_covariates} \
             ~{ukb_covariates} \
             ~{ukb_inferred_covariates} \
+            ~{table_with_eids_to_exclude} \
             --output-file ~{output_file}
     >>>
 
@@ -725,5 +764,56 @@ task merge_genomicc_ukb_covariates {
     runtime {
         docker: docker_image
         dx_instance_type: "mem1_ssd1_v2_x4"
+    }
+}
+
+task make_report {
+    input {
+        String docker_image
+
+        File ukb_kgp_merged_bed
+        File ukb_kgp_merged_bim
+        File ukb_kgp_merged_fam
+
+        Array[File] ukb_genomicc_merged_imputed_pvar
+        Array[File] ukb_genomicc_merged_imputed_psam
+
+        File ukb_genomicc_merged_bim
+        File ukb_genomicc_merged_fam
+
+        File merged_covariates
+
+        String julia_threads = "auto"
+        String julia_use_sysimage = "true"
+    }
+
+    command <<<
+       julia_cmd="julia --project=/opt/genomicc-workflows --startup-file=no"
+        if [[ "~{julia_use_sysimage}" == "true" ]]; then
+            julia_cmd+=" --sysimage=/opt/genomicc-workflows/GenomiccWorkflows.so"
+        fi
+        if [[ "~{julia_threads}" == "auto" ]]; then
+            julia_cmd+=" --threads=auto"
+        fi
+
+        for f in ~{sep=" " ukb_genomicc_merged_imputed_pvar} ~{sep=" " ukb_genomicc_merged_imputed_psam}; do
+            echo "${f%.bed}"
+        done > ukb_genomicc_imputed_files_list.txt
+
+        ${julia_cmd} /opt/genomicc-workflows/bin/genomicc.jl \
+            make-ukb-genomicc-merge-report \
+            ~{ukb_genomicc_merged_bim} \
+            ~{ukb_genomicc_merged_fam} \
+            ukb_genomicc_imputed_files_list.txt \
+            ~{merged_covariates}
+    >>>
+
+    output {
+        File report = "report.md"
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem1_ssd1_v2_x2"
     }
 }

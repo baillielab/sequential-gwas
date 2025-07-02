@@ -93,6 +93,29 @@ function cli_settings()
         "merge-ukb-genomicc-covariates"
             action = :command
             help = "Merges UKB and GenOMICC covariates files."
+
+        "make-ukb-genomicc-merge-report"
+            action = :command
+            help = "Generates a report after merging UKB and GenOMICC data."
+    end
+
+    @add_arg_table! s["make-ukb-genomicc-merge-report"] begin
+        "ukb-genomicc-merged-bim-file"
+            arg_type = String
+            required = true
+            help = "Path to the merged UKB and GenOMICC bim file."
+        "ukb-genomicc-merged-fam-file"
+            arg_type = String
+            required = true
+            help = "Path to the merged UKB and GenOMICC fam file."
+        "ukb-genomicc-imputed-files-list"
+            arg_type = String
+            required = true
+            help = "Path to the list of imputed files."
+        "ukb-genomicc-covariates-file"
+            arg_type = String
+            required = true
+            help = "Path to the merged UKB and GenOMICC covariates file."
     end
 
     @add_arg_table! s["merge-ukb-genomicc-covariates"] begin
@@ -115,6 +138,11 @@ function cli_settings()
             arg_type = String
             required = true
             help = "Path to UKB inferred covariates file."
+
+        "file-with-eids-to-exclude"
+            arg_type = String
+            required = true
+            help = "Path to file with EIDs to exclude from the merged covariates."
 
         "--output-file"
             arg_type = String
@@ -868,8 +896,16 @@ function julia_main()::Cint
             cmd_settings["genomicc-covariates"],
             cmd_settings["genomicc-inferred-covariates"],
             cmd_settings["ukb-covariates"],
-            cmd_settings["ukb-inferred-covariates"];
+            cmd_settings["ukb-inferred-covariates"],
+            cmd_settings["file-with-eids-to-exclude"];
             output_file=cmd_settings["output-file"]
+        )
+    elseif cmd == "make-ukb-genomicc-merge-report"
+        make_ukb_genomicc_merge_report(
+            ukb_genomicc_merged_bim_file=cmd_settings["ukb-genomicc-merged-bim-file"],
+            ukb_genomicc_merged_fam_file=cmd_settings["ukb-genomicc-merged-fam-file"],
+            ukb_genomicc_imputed_files_list=cmd_settings["ukb-genomicc-imputed-files-list"],
+            ukb_genomicc_covariates_file=cmd_settings["ukb-genomicc-covariates-file"]
         )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))
