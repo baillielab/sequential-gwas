@@ -54,6 +54,9 @@ process MakeReport {
             ${release_r8_kgp_samples_to_drop} \
             ${release_2021_2023_kgp_samples_to_drop} \
             ${release_2024_now_kgp_samples_to_drop} \
+            ${release_r8_kgp_flip} \
+            ${release_2021_2023_kgp_flip} \
+            ${release_2024_now_kgp_flip} \
             ${shared_variants} \
             ${wgs_prefix} \
             ${merge_log} \

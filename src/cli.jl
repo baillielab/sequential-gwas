@@ -440,6 +440,21 @@ function cli_settings()
             arg_type = String
             required = true
             help = "Path to dup samples 2024_now."
+        
+        "release_r8_kgp_flip"
+            arg_type = String
+            required = true
+            help = "Path to release r8 KGP flip file."
+
+        "release_2021_2023_kgp_flip"
+            arg_type = String
+            required = true
+            help = "Path to release 2021_2023 KGP flip file."
+
+        "release_2024_now_kgp_flip"
+            arg_type = String
+            required = true
+            help = "Path to release 2024_now KGP flip file."
 
         "shared_variants"
             arg_type = String
@@ -809,6 +824,9 @@ function julia_main()::Cint
             dup_samples_r8 = cmd_settings["dup_samples_r8"],
             dup_samples_2021_2023 = cmd_settings["dup_samples_2021_2023"],
             dup_samples_2024_now = cmd_settings["dup-samples_2024_now"],
+            release_r8_kgp_flip= cmd_settings["release_r8_kgp_flip"],
+            release_2021_2023_kgp_flip = cmd_settings["release_2021_2023_kgp_flip"],
+            release_2024_now_kgp_flip = cmd_settings["release_2024_now_kgp_flip"],
             shared_variants = cmd_settings["shared_variants"],
             wgs_prefix = cmd_settings["wgs_prefix"],
             merge_log = cmd_settings["merge_log"],

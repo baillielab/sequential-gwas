@@ -121,7 +121,7 @@ table |> markdown_table() #hide
 #=
 ### Shared variants and individuals across releases and WGS 
 
-Only variants present in all releases are kept.
+Only variants present in all releases and whose alleles exist in the 1000 Genome Project are kept.
 
 - Shared variants across releases.
 =#
@@ -139,6 +139,16 @@ Samples dropped from each release due to overlap with a higher priority release.
 println("r8 release: ", countlines(dup_samples_r8)) #hide
 println("2021 - 2023 release: ", countlines(dup_samples_2021_2023)) #hide
 println("2024 - now release: ", countlines(dup_samples_2024_now)) #hide
+
+#=
+- Flipping Alleles
+
+Some variants' alleles are flipped because their original alleles do not match the 1000 Genomes Project alleles.
+=#
+
+println("r8 release: ", countlines(release_r8_kgp_flip)) #hide
+println("2021 - 2023 release: ", countlines(release_2021_2023_kgp_flip)) #hide
+println("2024 - now release: ", countlines(release_2024_now_kgp_flip)) #hide
 
 #=
 ## Whole Genome Sequencing (Optional)

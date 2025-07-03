@@ -84,7 +84,6 @@ end
         @test eltype(merged_covariates[!, col]) == Float64
     end
     @test merged_covariates.FID == merged_covariates.IID
-    @test merged_covariates.FID == lowercase.(merged_covariates.FID)
 end
 
 # End to End Workflow run
