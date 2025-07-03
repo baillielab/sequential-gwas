@@ -37,13 +37,9 @@ function merge_qc_report(log_file) #hide
     for line in readlines(log_file) #hide
         if startswith(line, "--geno") && occursin("removed due to missing genotype data", line) #hide
             filtered["--geno"] = parse(Int, split(line, " ")[2]) #hide
-        elseif startswith(line, "--hwe") && occursin("removed due to Hardy-Weinberg exact test", line) #hide
-            filtered["--hwe"] = parse(Int, split(line, " ")[2]) #hide
-        elseif occursin("removed due to missing genotype data (--mind)", line) #hide
-            filtered["--mind"] = parse(Int, split(line, " ")[1]) #hide
         end #hide
     end #hide
-    return [get(filtered, "--geno", 0), get(filtered, "--hwe", 0), get(filtered, "--mind", 0)] #hide
+    return [get(filtered, "--geno", 0)] #hide
 end #hide
 function merge_report(log_file) #hide
     lines = readlines(log_file) #hide
@@ -189,7 +185,7 @@ Number of variants and individuals in merged fileset after QC.
 =#
 
 table = DataFrame(Dict( #hide
-    "" => ["--geno", "--hwe", "--mind"], #hide
+    "" => ["--geno"], #hide
     "MergedQCed" => merge_qc_report(qc_merge_log), #hide
 )) #hide
 table |> markdown_table() #hide

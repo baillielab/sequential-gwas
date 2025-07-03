@@ -24,8 +24,6 @@ process QCMergedGenotypes {
             --memory ${task.memory.toMega().toString()} \
             --bfile ${input_prefix} \
             --geno ${params.QC_GENOTYPE_MISSING_RATE} \
-            --mind ${params.QC_INDIVIDUAL_MISSING_RATE} \
-            --hwe ${params.QC_HWE_P} ${params.QC_HWE_K} \
             --ref-allele ref_alleles.txt \
             --output-chr chr26 \
             --keep ${unrelated_samples} \
