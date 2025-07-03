@@ -88,14 +88,6 @@ function align_ukb_variants_with_kgp_and_keep_unrelated(ukb_bed_prefix, kgp_bed_
     return 0
 end
 
-function read_covariate_and_lowercase_id(filepath; id_columns=[:FID, :IID])
-    covariates = CSV.read(filepath, DataFrame)
-    for id_column in id_columns
-        covariates[!, id_column] = lowercase.(covariates[!, id_column])
-    end
-    return covariates
-end
-
 function merge_ukb_genomicc_covariates(
     genomicc_covariates_file,
     genomicc_inferred_covariates_file,
@@ -105,8 +97,8 @@ function merge_ukb_genomicc_covariates(
     output_file="ukb_genomicc.covariates.csv"
     )
     # Process GenOMICC covariates
-    genomicc_covariates = read_covariate_and_lowercase_id(genomicc_covariates_file; id_columns=[:genotype_file_id]) 
-    genomicc_inferred_covariates = read_covariate_and_lowercase_id(genomicc_inferred_covariates_file, id_columns=[:FID, :IID])
+    genomicc_covariates = CSV.read(genomicc_covariates_file, DataFrame)
+    genomicc_inferred_covariates = CSV.read(genomicc_inferred_covariates_file, DataFrame)
     genomicc_all_covariates = innerjoin(
         genomicc_covariates, 
         genomicc_inferred_covariates, 
@@ -127,8 +119,8 @@ function merge_ukb_genomicc_covariates(
     genomicc_all_covariates.COHORT = fill(:GENOMICC, nrow(genomicc_all_covariates))
     # Process UKB covariates
     table_with_eids_to_exclude = CSV.read(file_with_eids_to_exclude, DataFrame, select=[:eid])
-    ukb_covariates = read_covariate_and_lowercase_id(ukb_covariates_file; id_columns=[:eid])
-    ukb_inferred_covariates = read_covariate_and_lowercase_id(ukb_inferred_covariates_file, id_columns=[:FID, :IID])
+    ukb_covariates = CSV.read(ukb_covariates_file, DataFrame)
+    ukb_inferred_covariates = CSV.read(ukb_inferred_covariates_file, DataFrame)
     ukb_all_covariates = innerjoin(
         ukb_covariates,
         ukb_inferred_covariates,
