@@ -128,7 +128,7 @@ jobs:
       - uses: nf-core/setup-nextflow@v1.2.0
       - name: Install graphviz
         run: sudo apt-get install -y graphviz
-      - name: Create Combining Datasets DAG
+      - name: Create Combining GenOMICC Datasets DAG
         run: nextflow run main.nf -with-dag docs/src/assets/combining_datasets_dag.html -preview -c test/assets/combine_datasets.wgs.config
       - name: Create GWAS DAG
         run: nextflow run main.nf -entry GWAS -with-dag docs/src/assets/gwas_dag.html -preview -c test/assets/gwas.bygroup.config

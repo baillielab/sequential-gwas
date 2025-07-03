@@ -1,4 +1,4 @@
-# Combining Datasets
+# Combining GenOMICC Datasets
 
 This workflow combines the various genetic data sources available into a unified dataset.
 
@@ -62,8 +62,9 @@ taskset -c 998 nextflow run main.nf -entry CombineGeneticDatasets -c run.config 
 All outputs are produced in `PUBLISH_DIR` (defaults to `results`), the main outputs of the workflow are:
 
 - `report.md`: A report of the pipeline execution
-- `genotypes.aggregated.qced.final.{bed,bim,fam}`: The aggregated genotypes
-- `covariates.inferred.csv`: THe covariates inferred from the genotypes (ancestry, PCs).
+- `genotypes.aggregated.qced.final.{bed,bim,fam}`: The aggregated genotypes to be sent to sent for [GenOMICC Genotypes Imputation](@ref)
+- `covariates.inferred.csv`: The covariates inferred from the genotypes (ancestry, PCs).
+- `ancestry/kgp_shared/kgp.merged.unrelated.shared.{bed,bim,fam}`: The 1000 Genome Project genotypes corresponding to the variants in the GenOMICC cohort (can be used later on in [Merging the GenOMICC and UK Biobank Cohorts](@ref))
 
 ## Workflow Parameters
 

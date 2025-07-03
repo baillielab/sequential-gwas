@@ -7,14 +7,14 @@ This section describes the main inputs to the workflow, see further down for the
 
 ### Genetic Data
 
-For this workflow, both genotypes and imputed genotypes are required. They will likely be the respective outputs of the [Combining Datasets](@ref) and [Genotypes Imputation](@ref) workflows, optionally merged with [Combining with UK Biobank](@ref) depending on your project of interest.
+For this workflow, both genotypes and imputed genotypes are required. They will likely be the respective outputs of the [Combining GenOMICC Datasets](@ref) and [GenOMICC Genotypes Imputation](@ref) workflows, optionally merged with [Combining with UK Biobank](@ref) depending on your project of interest.
 
 ### Covariates
 
 There are two main types of covariates files you can use here. 
 
 - The `COVARIATES` file contains the usual covariates information including phenotypes and is typically provided by Dominique on a per project basis. Unfortunately, at this point, the specifications for this file have not been clearly defined. The columns of the file I have received are: `genotype_file_id`, `age_years`, `sex`, `case_or_control`, `cohort`, `severe_cohort_primary_diagnosis`, `isaric_cohort_max_severity_score`.
-- An optional `INFERRED_COVARIATES` contains covariates information that is inferred from the genetic datasets during the [Combining Datasets](@ref) workflow. This is the case for ancestry estimates for instance.
+- An optional `INFERRED_COVARIATES` contains covariates information that is inferred from the genetic datasets during the [Combining GenOMICC Datasets](@ref) workflow. This is the case for ancestry estimates for instance.
 
 ### GWAS Variables
 
@@ -53,10 +53,10 @@ Again, due to the ill-definition of the covariates file, at the moment, only a s
 
 This is the list of all the pipeline's parameters, they can be set in the `run.config` file under the `params` section.
 
-- `GENOTYPES_PREFIX`: Prefix to genotypes in PLINK BED format (likely the output of the [Combining Datasets](@ref) workflow).
-- `IMPUTED_GENOTYPES_PREFIX`: Prefix to imputed genotypes in PGEN format (likely the output of the [Genotypes Imputation](@ref) workflow).
-- `COVARIATES`: Path to covariate file (likely the output of the [Combining Datasets](@ref) workflow)
-- `INFERRED_COVARIATES`: Optional, path to covariates inferred from genetic data during the [Combining Datasets](@ref) workflow.
+- `GENOTYPES_PREFIX`: Prefix to genotypes in PLINK BED format (likely the output of the [Combining GenOMICC Datasets](@ref) workflow).
+- `IMPUTED_GENOTYPES_PREFIX`: Prefix to imputed genotypes in PGEN format (likely the output of the [GenOMICC Genotypes Imputation](@ref) workflow).
+- `COVARIATES`: Path to covariate file (likely the output of the [Combining GenOMICC Datasets](@ref) workflow)
+- `INFERRED_COVARIATES`: Optional, path to covariates inferred from genetic data during the [Combining GenOMICC Datasets](@ref) workflow.
 - `N_PCS (default: 10)`: Number of principal components to compute.
 - `PCA_APPROX` (default: true): Whether PCA is performed via approximation [see](https://www.cog-genomics.org/plink/2.0/strat)
 - `MIN_GROUP_SIZE (default: 100)`: Minimum number of samples in a group to proceed to effect size estimation.

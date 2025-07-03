@@ -1,4 +1,4 @@
-# Genotypes Imputation
+# GenOMICC Genotypes Imputation
 
 This workflow sends the genotypes for imputation to [TOPMed](https://imputation.biodatacatalyst.nhlbi.nih.gov/#!pages/home), downloads and aggregates the results per chromosome. It follows the principles provided in their [documentation](https://topmedimpute.readthedocs.io/en/latest/).
 
@@ -9,7 +9,7 @@ This workflow sends the genotypes for imputation to [TOPMed](https://imputation.
 
 For this workflow to work, you will need:
 
-- Genotypes: likely the output of the [Combining Datasets](@ref) workflow.
+- Genotypes: likely the output of the [Combining GenOMICC Datasets](@ref) workflow.
 - A TOPMed token: see [this page](http://topmedimpute.readthedocs.io/en/latest/api/#authentication).
 - job ids (optional): Only to resume a crashed job.
 

@@ -21,11 +21,11 @@ In particular we need to populate the `genomicc` and `kgp` subfolders as display
 
 We will need the following GenOMICC data, at the present time, the name of the file does not matter since it seems impossible to reference a file by its path on the RAP, instead we will have to use file IDs: 
 
-- genotypes: Output by [Combining Datasets](@ref).
+- genotypes: Output by [Combining GenOMICC Datasets](@ref).
 - covariates: 
   - General covariates provided by Dominique, it should contain an `age_years` and a `sex` column.
-  - Inferred covariates output by [Combining Datasets](@ref) containing ancestry estimates.
-- imputed genotypes: Output by [Genotypes Imputation](@ref).
+  - Inferred covariates output by [Combining GenOMICC Datasets](@ref) containing ancestry estimates.
+- imputed genotypes: Output by [GenOMICC Genotypes Imputation](@ref).
 
 I recommend to organise them as follows:
 
@@ -36,7 +36,7 @@ I recommend to organise them as follows:
 
 ### 1000 Genome Project
 
-You will also need the 1000 Genome Project genotypes in plink format, filtered to keep only variants matching the GenOMICC genotyped variants. This is an output of the [Combining Datasets](@ref) workflow. They can be organised as follows:
+You will also need the 1000 Genome Project genotypes in plink format, filtered to keep only variants matching the GenOMICC genotyped variants. This is an output of the [Combining GenOMICC Datasets](@ref) workflow. They can be organised as follows:
 
 ![rap_assets_kgp](assets/rap_assets_kgp.png)
 
