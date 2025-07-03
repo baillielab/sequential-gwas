@@ -1,19 +1,26 @@
 
-function get_kgp_ref_alt(kgp)
-    kgp_info = GenomiccWorkflows.load_variants_info(kgp)
-    kgp_ref_alt = Dict()
-    for variant_id in kgp_info.VARIANT_ID
-        chr, pos, ref, alt = split(variant_id, ":")
-        if length(ref) == length(alt) == 1
-            key = (chr, parse(Int, pos))
-            if haskey(kgp_ref_alt, key)
-                kgp_ref_alt[key] = nothing
+function kgp_minor_major_alleles_by_position_from_df(kgp_info)
+    kgp_info_dict = Dict()
+    for (variant_id, chr, pos, minor, major, minor_freq) in
+            zip(kgp_info.VARIANT_ID, kgp_info.CHR_CODE, kgp_info.BP_COORD, kgp_info.MINOR_ALLELE, kgp_info.MAJOR_ALLELE, kgp_info.MINOR_ALLELE_FREQ)
+        # Only SNPs are considered
+        if length(minor) == length(major) == 1
+            key = (chr, pos)
+            # If there are multiple entries for the same position, these are multi-allelic variants that will be dropped
+            if haskey(kgp_info_dict, key)
+                kgp_info_dict[key] = nothing
+            # Otherwise, we add the stats
             else
-                kgp_ref_alt[key] = (ref, alt)
+                kgp_info_dict[key] = (minor, major, minor_freq, variant_id)
             end
         end
     end
-    return kgp_ref_alt
+    return kgp_info_dict
+end
+
+function get_kgp_minor_major_alleles_by_position(kgp)
+    kgp_info = GenomiccWorkflows.load_variants_info(kgp)
+    return kgp_minor_major_alleles_by_position_from_df(kgp_info)
 end
 
 almost_balanced(freq; threshold=0.02) = abs(freq - 0.5) < threshold
@@ -43,35 +50,35 @@ function get_action(row, kgp_info; threshold=0.2)
         return "DROP (VARIANT-NON-BIALLELIC)"
     end
 
-    ref, alt = kgp_info[key]
+    kgp_minor, kgp_major, kgp_minor_freq, kgp_id = kgp_info[key]
     # Note: PLINK2 ALLELE_1 and ALLELE_2 are the minor and major alleles, respectively
     # Ideal case, where the variant in our dataset matches the KGP dataset
-    if row.ALLELE_1 == alt && row.ALLELE_2 == ref
-        return "KEEP (MINOR-MAJOR-MATCHING-ALT-REF)"
+    if row.MINOR_ALLELE == kgp_minor && row.MAJOR_ALLELE == kgp_major
+        return "KEEP (MINOR-MAJOR-MATCHING-KGP)"
     # There are two cases:
     ## (i) The variant is palindromic, then either:
     ##  - It wasn't properly flipped by GenomeStudio or earlier steps and needs to be flipped
     ##  - It has opposite allele frequency in our dataset (this should only happen when MAF ≈ 0.5 and we drop these cases)
     ## (ii) The variant is not palyndromic, it has an opposite allele frequency in our dataset (likely when MAF ≈ 0.5), we annotate it
-    elseif row.ALLELE_1 == ref && row.ALLELE_2 == alt
-        alt_ref_set = Set([ref, alt])
-        if alt_ref_set == Set(["A", "T"]) || alt_ref_set == Set(["C", "G"])
-            if almost_balanced(row.ALLELE_1_FREQ; threshold=threshold)
-                return "DROP (PALINDROMIC-MINOR-MAJOR-REVERSED-ALT-REF-BALANCED)"
+    elseif row.MINOR_ALLELE == kgp_major && row.MAJOR_ALLELE == kgp_minor
+        kgp_alleles = Set([kgp_minor, kgp_major])
+        if kgp_alleles == Set(["A", "T"]) || kgp_alleles == Set(["C", "G"])
+            if almost_balanced(row.MINOR_ALLELE_FREQ; threshold=threshold)
+                return "DROP (PALINDROMIC-MINOR-MAJOR-REVERSED-KGP-BALANCED)"
             else
-                return "FLIP (PALINDROMIC-MINOR-MAJOR-REVERSED-ALT-REF)"
+                return "FLIP (PALINDROMIC-MINOR-MAJOR-REVERSED-KGP-UNBALANCED)"
             end
         else
-            return "KEEP (MINOR-MAJOR-REVERSED-ALT-REF)" # Should be rare and mostly happen when MAF ≈ 0.5
+            return "KEEP (MINOR-MAJOR-REVERSED-KGP)" # Should be rare and mostly happen when MAF ≈ 0.5
         end
     else
         complement = Dict("A" => "T", "T" => "A", "C" => "G", "G" => "C")
         # The variant alleles are the complement to the KGP alleles, we flip
-        if row.ALLELE_1 == complement[alt] && row.ALLELE_2 == complement[ref]
-            return "FLIP (COMPLEMENT)"
+        if row.MINOR_ALLELE == complement[kgp_minor] && row.MAJOR_ALLELE == complement[kgp_major]
+            return "FLIP (COMPLEMENT-KGP)"
         # The variant alleles are the complement to the KGP alleles, but mismatch frequencies, we flip and annotate
-        elseif row.ALLELE_1 == complement[ref] && row.ALLELE_2 == complement[alt]
-            return "FLIP (COMPLEMENT-MINOR-MAJOR-REVERSED-ALT-REF)"
+        elseif row.MINOR_ALLELE == complement[kgp_major] && row.MAJOR_ALLELE == complement[kgp_minor]
+            return "FLIP (COMPLEMENT-KGP-MINOR-MAJOR-REVERSED)"
         # All other cases are dropped (hopefully none)
         else
             return "DROP (ALLELES-NOT-MATCHING-KGP)"
@@ -90,8 +97,8 @@ function set_new_id_column!(variants_info::DataFrame, kgp_info)
         key = (row.CHR_CODE, row.BP_COORD)
         if haskey(kgp_info, key) && kgp_info[key] !== nothing
             # Thew new id is made from chr:pos:ref:alt
-            ref, alt = kgp_info[key]
-            return string(row.CHR_CODE, ":", row.BP_COORD, ":", ref, ":", alt)
+            minor, major, minor_frequency, kgp_id = kgp_info[key]
+            return kgp_id
         else
             # The new id does not matter, this variant will be dropped
             return row.VARIANT_ID
@@ -158,16 +165,34 @@ function generate_files_from_actions(outdir, prefixes_and_bims)
     end
 end
 
+function update_bim_with_minor_major_info!(bim, acount)
+        # Define a mapping from variant to minor and major alleles and minor allele frequency
+    variant_id_to_minor_major = map(zip(acount.ID, acount.REF, acount.ALT, acount.ALT_CTS, acount.OBS_CT)) do (id, ref, alt, alt_ct, obs_ct)
+        alt_freq = alt_ct / obs_ct
+        minor, major, minor_freq = if alt_freq <= 0.5 
+            (alt, ref, alt_freq) 
+        else 
+            (ref, alt, 1 - alt_freq)
+        end
+        id => (minor, major, minor_freq)
+    end |> Dict
+    # Update bim with MINOR_ALLELE, MAJOR_ALLELE and MINOR_ALLELE_FREQ
+    bim.MINOR_ALLELE = [
+        variant_id_to_minor_major[variant_id][1] for variant_id in bim.VARIANT_ID
+    ]
+    bim.MAJOR_ALLELE = [
+        variant_id_to_minor_major[variant_id][2] for variant_id in bim.VARIANT_ID
+    ]
+    bim.MINOR_ALLELE_FREQ = [
+        variant_id_to_minor_major[variant_id][3] for variant_id in bim.VARIANT_ID
+    ]
+    return bim
+end
+
 function load_variants_info(prefix)
     bim = GenomiccWorkflows.read_bim(string(prefix, ".bim"))
-    afreq = CSV.read(string(prefix, ".acount"), DataFrame)
-    alt_freqs = Dict(
-        zip(afreq.ID, afreq.ALT_CTS ./ afreq.OBS_CT)
-    )
-    bim.ALLELE_1_FREQ = map(bim.VARIANT_ID) do id
-        get(alt_freqs, id, missing)
-    end
-    return bim
+    acount = CSV.read(string(prefix, ".acount"), DataFrame)
+    return update_bim_with_minor_major_info!(bim, acount)
 end
 
 """
@@ -202,7 +227,7 @@ function generate_qc_extraction_files_from_kgp(
     release_r8_info = GenomiccWorkflows.load_variants_info(release_r8)
     release_2021_2023_info = GenomiccWorkflows.load_variants_info(release_2021_2023)
     release_2024_now_info = GenomiccWorkflows.load_variants_info(release_2024_now)
-    kgp_info = GenomiccWorkflows.get_kgp_ref_alt(kgp)
+    kgp_info = GenomiccWorkflows.get_kgp_minor_major_alleles_by_position(kgp)
 
     # Format the chromosome and set the action column
     set_new_columns!(release_r8_info, kgp_info; threshold=threshold)

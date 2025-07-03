@@ -54,6 +54,17 @@ function merge_report(log_file) #hide
     variants, _, _, people, _ = split(lines[info_line], " ") #hide
     return [parse(Int, variants), parse(Int, people)] #hide
 end #hide
+function wgs_table(wgs_prefix) #hide
+    if wgs_prefix !== "NO_WGS_SAMPLES" #hide
+        table = DataFrame(Dict( #hide
+            "" => ["Variants", "Individuals"], #hide
+            "WGS" => count_variants_and_indv(wgs_prefix), #hide
+        )) #hide
+        return table |> markdown_table() #hide
+    else #hide
+        return nothing #hide
+    end #hide
+end #hide
 #hide
 nothing #hide
 #=
@@ -140,18 +151,6 @@ The whole-genome sequencing data is then genotyped to include the variants prese
 
 Number of variants and individuals in filesets.
 =#
-
-function wgs_table(wgs_prefix) #hide
-    if wgs_prefix !== "NO_WGS_SAMPLES" #hide
-        table = DataFrame(Dict( #hide
-            "" => ["Variants", "Individuals"], #hide
-            "WGS" => count_variants_and_indv(wgs_prefix), #hide
-        )) #hide
-        return table |> markdown_table() #hide
-    else #hide
-        return nothing #hide
-    end #hide
-end #hide
 
 wgs_table(wgs_prefix) #hide
 
