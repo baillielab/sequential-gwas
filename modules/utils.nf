@@ -11,9 +11,6 @@ def get_julia_cmd(cpus){
         return "JULIA_CPU_TARGET=generic JULIA_DEPOT_PATH=/tmp:\$JULIA_DEPOT_PATH julia --project=/opt/genomicc-workflows --startup-file=no --threads=${cpus} /opt/genomicc-workflows/bin/genomicc.jl"
     }
     else {
-        return """
-        TEMPD=\$(mktemp -d)
-        JULIA_DEPOT_PATH=\$TEMPD:\$JULIA_DEPOT_PATH julia --project=/opt/genomicc-workflows --startup-file=no --threads=${cpus} --sysimage=${sysimageFile} /opt/genomicc-workflows/bin/genomicc.jl
-        """
+        return "TEMPD=\$(mktemp -d) && JULIA_DEPOT_PATH=\$TEMPD:\$JULIA_DEPOT_PATH julia --project=/opt/genomicc-workflows --startup-file=no --threads=${cpus} --sysimage=${sysimageFile} /opt/genomicc-workflows/bin/genomicc.jl"
     }        
 }
