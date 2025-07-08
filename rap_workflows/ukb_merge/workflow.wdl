@@ -56,6 +56,7 @@ workflow merge_ukb_and_genomicc {
         String maf = "0.01"
         String ancestry_threshold = "0.8"
         String palyndromic_threshold = "0.02"
+        String r2_threshold = "0.9"
         String julia_threads = "auto"
         String julia_use_sysimage = "true"
     }
@@ -82,7 +83,7 @@ workflow merge_ukb_and_genomicc {
                 table_with_eids_to_exclude = hesin_critical_table,
                 qc_genotype_missing_rate = qc_genotype_missing_rate,
                 qc_individual_missing_rate = qc_individual_missing_rate,
-                r2_threshold = "0.9",
+                r2_threshold = r2_threshold,
                 julia_threads = julia_threads,
                 julia_use_sysimage = julia_use_sysimage
         }
