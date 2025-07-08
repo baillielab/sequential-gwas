@@ -6,19 +6,25 @@
             "chr": "20",
             "bgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPx07jJykJvzB285f72YyqK",
             "bgi": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPvy48JykJV3kq0FXkV5vZ0",
-            "sample": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J0pqfk0JfkBK28pZfpB18qBk"
+            "sample": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J0pqfk0JfkBK28pZfpB18qBk",
+            "vcf_info": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPvy3QJykJqzP15BB5V4Gz8",
+            "vcf_info_index": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPvy38JykJZvX1Y5qB40k39"
         },
         {
             "chr": "21",
             "bgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPvzV8JykJQ1YFVFYgk3qGZ",
             "bgi": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPvy3jJykJyjzFf9FfxQ9zy",
-            "sample": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J0pqfqQJfkB735P76jvf7KFk"
+            "sample": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J0pqfqQJfkB735P76jvf7KFk",
+            "vcf_info": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPvy3QJykJy9fjf5qZK89Fk",
+            "vcf_info_index": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPvy38JykJjJ4vK9FgF4y2B"
         },
         {
             "chr": "22",
             "bgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPvzY0JykJxvXxb5g3367f4",
             "bgi": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPvy3QJykJYFBPy5qGgVpq7",
-            "sample": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J0pqfyQJfkBFpPvP031Ygq8P"
+            "sample": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J0pqfyQJfkBFpPvP031Ygq8P",
+            "vcf_info": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPvy3QJykJZZZYz14ypYPFf",
+            "vcf_info_index": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-GBPvy38JykJpV5P015P6Kzk9"
         }
     ],
     "merge_ukb_and_genomicc.ukb_covariates": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1Kf8G8JffPg8xYF3xZpq5K1",
