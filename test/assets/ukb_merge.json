@@ -9,19 +9,25 @@
             "chr": "1",
             "bgen": "test/assets/ukb/imputed/ukb21007_c1_b0_v1.bgen",
             "bgi": "test/assets/ukb/imputed/ukb21007_c1_b0_v1.bgen.bgi",
-            "sample": "test/assets/ukb/imputed/ukb21007_c1_b0_v1.sample"
+            "sample": "test/assets/ukb/imputed/ukb21007_c1_b0_v1.sample",
+            "vcf_info": "test/assets/ukb/imputed/ukb21007_c1_b0_v1.sites.vcf.gz",
+            "vcf_info_index": "test/assets/ukb/imputed/ukb21007_c1_b0_v1.sites.vcf.gz.csi"
         },
         {
             "chr": "2",
             "bgen": "test/assets/ukb/imputed/ukb21007_c2_b0_v1.bgen",
             "bgi": "test/assets/ukb/imputed/ukb21007_c2_b0_v1.bgen.bgi",
-            "sample": "test/assets/ukb/imputed/ukb21007_c2_b0_v1.sample"
+            "sample": "test/assets/ukb/imputed/ukb21007_c2_b0_v1.sample",
+            "vcf_info": "test/assets/ukb/imputed/ukb21007_c2_b0_v1.sites.vcf.gz",
+            "vcf_info_index": "test/assets/ukb/imputed/ukb21007_c2_b0_v1.sites.vcf.gz.csi"
         },
         {
             "chr": "3",
             "bgen": "test/assets/ukb/imputed/ukb21007_c3_b0_v1.bgen",
             "bgi": "test/assets/ukb/imputed/ukb21007_c3_b0_v1.bgen.bgi",
-            "sample": "test/assets/ukb/imputed/ukb21007_c3_b0_v1.sample"
+            "sample": "test/assets/ukb/imputed/ukb21007_c3_b0_v1.sample",
+            "vcf_info": "test/assets/ukb/imputed/ukb21007_c3_b0_v1.sites.vcf.gz",
+            "vcf_info_index": "test/assets/ukb/imputed/ukb21007_c3_b0_v1.sites.vcf.gz.csi"
         }
     ],
     "merge_ukb_and_genomicc.ukb_covariates": "test/assets/ukb/covariates_table.csv",

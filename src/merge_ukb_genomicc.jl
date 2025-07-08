@@ -162,3 +162,27 @@ function make_ukb_genomicc_merge_report(;kwargs...)
         preprocess=prepend_args
     )
 end
+
+function make_ukb_bgen_qc_and_r2_filter_files(prefix; threshold=0.9, output=string(prefix, ".extract_list.txt"))
+    variants_info = CSV.read(string(prefix, ".tsv"), DataFrame; delim='\t', header=["CHROM", "POS", "ID", "REF", "ALT", "R2"])
+    pvar = CSV.read(string(prefix, ".pvar"), DataFrame; delim='\t')
+    # Check REF, ALT, POS alleles match
+    @assert all(variants_info.REF .== pvar.REF)
+    @assert all(variants_info.ALT .== pvar.ALT)
+    @assert all(variants_info.POS .== pvar.POS)
+    # Write the variants_info with sufficient R2 to a file
+    open(output, "w") do f
+        println(filter(:R2 => >=(threshold), variants_info).ID)
+        for id in filter(:R2 => >=(threshold), variants_info).ID
+            println(f, id)
+        end
+    end
+    # Update the unknown ID column in the pvar file
+    pvar.ID = variants_info.ID
+    tmpdir = mktempdir()
+    tmpfile = joinpath(tmpdir, "temp.pvar")
+    CSV.write(tmpfile, pvar; delim='\t', writeheader=true)
+    mv(tmpfile, string(prefix, ".pvar"), force=true)
+
+    return 0
+end

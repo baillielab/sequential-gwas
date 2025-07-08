@@ -86,6 +86,53 @@ end
     @test merged_covariates.FID == merged_covariates.IID
 end
 
+
+@testset "Test make_ukb_bgen_qc_and_r2_filter_files" begin
+    tmpdir = mktempdir()
+    prefix = joinpath(TESTDIR, "assets", "ukb", "imputed", "ukb21007_c1_b0_v1")
+    output_file = joinpath(tmpdir, "extract_list.txt")
+    pvar = CSV.read(string(prefix, ".pvar"), DataFrame; delim='\t')
+    copy!(ARGS, [
+        "make-ukb-bgen-qc-and-r2-filter-files",
+        prefix,
+        "--threshold", "0.9",
+        "--output", output_file
+    ])
+    julia_main()
+    # First variant with R2 < 0.9 is dropped
+    extract_list = readlines(output_file)
+    @test extract_list == [
+        "chr1:14012312:T:C",
+        "chr1:18100537:G:A",
+        "chr1:22542609:T:C",
+        "chr1:40310265:G:A",
+        "chr1:92682820:C:T",
+        "chr1:111622622:C:A",
+        "chr1:183905563:G:A",
+        "chr1:231799576:C:T"
+    ]
+    # pvar file has updated ID
+    new_pvar = CSV.read(string(prefix, ".pvar"), DataFrame; delim='\t')
+    @test new_pvar.ID == [
+        "chr1:9694126:C:T",
+        "chr1:14012312:T:C",
+        "chr1:18100537:G:A",
+        "chr1:22542609:T:C",
+        "chr1:40310265:G:A",
+        "chr1:92682820:C:T",
+        "chr1:111622622:C:A",
+        "chr1:183905563:G:A",
+        "chr1:231799576:C:T"
+    ]
+    # Write back the original pvar file
+    CSV.write(
+        string(prefix, ".pvar"),
+        pvar,
+        delim='\t',
+        writeheader=true
+    )
+end
+
 # End to End Workflow run
 
 dorun = isinteractive() || (haskey(ENV, "CI_CONTAINER") && ENV["CI_CONTAINER"] == "docker")
@@ -114,31 +161,40 @@ if dorun
         results_dirs = readdir("ukb_genomicc_merge_results/merge_ukb_and_genomicc/", join=true)
         results_dir = results_dirs[argmax(mtime(d) for d in results_dirs)]
 
-        # Test filtering chromosome files (3 filesets)
+        # Test R2 filter and critical samples removed
+        samples_in_critical_care = CSV.read(
+                joinpath(TESTDIR, "assets", "ukb", "critical_table.csv"), 
+                DataFrame
+            ).eid
+        first_filter_dir = joinpath(results_dir, "call-filter_ukb_chr_with_r2_and_critical_samples")
+        for shard in [0, 1, 2]
+            execution_dir = joinpath(first_filter_dir, "shard-$shard", "execution")
+            results_files = readdir(execution_dir, join=true)
+            # Check critical samples are removed
+            samples = CSV.read(
+                only(filter(x -> endswith(x, ".psam"), results_files)),
+                DataFrame
+            )
+            @test isempty(intersect(samples.IID, samples_in_critical_care))
+            # Check R2 filter is applied
+            pvar = CSV.read(
+                only(filter(x -> endswith(x, ".pvar"), results_files)),
+                DataFrame
+            )
+            if first(pvar[!, "#CHROM"]) == "chr1"
+                @test "chr1:9694126:C:T" ∉ pvar.ID
+            end
+        end
+
+        # Test extract genomicc variants
         all_chr_bim = DataFrame()
         for shard in [0, 1, 2]
-            execution_dir = joinpath(results_dir, "call-filter_ukb_chr", "shard-$shard", "execution")
+            execution_dir = joinpath(results_dir, "call-extract_genomicc_variants", "shard-$shard", "execution")
             results_files = readdir(execution_dir, join=true)
             # Read bim file
             bim_file = only(filter(x -> endswith(x, ".bim"), results_files))
             bim = GenomiccWorkflows.read_bim(bim_file)
             append!(all_chr_bim, DataFrame(bim))
-            chr = replace(first(bim.CHR_CODE), "chr" => "")
-            # Read fam file
-            fam_file = only(filter(x -> endswith(x, ".fam"), results_files))
-            fam = GenomiccWorkflows.read_fam(fam_file)
-            # Check variants are subset of source BGEN file
-            src_bgen_file = joinpath(TESTDIR, "assets", "ukb", "imputed", "ukb21007_c$(chr)_b0_v1.bgen")
-            b = BGEN.Bgen(src_bgen_file)
-            src_positions = [pos(v) for v in iterator(b)]
-            @test issubset(bim.BP_COORD, src_positions)
-            # Check critical care individuals have been dropped
-            samples_in_critical_care = CSV.read(
-                joinpath(TESTDIR, "assets", "ukb", "critical_table.csv"), 
-                DataFrame
-            ).eid
-            samples_in_filterd_chr = fam.IID
-            @test isempty(intersect(fam.IID, samples_in_critical_care))
         end
 
         # Test merging chromosome files

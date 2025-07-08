@@ -97,6 +97,27 @@ function cli_settings()
         "make-ukb-genomicc-merge-report"
             action = :command
             help = "Generates a report after merging UKB and GenOMICC data."
+
+        "make-ukb-bgen-qc-and-r2-filter-files"
+            action = :command
+            help = "Generates UKB BGEN QC and R2 filter files."
+    end
+
+    @add_arg_table! s["make-ukb-bgen-qc-and-r2-filter-files"] begin
+        "prefix"
+            arg_type = String
+            required = true
+            help = "Prefix to the UKB file."
+
+        "--threshold"
+            arg_type = Float64
+            help = "R2 threshold for filtering variants."
+            default = 0.9
+
+        "--output"
+            arg_type = String
+            help = "Output file containing variants to extract."
+            default = "extract_list.txt"
     end
 
     @add_arg_table! s["make-ukb-genomicc-merge-report"] begin
@@ -924,6 +945,12 @@ function julia_main()::Cint
             ukb_genomicc_merged_fam_file=cmd_settings["ukb-genomicc-merged-fam-file"],
             ukb_genomicc_imputed_files_list=cmd_settings["ukb-genomicc-imputed-files-list"],
             ukb_genomicc_covariates_file=cmd_settings["ukb-genomicc-covariates-file"]
+        )
+    elseif cmd == "make-ukb-bgen-qc-and-r2-filter-files"
+        make_ukb_bgen_qc_and_r2_filter_files(
+            cmd_settings["prefix"];
+            threshold=cmd_settings["threshold"],
+            output=cmd_settings["output"]
         )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))
