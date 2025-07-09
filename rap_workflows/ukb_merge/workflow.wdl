@@ -418,10 +418,12 @@ task extract_genomicc_variants {
         full_pgen_prefix=$(dirname "~{pgen_file}")/$(basename "~{pgen_file}" .pgen)
         # Extract genomicc genotyped locations
         awk '{print $1, $4, $4}' ~{genomicc_genotyped_bim} > ranges_to_extract.txt
-        # Convert BGEN to PLINK, filtering both samples and variants
+        # Convert PGEN to PLINK, keep only bi-allelic SNPS, variant_IDS are reset to be unique to prevent multi-allelic variants obn multiple 
+        # lines to cause problems during the merge. These are dropped later on and IDS set to match the 1000 GP ids.
         plink2 \
             --pfile ${full_pgen_prefix} \
             --extract range ranges_to_extract.txt \
+            --set-all-var-ids @:#:\$1:\$2 \
             --snps-only \
             --output-chr chr26 \
             --max-alleles 2 \
@@ -477,7 +479,7 @@ task align_ukb_variants_with_kgp_and_keep_unrelated {
             align-ukb-variants-with-kgp-and-keep-unrelated \
             ${ukb_bed_prefix} \
             ${kgp_bed_prefix} \
-            --elatedness-degree=~{relatedness_degree}
+            --relatedness-degree=~{relatedness_degree}
     >>>
 
     output {
