@@ -187,10 +187,10 @@ function cli_settings()
             help = "Prefix to output files."
             default = "ukb_unrelated"
 
-        "--threshold"
+        "--relatedness-degree"
             arg_type = Float64
-            help = "Threshold for palindromic variants."
-            default = 0.02
+            help = "Degree of relatedness to keep individuals."
+            default = 3
     end
 
     @add_arg_table! s["merge-regenie-chr-results"] begin
@@ -928,7 +928,7 @@ function julia_main()::Cint
             cmd_settings["ukb-bed-prefix"],
             cmd_settings["kgp-bed-prefix"];
             out_prefix=cmd_settings["out-prefix"],
-            threshold=cmd_settings["threshold"]
+            relatedness_degree=cmd_settings["relatedness-degree"]
         )
     elseif cmd == "merge-ukb-genomicc-covariates"
         merge_ukb_genomicc_covariates(

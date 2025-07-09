@@ -33,7 +33,7 @@ function update_variant_ids_with_map!(bim, variant_ids_map)
     return unmapped_ids
 end
 
-function align_ukb_variants_with_kgp_and_keep_unrelated(ukb_bed_prefix, kgp_bed_prefix; out_prefix="ukb_unrelated", threshold=0.02)
+function align_ukb_variants_with_kgp_and_keep_unrelated(ukb_bed_prefix, kgp_bed_prefix; out_prefix="ukb_unrelated", relatedness_degree=3)
     tmpdir = mktempdir()
     # Load KGP variants info
     kgp_bim = GenomiccWorkflows.read_bim(string(kgp_bed_prefix, ".bim"))
@@ -74,7 +74,7 @@ function align_ukb_variants_with_kgp_and_keep_unrelated(ukb_bed_prefix, kgp_bed_
         delim="\t"
     )
     # Drop related individual using king
-    run(`king --cpus $(nthreads()) -b $ukb_bed_prefix.bed --bim $new_bim_file --fam $ukb_bed_prefix.fam --unrelated --degree 2`)
+    run(`king --cpus $(nthreads()) -b $ukb_bed_prefix.bed --bim $new_bim_file --fam $ukb_bed_prefix.fam --unrelated --degree $relatedness_degree`)
     # Drop variants using plink2
     run(`plink2 --bed $ukb_bed_prefix.bed \
     --bim $new_bim_file \

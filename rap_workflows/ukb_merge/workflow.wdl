@@ -55,7 +55,7 @@ workflow merge_ukb_and_genomicc {
         String ip_values = "1000 50 0.05"
         String maf = "0.01"
         String ancestry_threshold = "0.8"
-        String palyndromic_threshold = "0.02"
+        String relatedness_degree = "3"
         String r2_threshold = "0.9"
         String julia_threads = "auto"
         String julia_use_sysimage = "true"
@@ -127,7 +127,7 @@ workflow merge_ukb_and_genomicc {
             kgp_bed = kgp_genotypes.bed,
             kgp_bim = kgp_genotypes.bim,
             kgp_fam = kgp_genotypes.fam,
-            palyndromic_threshold = palyndromic_threshold,
+            relatedness_degree = relatedness_degree,
             julia_threads = julia_threads,
             julia_use_sysimage = julia_use_sysimage
     }
@@ -458,7 +458,7 @@ task align_ukb_variants_with_kgp_and_keep_unrelated {
         File kgp_bed
         File kgp_bim
         File kgp_fam
-        String palyndromic_threshold = "0.02"
+        String relatedness_degree = "3"
         String julia_threads = "auto"
         String julia_use_sysimage = "true"
     }
@@ -477,7 +477,7 @@ task align_ukb_variants_with_kgp_and_keep_unrelated {
             align-ukb-variants-with-kgp-and-keep-unrelated \
             ${ukb_bed_prefix} \
             ${kgp_bed_prefix} \
-            --threshold=~{palyndromic_threshold}
+            --elatedness-degree=~{relatedness_degree}
     >>>
 
     output {

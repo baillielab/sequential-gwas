@@ -29,6 +29,7 @@ params.PCA_APPROX = true
 params.IQR_FACTOR = 10
 params.FILTER_HIGH_LOADINGS_VARIANTS = false
 params.ANCESTRY_THRESHOLD = 0.8
+params.RELATEDNESS_DEGREE = 3
 
 // Imputation
 params.TOPMED_REFRESH_RATE = 180

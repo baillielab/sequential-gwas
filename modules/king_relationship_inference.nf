@@ -11,6 +11,6 @@ process KingRelationshipInference {
     script:
         """
         sed 's/^chr//' ${bim_file} > no_chr.bim
-        king --cpus ${task.cpus} -b ${bed_file} --bim no_chr.bim --fam ${fam_file} --unrelated --degree 2
+        king --cpus ${task.cpus} -b ${bed_file} --bim no_chr.bim --fam ${fam_file} --unrelated --degree ${params.RELATEDNESS_DEGREE}
         """
 }
