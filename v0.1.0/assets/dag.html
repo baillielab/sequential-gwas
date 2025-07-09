@@ -1,0 +1,136 @@
+<!--
+  ~ Copyright 2013-2024, Seqera Labs
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<html>
+<head>
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+</head>
+<body>
+<pre class="mermaid" style="text-align: center;">
+flowchart TB
+    subgraph " "
+    v0["Channel.of"]
+    v3["Channel.of"]
+    v6["store_dir"]
+    v17["publish_dir"]
+    v22["Channel.fromFilePairs"]
+    v23["Channel.of"]
+    v25["Channel.of"]
+    v28["Channel.of"]
+    v30["chain_file"]
+    v35["variants_to_flip"]
+    v57["publish_dir"]
+    end
+    subgraph AggregateGeneticData
+    subgraph KGP
+    v7([DownloadOrAccessStoredResource])
+    v12([CleanKGP])
+    v13([KGPVCFToBed])
+    v18([MergeGenotypes])
+    v1(( ))
+    v8(( ))
+    v14(( ))
+    v16(( ))
+    v19(( ))
+    end
+    v21([DownloadOrAccessReferenceGenome])
+    subgraph GenotypesQC
+    v31([LiftOver])
+    v34([PedToBed])
+    v36([QCRawGenotypes])
+    v24(( ))
+    v29(( ))
+    v37(( ))
+    v39(( ))
+    end
+    v40([QCFilesFromKGP])
+    v47([FlipAndExtract])
+    subgraph GVCFGenotyping
+    v49([IndexReferenceGenome])
+    v50([CreateSequenceDictionary])
+    v51([GenotypeGVCFs])
+    end
+    v58([MergeGenotypes])
+    v59([QCMergedGenotypes])
+    v42(( ))
+    v43(( ))
+    v48(( ))
+    v52(( ))
+    end
+    subgraph " "
+    v32[" "]
+    v38["reports"]
+    v41[" "]
+    v60[" "]
+    v61[" "]
+    end
+    v0 --> v1
+    v3 --> v1
+    v6 --> v7
+    v1 --> v7
+    v7 --> v8
+    v8 --> v12
+    v12 --> v13
+    v13 --> v14
+    v13 --> v16
+    v17 --> v18
+    v14 --> v18
+    v16 --> v18
+    v18 --> v19
+    v21 --> v49
+    v21 --> v50
+    v21 --> v51
+    v22 --> v51
+    v23 --> v24
+    v25 --> v24
+    v28 --> v29
+    v30 --> v31
+    v24 --> v31
+    v31 --> v32
+    v31 --> v29
+    v29 --> v34
+    v34 --> v36
+    v35 --> v36
+    v36 --> v37
+    v36 --> v39
+    v36 --> v43
+    v37 --> v38
+    v19 --> v40
+    v39 --> v40
+    v40 --> v41
+    v40 --> v42
+    v40 --> v43
+    v40 --> v48
+    v42 --> v47
+    v43 --> v47
+    v47 --> v52
+    v49 --> v51
+    v50 --> v51
+    v19 --> v51
+    v48 --> v51
+    v51 --> v52
+    v57 --> v58
+    v52 --> v58
+    v58 --> v59
+    v59 --> v61
+    v59 --> v60
+
+</pre>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, maxTextSize: Number.MAX_SAFE_INTEGER, maxEdges: Number.MAX_SAFE_INTEGER });
+</script>
+</body>
+</html>
