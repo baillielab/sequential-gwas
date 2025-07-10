@@ -343,20 +343,20 @@ function cli_settings()
     end
 
     @add_arg_table! s["make-gwas-groups"] begin
-        "covariates"
+        "covariates-file"
             arg_type = String
             required = true
             help = "Path to covariates file."
 
-        "variables-file"
+        "--groupby"
             arg_type = String
-            required = true
-            help = "Path to variables file."
-
-        "--inferred-covariates"
-            arg_type = String
+            help = "Comma separated list of variables to use to stratify the GWAS."
             default = nothing
-            help = "Path to covariates inferred from genotypes."
+        
+        "--covariates"
+            arg_type = String
+            help = "Comma separated list of covariates to include in the output file."
+            default = "AGE"
 
         "--output-prefix"
             arg_type = String
@@ -870,9 +870,9 @@ function julia_main()::Cint
         )
     elseif cmd == "make-gwas-groups"
         make_gwas_groups(
-            cmd_settings["covariates"],
-            cmd_settings["variables-file"];
-            inferred_covariates_file=cmd_settings["inferred-covariates"],
+            cmd_settings["covariates-file"];
+            groupby_string=cmd_settings["groupby"],
+            covariates_string=cmd_settings["covariates"],
             output_prefix=cmd_settings["output-prefix"],
             min_group_size=cmd_settings["min-group-size"]
         )

@@ -1,0 +1,36 @@
+{
+    "gwas.julia_threads": "1",
+    "gwas.julia_use_sysimage": "false",
+    "gwas.docker_image": "olivierlabayle/genomicc:main",
+    "gwas.covariates_file": "test/assets/gwas/covariates/ukb_genomicc.covariates.csv",
+    "gwas.groupby": ["ANCESTRY_ESTIMATE"],
+    "gwas.covariates": ["AGE", "SEX", "AGE_x_AGE"],
+    "gwas.min_group_size": "100",
+    "gwas.genotypes": {
+        "chr": "all",
+        "bed": "test/assets/gwas/genotypes/genotypes.arrays_wgs.aggregated.bed",
+        "bim": "test/assets/gwas/genotypes/genotypes.arrays_wgs.aggregated.bim",
+        "fam": "test/assets/gwas/genotypes/genotypes.arrays_wgs.aggregated.fam"
+    },
+    "gwas.imputed_genotypes": [
+        {
+            "chr": "1",
+            "pgen": "test/assets/gwas/imputed/chr1.qced.pgen",
+            "psam": "test/assets/gwas/imputed/chr1.qced.psam",
+            "pvar": "test/assets/gwas/imputed/chr1.qced.pvar"
+        },
+        {
+            "chr": "2",
+            "pgen": "test/assets/gwas/imputed/chr2.qced.pgen",
+            "psam": "test/assets/gwas/imputed/chr2.qced.psam",
+            "pvar": "test/assets/gwas/imputed/chr2.qced.pvar"
+        },
+        {
+            "chr": "3",
+            "pgen": "test/assets/gwas/imputed/chr3.qced.pgen",
+            "psam": "test/assets/gwas/imputed/chr3.qced.psam",
+            "pvar": "test/assets/gwas/imputed/chr3.qced.pvar"
+        }
+    ],
+    "gwas.high_ld_regions": "assets/exclude_b38.txt"
+}
