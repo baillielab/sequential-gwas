@@ -72,7 +72,7 @@ dx download file-J1P9y88JjZjXfq4Y5gYBxk86 file-J1P9y88JjZjbX18xFZ38qY2P
 Then you can download the docker image and enter a container:
 
 ```bash
-docker run -it --rm -v $PWD:/mnt/data olivierlabayle/genomicc:main /bin/bash
+docker run -it --rm -v $PWD:/mnt/data olivierlabayle/genomicc:analysis_workflow /bin/bash
 ```
 
 The current directory is mounted to `/mnt/data`. From there, work as usual, for instance to start a Julia REPL:

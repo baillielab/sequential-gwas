@@ -10,7 +10,7 @@ struct RegenieStep1Files {
 
 workflow gwas {
     input {
-        String docker_image = "olivierlabayle/genomicc:main"
+        String docker_image = "olivierlabayle/genomicc:analysis_workflow"
         File covariates_file
         PLINKFileset genotypes
         Array[PGENFileset]+ imputed_genotypes
@@ -156,6 +156,74 @@ workflow gwas {
                 bsize = regenie_bsize
         }
     }
+
+    # Merge Regenie Step 2 results
+    call merge_regenie_chr_results {
+        input:
+            docker_image = docker_image,
+            julia_cmd = get_julia_cmd.julia_cmd,
+            regenie_step2_files = flatten(regenie_step_2.regenie_step2)
+    }
+
+    scatter (merged_results in merge_regenie_chr_results.merged_results) {
+        # Generate GWAS plots
+        call gwas_plots {
+            input:
+                docker_image = docker_image,
+                julia_cmd = get_julia_cmd.julia_cmd,
+                results = merged_results
+        }
+    }
+}
+
+task gwas_plots {
+    input {
+        String docker_image
+        String julia_cmd
+        File results
+    }
+
+    command <<<
+        ~{julia_cmd} gwas-plots \
+            ~{results} \
+            --output-prefix=gwas.plot
+    >>>
+
+    output {
+        Array[File] plots = glob("gwas.plot*")
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem1_ssd1_v2_x2"
+    }
+}
+
+task merge_regenie_chr_results {
+    input {
+        String docker_image
+        String julia_cmd
+        Array[File] regenie_step2_files
+    }
+
+    command <<<
+        for f in ~{sep=" " regenie_step2_files}; do
+            echo "${f}"
+        done > merge_list.txt
+
+        ~{julia_cmd} merge-regenie-chr-results \
+            merge_list.txt \
+            --output-prefix=regenie.results
+    >>>
+
+    output {
+        Array[File] merged_results = glob("regenie.results*.tsv")
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem1_ssd1_v2_x2"
+    }
 }
 
 task regenie_step_2 {
@@ -200,11 +268,11 @@ task regenie_step_2 {
             --firth --approx --pThresh 0.01 \
             --pred ~{regenie_list} \
             --bsize ~{bsize} \
-            --out ~{group_name}.~{chr}.step2
+            --out ~{group_name}.chr~{chr}.step2
     >>>
 
     output {
-        Array[File] regenie_step2 = glob("${group_name}.${chr}.step2*")
+        Array[File] regenie_step2 = glob("${group_name}.chr${chr}.step2*.regenie")
     }
 
     runtime {

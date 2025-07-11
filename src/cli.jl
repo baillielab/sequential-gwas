@@ -194,15 +194,14 @@ function cli_settings()
     end
 
     @add_arg_table! s["merge-regenie-chr-results"] begin
-        "input-prefix"
+        "merge-list"
             arg_type = String
             required = true
-            help = "Prefix to input files."
-
-        "--output"
+            help = "File with list of files to be merged."
+        "--output-prefix"
             arg_type = String
-            help = "Output file name."
-            default = "results.csv"
+            help = "Prefix to output files."
+            default = "regenie.results"
     end
 
     @add_arg_table! s["download-topmed-file"] begin
@@ -314,15 +313,10 @@ function cli_settings()
             required = true
             help = "Path to GWAS results file."
         
-        "group"
-            arg_type = String
-            required = true
-            help = "Group name."
-        
         "--output-prefix"
             arg_type = String
             help = "Prefix to output files."
-            default = "gwas"
+            default = "gwas.plot"
     end
 
     @add_arg_table! s["merge-covariates-pcs"] begin
@@ -884,8 +878,7 @@ function julia_main()::Cint
         )
     elseif cmd == "gwas-plots"
         gwas_plots(
-            cmd_settings["results"],
-            cmd_settings["group"];
+            cmd_settings["results"];
             output_prefix=cmd_settings["output-prefix"]
         )
     elseif cmd == "write-imputation-split-lists"
@@ -919,9 +912,8 @@ function julia_main()::Cint
             refresh_rate=cmd_settings["refresh-rate"]
             )
     elseif cmd == "merge-regenie-chr-results"
-        merge_regenie_chr_results(
-            cmd_settings["input-prefix"];
-            output=cmd_settings["output"]
+        merge_regenie_chr_results(cmd_settings["merge-list"];
+            output_prefix=cmd_settings["output-prefix"]
         )
     elseif cmd == "align-ukb-variants-with-kgp-and-keep-unrelated"
         align_ukb_variants_with_kgp_and_keep_unrelated(

@@ -9,6 +9,212 @@ using DelimitedFiles
 PKGDIR = pkgdir(GenomiccWorkflows)
 TESTDIR = joinpath(PKGDIR, "test")
 
+@testset "Test make-gwas-groups" begin
+    tmpdir = mktempdir()
+    output_prefix = joinpath(tmpdir, "gwas")
+    covariates_file = joinpath(TESTDIR, "assets", "gwas", "covariates", "ukb_genomicc.covariates.csv")
+    min_group_size = 100
+    copy!(ARGS, [
+        "make-gwas-groups", 
+        covariates_file,
+        "--groupby=ANCESTRY_ESTIMATE,SEX",
+        "--covariates=AGE,AGE_x_AGE,AGE_x_SEX",
+        "--output-prefix", output_prefix, 
+        "--min-group-size", string(min_group_size)
+    ])
+    expected_logs = [
+        (:info, "Running GenOMICC Workflows: make-gwas-groups"),
+        (:info, "Skipping group ADMIXED_0 because it has fewer than 100 individuals."),
+        (:info, "Skipping group ADMIXED_1 because it has fewer than 100 individuals.")
+    ]
+    @test_logs expected_logs... julia_main()
+
+    updated_covariates = CSV.read(joinpath(tmpdir, "gwas.covariates.csv"), DataFrame)
+    # Chec newly create covariates
+
+    # Check covariate file
+    expected_covariate_cols = [
+        "FID", 
+        "IID", 
+        "AGE", 
+        "SEX",
+        "ANCESTRY_ESTIMATE",
+        "AFR",
+        "SAS",
+        "EAS",
+        "AMR",
+        "EUR",
+        "COHORT",
+        "SEVERE_COVID_19",
+        "SEVERE_PNEUMONIA",
+        "AGE_x_AGE",
+        "AGE_x_SEX"
+    ]
+    @test names(updated_covariates) == expected_covariate_cols
+    for row in eachrow(updated_covariates)
+        @test row.AGE_x_AGE == row.AGE * row.AGE
+        if row.SEX === missing
+            @test row.AGE_x_SEX === missing
+        else
+            @test row.AGE_x_SEX == row.AGE * row.SEX
+        end
+    end
+    # Check covariates list
+    @test readlines(joinpath(tmpdir, "gwas.covariates_list.txt"),) == ["AGE", "AGE_x_AGE", "AGE_x_SEX"]
+        
+    # Check groups files
+    for ancestry in ["EUR", "AMR", "SAS", "AFR", "EAS"]
+        for sex in [0, 1]
+            group_key = string(ancestry, "_", sex)
+            individuals = CSV.read(joinpath(tmpdir, "gwas.individuals.$group_key.txt"), DataFrame; header=["FID", "IID"])
+            joined = innerjoin(updated_covariates, individuals, on = [:FID, :IID])
+            @test all(==(ancestry), joined.ANCESTRY_ESTIMATE)
+            @test all(==(sex), joined.SEX)
+        end
+    end
+end
+
+@testset "Test make-gwas-groups: no groups" begin
+    tmpdir = mktempdir()
+    output_prefix = joinpath(tmpdir, "gwas_all")
+    covariates_file = joinpath(TESTDIR, "assets", "gwas", "covariates", "ukb_genomicc.covariates.csv")
+    min_group_size = 100
+    copy!(ARGS, [
+        "make-gwas-groups", 
+        covariates_file,
+        "--output-prefix", output_prefix, 
+        "--covariates=AGE",
+        "--min-group-size", string(min_group_size)
+    ])
+    julia_main()
+
+    # Check covariate file and group 
+    covariates = CSV.read(joinpath(tmpdir, "gwas_all.covariates.csv"), DataFrame)
+    individuals = CSV.read(joinpath(tmpdir, "gwas_all.individuals.all.txt"), DataFrame; header=["FID", "IID"])
+    @test covariates.FID == individuals.FID
+    @test covariates.IID == individuals.IID
+
+    # Check covariates list
+    @test readlines(joinpath(tmpdir, "gwas_all.covariates_list.txt"),) == ["AGE"]
+end
+
+@testset "Test merge-covariates-pcs" begin
+    tmpdir = mktempdir()
+
+    covariates = DataFrame(
+        FID = string.(1:10),
+        IID = string.(1:10),
+        ANCESTRY_ESTIMATE = ["EUR", "EUR", "AFR", "AFR", "AMR", "AMR", "EAS", "EAS", "SAS", "SAS"],
+        COVID_19 = [1, missing, 0, 1, 0, 1, 1, missing, 0, 1],
+        AGE = rand(20:80, 10),
+    )
+    CSV.write(joinpath(tmpdir, "covariates.csv"), covariates, delim="\t")
+
+    for ancestry in ["AFR", "AMR", "EAS", "EUR", "SAS"]
+        for chr in 1:3
+            matching_covariates = covariates[covariates.ANCESTRY_ESTIMATE .== ancestry, :]
+            pcs = DataFrame(
+                FID = matching_covariates.FID,
+                IID = matching_covariates.IID,
+                PC1 = randn(2),
+                PC2 = randn(2),
+            )
+            rename!(pcs, "FID" => "#FID")
+            CSV.write(joinpath(tmpdir, "pca.$ancestry.chr$(chr)_out.eigenvec"), pcs, delim="\t")
+        end
+    end
+
+    covariates_file = joinpath(tmpdir, "covariates.csv")
+    pcs_prefix = joinpath(tmpdir, "pca")
+    copy!(ARGS, [
+        "merge-covariates-pcs", 
+        covariates_file,
+        pcs_prefix,
+        "--output", joinpath(tmpdir, "merged_covariates_and_pcs.tsv")
+    ])
+    julia_main()
+    merged_covariates_pcs = CSV.read(joinpath(tmpdir, "merged_covariates_and_pcs.tsv"), DataFrame)
+    # Merge did not add any row
+    @test nrow(merged_covariates_pcs) == 10
+    # 6 new columns 2 for PCS, 3 for get_chr_out_string
+    @test names(merged_covariates_pcs) == [
+        "FID",
+        "IID",
+        "ANCESTRY_ESTIMATE",
+        "COVID_19",
+        "AGE",
+        "CHR1_OUT_PC1",
+        "CHR1_OUT_PC2",
+        "CHR2_OUT_PC1",
+        "CHR2_OUT_PC2",
+        "CHR3_OUT_PC1",
+        "CHR3_OUT_PC2"
+    ]
+    # missings are NA
+    @test sum(merged_covariates_pcs.COVID_19 .== "NA") == 2
+end
+
+@testset "Test merge_regenie_chr_results" begin
+    tmpdir = mktempdir()
+    groups = ["AFR", "EUR"]
+    chrs = 1:2
+    phenotypes = ["SEVERE_COVID_19", "SEVERE_PNEUMONIA"]
+    merge_list = []
+    for group in groups
+        for chr in chrs
+            for phenotype in phenotypes
+                # Create dummy Regenie Step 1 results files
+                results = DataFrame(
+                    CHROM = [chr],
+                    GENPOS = [1000],
+                    ID = ["chr$(chr):4132:G:A"],
+                    ALLELE0 = ["A"],
+                    ALLELE1 = ["T"],
+                    A1FREQ = [.5],
+                    N = [100],
+                    TEST = ["ADD"],
+                    BETA = [0.01],
+                    SE = [0.001],
+                    CHISQ = [10],
+                    LOG10P = [1.0],
+                    EXTRA = [""]
+                )
+                output_file = joinpath(tmpdir, "$group.chr$(chr).step2_$phenotype.regenie")
+                CSV.write(output_file, results)
+                push!(merge_list, output_file)
+            end
+        end
+    end
+    merge_list_file = joinpath(tmpdir, "merge_list.txt")
+    open(merge_list_file, "w") do io
+        for file in merge_list
+            println(io, file)
+        end
+    end
+    results_prefix = joinpath(tmpdir, "regenie.results")
+    copy!(ARGS, [
+        "merge-regenie-chr-results",
+        merge_list_file,
+        "--output-prefix", results_prefix
+    ])
+    julia_main()
+    expected_cols = [
+        "CHROM", "GENPOS", "ID", "ALLELE0", "ALLELE1", 
+        "A1FREQ", "N", "TEST", "BETA", "SE", 
+        "CHISQ", "LOG10P", "EXTRA"
+    ]
+    for group in groups
+        for phenotype in phenotypes
+            output_file = joinpath(tmpdir, "$results_prefix.$group.$phenotype.tsv")
+            results = CSV.read(output_file, DataFrame; delim="\t")
+            @test nrow(results) == 2
+            @test Set(results.CHROM) == Set([1, 2])
+            @test names(results) == expected_cols
+        end
+    end
+end
+
+
 # End to End Workflow run
 
 dorun = isinteractive() || (haskey(ENV, "CI_CONTAINER") && ENV["CI_CONTAINER"] == "docker")
@@ -122,12 +328,35 @@ if dorun
         push!(ancestries_and_chrs, (ancestry, chr))
     end
     @test ancestries_and_chrs == Set([
-        ("AMR", "1"), ("AMR", "2"), ("AMR", "3"),
-        ("EUR", "1"), ("EUR", "2"), ("EUR", "3"),
-        ("EAS", "1"), ("EAS", "2"), ("EAS", "3"),
-        ("SAS", "1"), ("SAS", "2"), ("SAS", "3"),
-        ("AFR", "1"), ("AFR", "2"), ("AFR", "3")
+        ("AMR", "chr1"), ("AMR", "chr2"), ("AMR", "chr3"),
+        ("EUR", "chr1"), ("EUR", "chr2"), ("EUR", "chr3"),
+        ("EAS", "chr1"), ("EAS", "chr2"), ("EAS", "chr3"),
+        ("SAS", "chr1"), ("SAS", "chr2"), ("SAS", "chr3"),
+        ("AFR", "chr1"), ("AFR", "chr2"), ("AFR", "chr3")
     ])
+
+    # Test merge Regenie results
+    merged_results_dir = joinpath(results_dir, "call-merge_regenie_chr_results", "execution")
+    for group in ["AFR", "AMR", "EAS", "EUR", "SAS"]
+        for phenotype in ["SEVERE_COVID_19", "SEVERE_PNEUMONIA"]
+            output_file = joinpath(merged_results_dir, "regenie.results.$group.$phenotype.tsv")
+            results = CSV.read(output_file, DataFrame; delim="\t")
+            @test names(results) == results_expected_cols
+            @test nrow(results) > 0
+        end
+    end
+
+    # Test plots
+
+    plots_dir = joinpath(results_dir, "call-gwas_plots")
+    for shard in 0:9
+        execution_dir = joinpath(plots_dir, "shard-$shard", "execution")
+        files = readdir(execution_dir)
+        manhattan_plot = only(filter(f -> endswith(f, ".manhattan.png"), files))
+        @test isfile(joinpath(execution_dir, manhattan_plot))
+        qq_file = only(filter(f -> endswith(f, ".qq.png"), files))
+        @test isfile(joinpath(execution_dir, qq_file))
+    end
 
 end
 
