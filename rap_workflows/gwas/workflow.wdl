@@ -3,6 +3,11 @@ version 1.0
 import '../common/structs.wdl'
 import '../common/tasks.wdl'
 
+struct RegenieStep1Files {
+    Array[File] phenotypes_loco
+    File list
+}
+
 workflow gwas {
     input {
         String docker_image = "olivierlabayle/genomicc:main"
@@ -21,6 +26,8 @@ workflow gwas {
         String maf = "0.01"
         String mac = "10"
         String ip_values = "1000 50 0.05"
+        String regenie_cv_folds = "5"
+        String regenie_bsize = "1000"
     }
 
     call tasks.get_julia_cmd as get_julia_cmd {
@@ -93,33 +100,197 @@ workflow gwas {
             }
     }
 
+    # Merge covariates and LOCO PCs
+    call merge_covariates_and_pcs {
+        input:
+            docker_image = docker_image,
+            covariates_file = make_covariates_and_groups.updated_covariates,
+            pcs_files = loco_pca.eigenvec,
+            julia_cmd = get_julia_cmd.julia_cmd 
+    }
+
+    # Regenie Step 1
+    scatter (group_individuals_and_plink_filesets in zip(make_covariates_and_groups.groups_lists, make_group_bed_qced.plink_fileset)) {
+
+        File sample_list = group_individuals_and_plink_filesets.left
+        PLINKFileset plink_fileset = group_individuals_and_plink_filesets.right
+
+        call regenie_step1 {
+            input:
+                docker_image = docker_image,
+                bed_file = plink_fileset.bed,
+                bim_file = plink_fileset.bim,
+                fam_file = plink_fileset.fam,
+                sample_list = sample_list,
+                covariates_file = merge_covariates_and_pcs.covariates_and_pcs,
+                phenotypes_list = phenotypes,
+                covariates_list = covariates,
+                cv_folds = regenie_cv_folds,
+                bsize = regenie_bsize
+        }
+    }
+
+    # Regenie Step 2
+
+    scatter (pair in zip(make_covariates_and_groups.groups_lists, regenie_step1.step1_files)) {
+        Pair[File, RegenieStep1Files] group_samples_and_regenie_step_1_files = pair
+    }
+
+    Array[Pair[PGENFileset, Pair[File, RegenieStep1Files]]] imputed_genotypes_to_groups_files = cross(imputed_genotypes, group_samples_and_regenie_step_1_files)
+
+    scatter (imputed_genotype_and_group in imputed_genotypes_to_groups_files) {
+        call regenie_step_2 {
+            input:
+                docker_image = docker_image,
+                chr = imputed_genotype_and_group.left.chr,
+                pgen_file = imputed_genotype_and_group.left.pgen,
+                pvar_file = imputed_genotype_and_group.left.pvar,
+                psam_file = imputed_genotype_and_group.left.psam,
+                sample_list = imputed_genotype_and_group.right.left,
+                covariates_file = merge_covariates_and_pcs.covariates_and_pcs,
+                regenie_loco = imputed_genotype_and_group.right.right.phenotypes_loco,
+                regenie_list = imputed_genotype_and_group.right.right.list,
+                phenotypes_list = phenotypes,
+                covariates_list = covariates,
+                npcs = npcs,
+                bsize = regenie_bsize
+        }
+    }
 }
 
-# task merge_covariates_and_pcs {
-#     input {
-#         String docker_image
-#         File covariates_file
-#         Array[File] pcs_files
-#     }
+task regenie_step_2 {
+    input {
+        String docker_image
+        String chr
+        File pgen_file
+        File pvar_file
+        File psam_file
+        File sample_list
+        File covariates_file
+        Array[File] regenie_loco
+        File regenie_list
+        Array[String] phenotypes_list
+        Array[String] covariates_list
+        String npcs = "10"
+        String bsize = "1000"
+    }
 
-#     command <<<
-#         ${julia_cmd} /opt/genomicc-workflows/bin/genomicc.jl \
-#             merge-covariates-and-pcs \
-#             ~{covariates_file} \
-#             ~{sep=" " pcs_files} \
-#             --output-prefix=merged_covariates_and_pcs
-#     >>>
+    String group_name = sub(basename(sample_list, ".txt"), "grouped.individuals.", "")
 
-#     output {
-#         File merged_covariates = "merged_covariates_and_pcs.covariates.csv"
-#         File pcs_list = "merged_covariates_and_pcs.pcs_list.txt"
-#     }
+    command <<<
 
-#     runtime {
-#         docker: docker_image
-#         dx_instance_type: "mem1_ssd1_v2_x2"
-#     }
-# }
+        for file in  ~{sep=" " regenie_loco}; do
+            ln -s "$file" .
+        done
+
+        input_prefix=$(dirname "~{pgen_file}")/$(basename "~{pgen_file}" .pgen)
+
+        pc_list=$(printf "CHR~{chr}_OUT_PC%s," {1..~{npcs}} | sed 's/,$//')
+        full_covariates_list="~{sep="," covariates_list},${pc_list}"
+
+        mamba run -n regenie_env regenie \
+            --step 2 \
+            --pgen ${input_prefix} \
+            --keep ~{sample_list} \
+            --phenoFile ~{covariates_file} \
+            --phenoColList ~{sep="," phenotypes_list} \
+            --covarFile ~{covariates_file} \
+            --covarColList ${full_covariates_list} \
+            --bt \
+            --firth --approx --pThresh 0.01 \
+            --pred ~{regenie_list} \
+            --bsize ~{bsize} \
+            --out ~{group_name}.~{chr}.step2
+    >>>
+
+    output {
+        Array[File] regenie_step2 = glob("${group_name}.${chr}.step2*")
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem1_ssd1_v2_x2"
+    }
+}
+
+
+task regenie_step1 {
+    input {
+        String docker_image
+        File bed_file
+        File bim_file
+        File fam_file
+        File sample_list
+        File covariates_file
+        Array[String] phenotypes_list
+        Array[String] covariates_list
+        String cv_folds = "5"
+        String bsize = "1000"
+    }
+
+    String group_name = sub(basename(sample_list, ".txt"), "grouped.individuals.", "")
+
+    command <<<
+        genotypes_prefix=$(dirname "~{bed_file}")/$(basename "~{bed_file}" .bed)
+
+        mamba run -n regenie_env regenie \
+            --step 1 \
+            --bed ${genotypes_prefix} \
+            --keep ~{sample_list} \
+            --phenoFile ~{covariates_file} \
+            --phenoColList ~{sep="," phenotypes_list} \
+            --covarFile ~{covariates_file} \
+            --covarColList ~{sep="," covariates_list} \
+            --cv ~{cv_folds} \
+            --bt \
+            --bsize ~{bsize} \
+            --lowmem \
+            --out ~{group_name}.step1
+        awk '{sub(".*/", "", $2); print $1, $2}' ~{group_name}.step1_pred.list > ~{group_name}.step1_pred.listrelative
+    >>>
+
+    output {
+        RegenieStep1Files step1_files = object {
+            phenotypes_loco: glob("${group_name}.step1_*.loco"),
+            list: "${group_name}.step1_pred.listrelative"
+        }
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem1_ssd1_v2_x2"
+    }
+}
+
+task merge_covariates_and_pcs {
+    input {
+        String docker_image
+        File covariates_file
+        Array[File] pcs_files
+        String julia_cmd
+    }
+
+    command <<<
+        for file in  ~{sep=" " pcs_files}; do
+            ln -s "$file" .
+        done
+
+        ~{julia_cmd} \
+            merge-covariates-pcs \
+            ~{covariates_file} \
+            pca \
+            --output=merged_covariates_and_pcs.tsv
+    >>>
+
+    output {
+        File covariates_and_pcs = "merged_covariates_and_pcs.tsv"
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem1_ssd1_v2_x2"
+    }
+}
 
 task loco_pca {
     input {
@@ -132,7 +303,7 @@ task loco_pca {
         String approx = "true"
     }
 
-    String output_prefix = "pca" + basename(bed_file, ".ldpruned.bed") + ".chr~{chr}_out"
+    String output_prefix = "pca." + basename(bed_file, ".ldpruned.bed") + ".chr~{chr}_out"
 
     command <<<
         genotypes_prefix=$(dirname "~{bed_file}")/$(basename "~{bed_file}" .bed)

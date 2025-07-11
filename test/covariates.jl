@@ -98,6 +98,62 @@ end
     @test readlines(joinpath(tmpdir, "gwas_all.covariates_list.txt"),) == ["AGE"]
 end
 
+@testset "Test merge-covariates-pcs" begin
+    tmpdir = mktempdir()
+
+    covariates = DataFrame(
+        FID = string.(1:10),
+        IID = string.(1:10),
+        ANCESTRY_ESTIMATE = ["EUR", "EUR", "AFR", "AFR", "AMR", "AMR", "EAS", "EAS", "SAS", "SAS"],
+        COVID_19 = [1, missing, 0, 1, 0, 1, 1, missing, 0, 1],
+        AGE = rand(20:80, 10),
+    )
+    CSV.write(joinpath(tmpdir, "covariates.csv"), covariates, delim="\t")
+
+    for ancestry in ["AFR", "AMR", "EAS", "EUR", "SAS"]
+        for chr in 1:3
+            matching_covariates = covariates[covariates.ANCESTRY_ESTIMATE .== ancestry, :]
+            pcs = DataFrame(
+                FID = matching_covariates.FID,
+                IID = matching_covariates.IID,
+                PC1 = randn(2),
+                PC2 = randn(2),
+            )
+            rename!(pcs, "FID" => "#FID")
+            CSV.write(joinpath(tmpdir, "pca.$ancestry.chr$(chr)_out.eigenvec"), pcs, delim="\t")
+        end
+    end
+
+    covariates_file = joinpath(tmpdir, "covariates.csv")
+    pcs_prefix = joinpath(tmpdir, "pca")
+    copy!(ARGS, [
+        "merge-covariates-pcs", 
+        covariates_file,
+        pcs_prefix,
+        "--output", joinpath(tmpdir, "merged_covariates_and_pcs.tsv")
+    ])
+    julia_main()
+    merged_covariates_pcs = CSV.read(joinpath(tmpdir, "merged_covariates_and_pcs.tsv"), DataFrame)
+    # Merge did not add any row
+    @test nrow(merged_covariates_pcs) == 10
+    # 6 new columns 2 for PCS, 3 for get_chr_out_string
+    @test names(merged_covariates_pcs) == [
+        "FID",
+        "IID",
+        "ANCESTRY_ESTIMATE",
+        "COVID_19",
+        "AGE",
+        "CHR1_OUT_PC1",
+        "CHR1_OUT_PC2",
+        "CHR2_OUT_PC1",
+        "CHR2_OUT_PC2",
+        "CHR3_OUT_PC1",
+        "CHR3_OUT_PC2"
+    ]
+    # missings are NA
+    @test sum(merged_covariates_pcs.COVID_19 .== "NA") == 2
+end
+
 end
 
 true

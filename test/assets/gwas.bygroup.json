@@ -5,6 +5,7 @@
     "gwas.covariates_file": "test/assets/gwas/covariates/ukb_genomicc.covariates.csv",
     "gwas.groupby": ["ANCESTRY_ESTIMATE"],
     "gwas.covariates": ["AGE", "SEX", "AGE_x_AGE"],
+    "gwas.phenotypes": ["SEVERE_PNEUMONIA", "SEVERE_COVID_19"],
     "gwas.min_group_size": "100",
     "gwas.genotypes": {
         "chr": "all",

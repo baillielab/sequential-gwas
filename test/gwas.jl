@@ -76,7 +76,59 @@ if dorun
         end
     end
 
-    readdir(pca_dir) 
+    # Test merge covariates and PCs
+    covariates_and_pcs = CSV.read(
+        joinpath(results_dir, "call-merge_covariates_and_pcs", "execution", "merged_covariates_and_pcs.tsv"), 
+        DataFrame
+    )
+    for chr in 1:3
+        for pc in 1:10
+            @test "CHR$(chr)_OUT_PC$(pc)" in names(covariates_and_pcs)
+        end
+    end
+
+    # Test Regenie Step 1
+    regenie_step1_dir = joinpath(results_dir, "call-regenie_step1")
+    for shard in 0:4
+        execution_dir = joinpath(regenie_step1_dir, "shard-$shard", "execution")
+        files = readdir(execution_dir)
+        pred_list = files[findfirst(endswith(".step1_pred.listrelative"), files)]
+        phenotype_pred_files = readlines(joinpath(execution_dir, pred_list))
+        phenotypes = getindex.(split.(phenotype_pred_files, " "), 1)
+        @test Set(phenotypes) == Set(["SEVERE_PNEUMONIA", "SEVERE_COVID_19"])
+    end
+
+    # Test Regenie Step 2
+    results_expected_cols = [
+            "CHROM", "GENPOS", "ID", "ALLELE0", "ALLELE1", "A1FREQ", "N", "TEST", "BETA", "SE", "CHISQ", "LOG10P", "EXTRA"
+        ]
+    regenie_step2_dir = joinpath(results_dir, "call-regenie_step_2")
+    ancestries_and_chrs = Set{Tuple{String, String}}([])
+    for shard in 0:14
+        execution_dir = joinpath(regenie_step2_dir, "shard-$shard", "execution")
+        files = readdir(execution_dir)
+        ## Covid-19
+        covid_results_file = only(filter(f -> endswith(f, "step2_SEVERE_COVID_19.regenie"), files))
+        covid_results = CSV.read(joinpath(execution_dir, covid_results_file), DataFrame)
+        @test names(covid_results) == results_expected_cols
+        @test nrow(covid_results) > 0
+        ## Pneumonia
+        pneumonia_results_file = only(filter(f -> endswith(f, "step2_SEVERE_PNEUMONIA.regenie"), files))
+        pneumonia_results = CSV.read(joinpath(execution_dir, pneumonia_results_file), DataFrame)
+        @test names(pneumonia_results) == results_expected_cols
+        @test nrow(pneumonia_results) > 0
+        # ancestry, chr 
+        ancestry, chr, _ = split(covid_results_file, ".")
+        push!(ancestries_and_chrs, (ancestry, chr))
+    end
+    @test ancestries_and_chrs == Set([
+        ("AMR", "1"), ("AMR", "2"), ("AMR", "3"),
+        ("EUR", "1"), ("EUR", "2"), ("EUR", "3"),
+        ("EAS", "1"), ("EAS", "2"), ("EAS", "3"),
+        ("SAS", "1"), ("SAS", "2"), ("SAS", "3"),
+        ("AFR", "1"), ("AFR", "2"), ("AFR", "3")
+    ])
+
 end
 
 true

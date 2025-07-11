@@ -269,13 +269,14 @@ function make_gwas_groups(
     end
 end
 
+get_chr_out_string(pc_filename) = splitext(splitext(pc_filename)[1])[2][2:end]
 
 function read_loco_pcs(pc_file)
-    chr_out = first(split(pc_file, "."))
+    chr_out = GenomiccWorkflows.get_chr_out_string(pc_file)
     pcs = CSV.read(pc_file, DataFrame, drop=["#FID"])
     PC_colnames = filter(!=("IID"), names(pcs))
     for PC_colname in PC_colnames
-        rename!(pcs, Symbol(PC_colname) => Symbol(string(uppercase(chr_out), "_OUT_", PC_colname)))
+        rename!(pcs, Symbol(PC_colname) => Symbol(string(uppercase(chr_out), "_", PC_colname)))
     end
     return pcs
 end
@@ -283,14 +284,14 @@ end
 function merge_covariates_and_pcs(covariates_file, pcs_prefix; output="covariates_and_pcs.csv")
     covariates = CSV.read(covariates_file, DataFrame)
     pcs_dir = dirname(pcs_prefix)
-    pcs_dir = pcs_dir == "" ? "." : pcs_dir
-    pcs_files = filter(startswith(pcs_prefix), readdir(pcs_dir))
-    chrs = unique(getindex.(split.(pcs_files, "."), 1))
+    pcs_dir, pcs_prefix = pcs_dir == "" ? (".", "./$pcs_prefix") : (pcs_dir, pcs_prefix)
+    pcs_files = filter(startswith(pcs_prefix), readdir(pcs_dir, join=true))
+    chrs = unique(GenomiccWorkflows.get_chr_out_string.(pcs_files))
     chr_out_pcs = map(chrs) do chr
-        chr_out_pcs_files = filter(x -> startswith(x, chr*"."), pcs_files)
-        mapreduce(read_loco_pcs, vcat, chr_out_pcs_files)
+        chr_out_pcs_files = filter(x -> occursin(chr, x), pcs_files)
+        mapreduce(GenomiccWorkflows.read_loco_pcs, vcat, chr_out_pcs_files)
     end
     covariates_and_pcs = innerjoin(covariates, chr_out_pcs..., on=:IID)
-    CSV.write(output, covariates_and_pcs, delim="\t")
+    CSV.write(output, covariates_and_pcs, delim="\t", missingstring="NA")
     return 0
 end
