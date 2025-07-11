@@ -20,7 +20,7 @@ In order to upload the current state of the code, or a specific version of `geno
 The following assumes a specific git tag corresponding to a release for which a matching docker image exists, but the steps can be adapted to any need.
 
 ```bash
-export genomicc_workflows_tag="main"
+export genomicc_workflows_tag="0.1.0"
 ```
 
 In the shared folder.
@@ -29,14 +29,15 @@ In the shared folder.
 
 ```bash
 git clone git@github.com:baillielab/genomicc-workflows.git
-git checkout $genomicc_workflows_tag
+cd genomicc-workflows
+git checkout v$genomicc_workflows_tag
 ```
 
 2. Download and save the docker image
    
 ```bash
 docker pull --platform linux/amd64 olivierlabayle/genomicc:$genomicc_workflows_tag
-docker save olivierlabayle/genomicc:$genomicc_workflows_tag | gzip > genomicc-workflows/genomicc.tar.gz
+docker save olivierlabayle/genomicc:$genomicc_workflows_tag | gzip > genomicc.tar.gz
 ```
 
 Then ask Dominique to uplaod the folder to ODAP.

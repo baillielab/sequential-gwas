@@ -79,9 +79,3 @@ All outputs are produced in `PUBLISH_DIR (default: results)`, for each group a s
 
 - plots: Manhattan and QQ plots
 - results: A CSV file of summary statistics
-
-## Workflow DAG
-
-```@raw html
-<iframe src="../assets/gwas_dag.html" width="100%" height="800px"></iframe>
-```
