@@ -7,7 +7,7 @@ This workflow yields combined:
 - covariates containing the current age and sex of individuals
 - ancestry estimates: via the 1000 Genome Project
 
-It is assumed that you have installed the required dependencies as explained in [Working with the UKB RAP](@ref).
+It is assumed that you have installed the required dependencies as explained in [UKB RAP](@ref).
 
 ## 1. Uploading Inputs
 

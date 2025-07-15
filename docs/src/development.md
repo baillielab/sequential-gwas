@@ -49,7 +49,7 @@ docker run -it --rm genomicc-workflows /opt/miniforge3/bin/mamba run -n regenie_
 (If running on MacOS with arm platform, add: `--platform linux/amd64`)
 
 
-## UKB RAP
+## Debugging on UKB RAP
 
 ### Cloud Workstation
 

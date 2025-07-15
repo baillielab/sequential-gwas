@@ -1,5 +1,6 @@
 # GWAS
 
+This WDL workflow performs a genome-wide association study across all defined subgroups and phenotypes. It can either be run on [ODAP](@ref) or on the [UKB RAP](@ref). 
 
 ## Inputs
 
@@ -42,7 +43,7 @@ where the `DX_COMPILER_PATH` and `PROJECT_ID` have to be set appropriately. The 
 
 !!! warning "Updating workflows"
     At this point in time it seems like compiling multiple times the same workflow does not replace the old files. You will need to manually erase them from the RAP.
-    
+
 Then, you can run the workflow with the following command
 
 ```bash
