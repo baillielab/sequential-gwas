@@ -1,0 +1,42 @@
+{
+    "gwas.docker_image": "olivierlabayle/genomicc:analysis_workflow",
+    "gwas.covariates_file": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1gFGv8JppvzKkzF0q357jk4",
+    "gwas.genotypes": {
+        "chr": "all",
+        "bed": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1g5zQQJ5q60G0Qy9Z56Z54j",
+        "bim": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1g5zQQJ5q67kvFkZg5YbpQZ",
+        "fam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1g5zQQJ5q6GV3Jk9ykx6pVF"
+    },
+    "gwas.imputed_genotypes": [
+        {
+            "chr": "20",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1gFP3QJxj33FqGX25Bf605K",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1gFP3QJxj37JvqXjVzQx511",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1gFP3QJxj34KBFzFJB3fQg8"
+        },
+        {
+            "chr": "21",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1g9VxjJXK9Xj5k8fB7zypgz",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1g9VxjJXK9Qkb0KFGXFFjZP",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1g9VxjJXK9xG983Gy3V9yVF"
+        },
+        {
+            "chr": "22",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1g9VJjJ8Jy465v4vy5pGvXg",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1g9VJjJ8Jy0b81bXFJ09Kpv",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1g9VJjJ8Jy91FXzxGv0F2V8"
+        }
+    ],
+    "gwas.phenotypes": ["SEX"],
+    "gwas.covariates": ["AGE", "AGE_x_AGE"],
+    "gwas.groupby": ["ANCESTRY_ESTIMATE"],
+    "gwas.min_group_size": "100",
+    "gwas.julia_use_sysimage": "true",
+    "gwas.julia_threads": "auto",
+    "gwas.npcs": "20",
+    "gwas.maf": "0.01",
+    "gwas.mac": "10",
+    "gwas.regenie_cv_folds": "5",
+    "gwas.regenie_bsize": "1000",
+    "gwas.high_ld_regions": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J199PpjJpYQ3vypJx7PJg3gb"
+}
