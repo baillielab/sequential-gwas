@@ -1,6 +1,6 @@
 version 1.0
 
-import '../common/structs.wdl'
+import "structs.wdl"
 
 task get_julia_cmd {
     input {

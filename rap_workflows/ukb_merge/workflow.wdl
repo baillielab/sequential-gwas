@@ -1,7 +1,7 @@
 version 1.0
 
-import '../common/structs.wdl'
-import '../common/tasks.wdl'
+import "../common/structs.wdl"
+import "../common/tasks.wdl"
 
 workflow merge_ukb_and_genomicc {
     # Inputs

@@ -1,7 +1,7 @@
 version 1.0
 
-import '../common/structs.wdl'
-import '../common/tasks.wdl'
+import "../common/structs.wdl"
+import "../common/tasks.wdl"
 
 struct RegenieStep1Files {
     Array[File] phenotypes_loco

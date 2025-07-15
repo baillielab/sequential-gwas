@@ -87,10 +87,13 @@ First you need to compile the WDL workflow and upload it to the RAP, this can be
 ```bash
 export DX_COMPILER_PATH=/Users/olabayle/dxCompiler/dxCompiler-2.13.0.jar
 export PROJECT_ID=project-J0pkqyQJpYQ133JG1p2J1qzv
-java -jar $DX_COMPILER_PATH compile rap_workflows/ukb_merge/workflow.wdl -f -project $PROJECT_ID -folder /workflows -inputs rap_workflows/ukb_merge/inputs.json
+java -jar $DX_COMPILER_PATH compile rap_workflows/ukb_merge/workflow.wdl -f -project $PROJECT_ID -folder /workflows/ukb_merge -inputs rap_workflows/ukb_merge/inputs.json
 ```
 
 where the `DX_COMPILER_PATH` and `PROJECT_ID` have to be set appropriately. The compiler might output some warnings like `missing input for non-optional parameter` but you can ignore these.
+
+!!! warning "Updating workflows"
+    At this point in time it seems like compiling multiple times the same workflow does not replace the old files. You will need to manually erase them from the RAP.
 
 Then, you can run the workflow with the following command
 
@@ -99,5 +102,13 @@ dx run -y \
 -f rap_workflows/ukb_merge/inputs.dx.json \
 --priority high \
 --destination /ukb_merge_outputs/ \
-/workflows/merge_ukb_and_genomicc
+/workflows/ukb_merge/merge_ukb_and_genomicc
 ```
+
+## Merging Cohorts Outputs
+
+All outputs will be located in the `ukb_merge_outputs` folder on the RAP.
+
+- `genomicc_ukb.merged.imputed.chr_{1..22}.{pgen,psam,pva}`: Merged imputed genotypes.
+- `ukb_genomicc.merged.{bed,bim,fam}`: Merged genotypes.
+- `ukb_genomicc.covariates.csv`: Merged covariates
