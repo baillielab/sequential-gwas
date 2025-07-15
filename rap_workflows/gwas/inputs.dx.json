@@ -150,6 +150,7 @@
       "project": "project-J0pkqyQJpYQ133JG1p2J1qzv"
     }
   },
+  "stage-common.approx_pca": "true",
   "stage-common.groupby": ["ANCESTRY_ESTIMATE"],
   "stage-common.genotypes___dxfiles": [{
     "$dnanexus_link": {

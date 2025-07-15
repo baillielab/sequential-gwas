@@ -22,7 +22,7 @@ workflow gwas {
         String julia_threads = "auto"
         File high_ld_regions = "assets/exclude_b38.txt"
         String npcs = "10"
-        String approx_pca = "false"
+        String approx_pca = "true"
         String maf = "0.01"
         String mac = "10"
         String ip_values = "1000 50 0.05"

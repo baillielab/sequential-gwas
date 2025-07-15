@@ -29,6 +29,8 @@ Depending on your phenotypes of interest, some of the input files to the workflo
 
 For Regenie's options see the [online documentation](https://rgcgithub.github.io/regenie/options/).
 
+The inputs need to be filled within the `rap_workflows/gwas/inputs.json` file.
+
 ## Running On UKB RAP
 
 First you need to compile the WDL workflow and upload it to the RAP, this can be done with the following:

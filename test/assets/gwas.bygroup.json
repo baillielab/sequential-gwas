@@ -7,6 +7,7 @@
     "gwas.covariates": ["AGE", "SEX", "AGE_x_AGE"],
     "gwas.phenotypes": ["SEVERE_PNEUMONIA", "SEVERE_COVID_19"],
     "gwas.min_group_size": "100",
+    "gwas.approx_pca": "false",
     "gwas.genotypes": {
         "chr": "all",
         "bed": "test/assets/gwas/genotypes/genotypes.arrays_wgs.aggregated.bed",
