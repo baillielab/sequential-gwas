@@ -124,7 +124,7 @@ workflow gwas {
                 sample_list = sample_list,
                 covariates_file = merge_covariates_and_pcs.covariates_and_pcs,
                 phenotypes_list = phenotypes,
-                covariates_list = covariates,
+                covariates_list = make_covariates_and_groups.covariates_list,
                 cv_folds = regenie_cv_folds,
                 bsize = regenie_bsize
         }
@@ -151,7 +151,7 @@ workflow gwas {
                 regenie_loco = imputed_genotype_and_group.right.right.phenotypes_loco,
                 regenie_list = imputed_genotype_and_group.right.right.list,
                 phenotypes_list = phenotypes,
-                covariates_list = covariates,
+                covariates_list = make_covariates_and_groups.covariates_list,
                 npcs = npcs,
                 bsize = regenie_bsize
         }
@@ -428,7 +428,7 @@ task make_covariates_and_groups {
 
     output {
         File updated_covariates = "grouped.covariates.csv"
-        File covariates_list = "grouped.covariates_list.txt"
+        Array[String] covariates_list = read_lines("grouped.covariates_list.txt")
         Array[File] groups_lists = glob("grouped.individuals.*.txt")
     }
 

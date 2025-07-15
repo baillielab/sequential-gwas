@@ -18,7 +18,7 @@ TESTDIR = joinpath(PKGDIR, "test")
         "make-gwas-groups", 
         covariates_file,
         "--groupby=ANCESTRY_ESTIMATE,SEX",
-        "--covariates=AGE,AGE_x_AGE,AGE_x_SEX",
+        "--covariates=AGE,AGE_x_AGE,AGE_x_SEX,COHORT",
         "--output-prefix", output_prefix, 
         "--min-group-size", string(min_group_size)
     ])
@@ -48,7 +48,9 @@ TESTDIR = joinpath(PKGDIR, "test")
         "SEVERE_COVID_19",
         "SEVERE_PNEUMONIA",
         "AGE_x_AGE",
-        "AGE_x_SEX"
+        "AGE_x_SEX",
+        "COHORT__GENOMICC",
+        "COHORT__UKB"
     ]
     @test names(updated_covariates) == expected_covariate_cols
     for row in eachrow(updated_covariates)
@@ -60,7 +62,7 @@ TESTDIR = joinpath(PKGDIR, "test")
         end
     end
     # Check covariates list
-    @test readlines(joinpath(tmpdir, "gwas.covariates_list.txt"),) == ["AGE", "AGE_x_AGE", "AGE_x_SEX"]
+    @test readlines(joinpath(tmpdir, "gwas.covariates_list.txt"),) == ["AGE", "AGE_x_AGE", "AGE_x_SEX", "COHORT__GENOMICC", "COHORT__UKB"]
         
     # Check groups files
     for ancestry in ["EUR", "AMR", "SAS", "AFR", "EAS"]
@@ -272,7 +274,7 @@ if dorun
     ## One PCA per (group, chromosome) pair = 5 * 3 = 15
     ## These are ordered by group and chromosome
     pca_dir = joinpath(results_dir, "call-loco_pca")
-    shard = 0
+    local shard = 0
     for group in ["AFR", "AMR", "EAS", "EUR", "SAS"]
         for chr in 1:3
             execution_dir = joinpath(pca_dir, "shard-$shard", "execution")
