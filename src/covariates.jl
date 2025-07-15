@@ -65,36 +65,13 @@ function process_ukb_age(years_of_birth)
     return coalesce.(ages, μ)
 end
 
-function read_and_process_covariates(covariates_file, required_covariate_variables;
-    inferred_covariates_file=nothing
+function read_and_process_covariates(covariates_file;
+    covariates_string=nothing
     )
     # Read the covariates file
-    covariates = CSV.read(
-        covariates_file, 
-        DataFrame
-        )
-    # Process the covariates
-    DataFrames.select!(covariates,
-        :genotype_file_id => :FID,
-        :genotype_file_id => :IID,
-        :age_years => process_genomicc_age => :AGE,
-        :sex => process_genomicc_sexes => :SEX,
-        :severe_cohort_primary_diagnosis => process_primary_diagnosis => :GENOMICC_PRIMARY_DIAGNOSIS,
-        :cohort => process_cohort => :COHORT,
-        :case_or_control,
-        :isaric_cohort_max_severity_score => process_isaric_score => :ISARIC_MAX_SEVERITY_SCORE
-    )
-    # Read inferred covariates
-    if inferred_covariates_file !== nothing
-        inferred_covariates = CSV.read(
-            inferred_covariates_file, 
-            DataFrame
-        )
-        # Join
-        covariates = innerjoin(covariates, inferred_covariates, on=[:FID, :IID])
-    end
+    covariates = CSV.read(covariates_file, DataFrame)
     # Add user defined covariates
-    required_covariate_variables = add_user_defined_covariates!(covariates, required_covariate_variables)
+    required_covariate_variables = add_user_defined_covariates!(covariates, covariates_string)
 
     return covariates, required_covariate_variables
 end
@@ -209,7 +186,8 @@ function define_phenotypes!(covariates, phenotypes)
     end
 end
 
-function add_user_defined_covariates!(covariates, required_covariate_variables)
+function add_user_defined_covariates!(covariates, covariates_string)
+    required_covariate_variables = split(covariates_string, ",")
     all_colnames = names(covariates)
     updated_required_covariate_variables = []
     for variable in required_covariate_variables
@@ -247,90 +225,4 @@ function write_covariates_and_phenotypes_group(data; group_id="all", output_pref
     end
     # Write group individuals
     CSV.write(string(output_prefix, ".individuals.", group_id, ".txt"), DataFrames.select(data, ["FID", "IID"]), header=false, delim="\t")
-end
-
-function make_gwas_groups(
-    covariates_file, 
-    variables_file;
-    inferred_covariates_file=nothing,
-    output_prefix="gwas", 
-    min_group_size=100
-    )
-    # Parse required variables
-    variables = YAML.load_file(variables_file)
-    required_covariate_variables = variables["covariates"]
-    required_phenotype_variables = variables["phenotypes"]
-    # Define required covariates
-    covariates, required_covariate_variables = read_and_process_covariates(
-        covariates_file, 
-        required_covariate_variables;
-        inferred_covariates_file=inferred_covariates_file
-    )
-    # Define required phenotypes
-    GenomiccWorkflows.define_phenotypes!(covariates, required_phenotype_variables)
-    # Only keep non-missing
-    all_variables = vcat(required_covariate_variables, required_phenotype_variables)
-    all_variables = haskey(variables, "groupby") ? vcat(all_variables, variables["groupby"]) : all_variables
-    covariates = dropmissing(DataFrames.select(covariates, "FID", "IID", all_variables))
-    # Write covariates
-    CSV.write(
-        string(output_prefix, ".covariates.csv"), 
-        DataFrames.select(covariates, "FID", "IID", required_covariate_variables), 
-        delim="\t"
-    )
-    # Write phenotypes
-    CSV.write(
-        string(output_prefix, ".phenotypes.csv"), 
-        DataFrames.select(covariates, "FID", "IID", required_phenotype_variables), 
-        delim="\t"
-    )
-    # Write groups' individuals lists
-    if haskey(variables, "groupby")
-        for (groupkey, group) in pairs(groupby(covariates, variables["groupby"], sort=true))
-            group_id = join(groupkey, "_")
-            write_covariates_and_phenotypes_group(group; 
-                group_id=group_id, 
-                output_prefix=output_prefix, 
-                min_group_size=min_group_size
-            )
-        end
-    else
-        write_covariates_and_phenotypes_group(covariates; 
-                group_id="all", 
-                output_prefix=output_prefix, 
-                min_group_size=min_group_size
-        )
-    end
-    # Write covariate list for REGENIE
-    open(string(output_prefix, ".covariates_list.txt"), "w") do io
-        for covariate in required_covariate_variables
-            println(io, covariate)
-        end
-    end
-end
-
-
-function read_loco_pcs(pc_file)
-    chr_out = first(split(pc_file, "."))
-    pcs = CSV.read(pc_file, DataFrame, drop=["#FID"])
-    PC_colnames = filter(!=("IID"), names(pcs))
-    for PC_colname in PC_colnames
-        rename!(pcs, Symbol(PC_colname) => Symbol(string(uppercase(chr_out), "_OUT_", PC_colname)))
-    end
-    return pcs
-end
-
-function merge_covariates_and_pcs(covariates_file, pcs_prefix; output="covariates_and_pcs.csv")
-    covariates = CSV.read(covariates_file, DataFrame)
-    pcs_dir = dirname(pcs_prefix)
-    pcs_dir = pcs_dir == "" ? "." : pcs_dir
-    pcs_files = filter(startswith(pcs_prefix), readdir(pcs_dir))
-    chrs = unique(getindex.(split.(pcs_files, "."), 1))
-    chr_out_pcs = map(chrs) do chr
-        chr_out_pcs_files = filter(x -> startswith(x, chr*"."), pcs_files)
-        mapreduce(read_loco_pcs, vcat, chr_out_pcs_files)
-    end
-    covariates_and_pcs = innerjoin(covariates, chr_out_pcs..., on=:IID)
-    CSV.write(output, covariates_and_pcs, delim="\t")
-    return 0
 end
