@@ -105,7 +105,7 @@ dx run -y \
 /workflows/ukb_merge/merge_ukb_and_genomicc
 ```
 
-## Merging Cohorts Outputs
+## Merging Cohorts Outputs
 
 All outputs will be located in the `ukb_merge_outputs` folder on the RAP.
 
