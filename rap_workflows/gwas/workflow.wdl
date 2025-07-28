@@ -277,7 +277,7 @@ task regenie_step_2 {
 
     runtime {
         docker: docker_image
-        dx_instance_type: "mem1_ssd1_v2_x2"
+        dx_instance_type: "mem1_ssd1_v2_x16"
     }
 }
 
@@ -326,7 +326,7 @@ task regenie_step1 {
 
     runtime {
         docker: docker_image
-        dx_instance_type: "mem1_ssd1_v2_x2"
+        dx_instance_type: "mem1_ssd1_v2_x16"
     }
 }
 
@@ -395,7 +395,7 @@ task loco_pca {
 
     runtime {
         docker: docker_image
-        dx_instance_type: "mem1_ssd1_v2_x2"
+        dx_instance_type: "mem1_ssd1_v2_x16"
     }
 }
 
