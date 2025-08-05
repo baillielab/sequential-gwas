@@ -145,11 +145,6 @@ function cli_settings()
             required = true
             help = "Path to GenOMICC covariates file."
 
-        "genomicc-inferred-covariates"
-            arg_type = String
-            required = true
-            help = "Path to GenOMICC inferred covariates file."
-
         "ukb-covariates"
             arg_type = String
             required = true
@@ -925,7 +920,6 @@ function julia_main()::Cint
     elseif cmd == "merge-ukb-genomicc-covariates"
         merge_ukb_genomicc_covariates(
             cmd_settings["genomicc-covariates"],
-            cmd_settings["genomicc-inferred-covariates"],
             cmd_settings["ukb-covariates"],
             cmd_settings["ukb-inferred-covariates"],
             cmd_settings["file-with-eids-to-exclude"];

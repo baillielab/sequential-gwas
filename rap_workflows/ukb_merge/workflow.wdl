@@ -16,7 +16,6 @@ workflow merge_ukb_and_genomicc {
         PLINKFileset genomicc_genotypes
         Array[PGENFileset]+ genomicc_pgen_filesets
         File genomicc_covariates
-        File genomicc_inferred_covariates
 
         PLINKFileset kgp_genotypes
 
@@ -217,7 +216,6 @@ workflow merge_ukb_and_genomicc {
         input:
             docker_image = docker_image,
             genomicc_covariates = genomicc_covariates,
-            genomicc_inferred_covariates = genomicc_inferred_covariates,
             ukb_covariates = ukb_covariates,
             ukb_inferred_covariates = estimate_ukb_ancestry_from_kgp.ancestry_estimate,
             table_with_eids_to_exclude = hesin_critical_table,
@@ -687,7 +685,6 @@ task merge_genomicc_ukb_covariates {
     input {
         String docker_image
         File genomicc_covariates
-        File genomicc_inferred_covariates
         File ukb_covariates
         File ukb_inferred_covariates
         File table_with_eids_to_exclude
@@ -708,7 +705,6 @@ task merge_genomicc_ukb_covariates {
         ${julia_cmd} /opt/genomicc-workflows/bin/genomicc.jl \
             merge-ukb-genomicc-covariates \
             ~{genomicc_covariates} \
-            ~{genomicc_inferred_covariates} \
             ~{ukb_covariates} \
             ~{ukb_inferred_covariates} \
             ~{table_with_eids_to_exclude} \

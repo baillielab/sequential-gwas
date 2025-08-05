@@ -58,3 +58,7 @@ genomicc.sif
 
 cromwell-executions/
 cromwell-workflow-logs/
+
+# vscode
+
+.vscode/*

@@ -17,7 +17,7 @@ TESTDIR = joinpath(PKGDIR, "test")
     copy!(ARGS, [
         "make-gwas-groups", 
         covariates_file,
-        "--groupby=ANCESTRY_ESTIMATE,SEX",
+        "--groupby=SUPERPOPULATION,SEX",
         "--covariates=AGE,AGE_x_AGE,AGE_x_SEX,COHORT",
         "--output-prefix", output_prefix, 
         "--min-group-size", string(min_group_size)
@@ -38,7 +38,7 @@ TESTDIR = joinpath(PKGDIR, "test")
         "IID", 
         "AGE", 
         "SEX",
-        "ANCESTRY_ESTIMATE",
+        "SUPERPOPULATION",
         "AFR",
         "SAS",
         "EAS",
@@ -70,7 +70,7 @@ TESTDIR = joinpath(PKGDIR, "test")
             group_key = string(ancestry, "_", sex)
             individuals = CSV.read(joinpath(tmpdir, "gwas.individuals.$group_key.txt"), DataFrame; header=["FID", "IID"])
             joined = innerjoin(updated_covariates, individuals, on = [:FID, :IID])
-            @test all(==(ancestry), joined.ANCESTRY_ESTIMATE)
+            @test all(==(ancestry), joined.SUPERPOPULATION)
             @test all(==(sex), joined.SEX)
         end
     end
@@ -106,7 +106,7 @@ end
     covariates = DataFrame(
         FID = string.(1:10),
         IID = string.(1:10),
-        ANCESTRY_ESTIMATE = ["EUR", "EUR", "AFR", "AFR", "AMR", "AMR", "EAS", "EAS", "SAS", "SAS"],
+        SUPERPOPULATION = ["EUR", "EUR", "AFR", "AFR", "AMR", "AMR", "EAS", "EAS", "SAS", "SAS"],
         COVID_19 = [1, missing, 0, 1, 0, 1, 1, missing, 0, 1],
         AGE = rand(20:80, 10),
     )
@@ -114,7 +114,7 @@ end
 
     for ancestry in ["AFR", "AMR", "EAS", "EUR", "SAS"]
         for chr in 1:3
-            matching_covariates = covariates[covariates.ANCESTRY_ESTIMATE .== ancestry, :]
+            matching_covariates = covariates[covariates.SUPERPOPULATION .== ancestry, :]
             pcs = DataFrame(
                 FID = matching_covariates.FID,
                 IID = matching_covariates.IID,
@@ -142,7 +142,7 @@ end
     @test names(merged_covariates_pcs) == [
         "FID",
         "IID",
-        "ANCESTRY_ESTIMATE",
+        "SUPERPOPULATION",
         "COVID_19",
         "AGE",
         "CHR1_OUT_PC1",
@@ -216,7 +216,6 @@ end
     end
 end
 
-
 # End to End Workflow run
 
 dorun = isinteractive() || (haskey(ENV, "CI_CONTAINER") && ENV["CI_CONTAINER"] == "docker")
@@ -236,12 +235,12 @@ if dorun
 
     results_dirs = readdir("cromwell-executions/gwas", join=true)
     results_dir = results_dirs[argmax(mtime(d) for d in results_dirs)]
-    expected_groups = Set(["AFR", "AMR", "EAS", "EUR", "SAS"])
-    # Test groups and covariates
+    expected_groups = Set(["AMR", "EAS"])
+    # Test groups and covariates: only AMR and EAS have more than 2400 individuals
     groups_dir = joinpath(results_dir, "call-make_covariates_and_groups", "execution")
-    for ancestry in ["AFR", "AMR", "EAS", "EUR", "SAS"]
+    for ancestry in ["AMR", "EAS"]
         individuals = CSV.read(joinpath(groups_dir, "grouped.individuals.$ancestry.txt"), DataFrame, header=["FID", "IID"])
-        @test nrow(individuals) >= 100
+        @test nrow(individuals) >= 2400
     end
     covariates = CSV.read(joinpath(groups_dir, "grouped.covariates.csv"), DataFrame)
     @test "AGE_x_AGE" in names(covariates)
@@ -251,7 +250,7 @@ if dorun
     # Test BED groups qced
     bed_dir = joinpath(results_dir, "call-make_group_bed_qced")
     groups = Set([])
-    for shard in [0, 1, 2, 3, 4]
+    for shard in [0, 1]
         execution_dir = joinpath(bed_dir, "shard-$shard", "execution")
         files = readdir(execution_dir)
         fam_file = files[findfirst(endswith(".fam"), files)]
@@ -262,7 +261,7 @@ if dorun
     # Test LD pruning
     ld_prune_dir = joinpath(results_dir, "call-groups_ld_prune")
     groups = Set([])
-    for shard in [0, 1, 2, 3, 4]
+    for shard in [0, 1]
         execution_dir = joinpath(ld_prune_dir, "shard-$shard", "execution")
         files = readdir(execution_dir)
         fam_file = files[findfirst(endswith(".fam"), files)]
@@ -275,7 +274,7 @@ if dorun
     ## These are ordered by group and chromosome
     pca_dir = joinpath(results_dir, "call-loco_pca")
     local shard = 0
-    for group in ["AFR", "AMR", "EAS", "EUR", "SAS"]
+    for group in ["AMR", "EAS"]
         for chr in 1:3
             execution_dir = joinpath(pca_dir, "shard-$shard", "execution")
             eigenvec_file = joinpath(execution_dir, "pca.$group.chr$(chr)_out.eigenvec")
@@ -297,7 +296,7 @@ if dorun
 
     # Test Regenie Step 1
     regenie_step1_dir = joinpath(results_dir, "call-regenie_step1")
-    for shard in 0:4
+    for shard in 0:1
         execution_dir = joinpath(regenie_step1_dir, "shard-$shard", "execution")
         files = readdir(execution_dir)
         pred_list = files[findfirst(endswith(".step1_pred.listrelative"), files)]
@@ -312,7 +311,7 @@ if dorun
         ]
     regenie_step2_dir = joinpath(results_dir, "call-regenie_step_2")
     ancestries_and_chrs = Set{Tuple{String, String}}([])
-    for shard in 0:14
+    for shard in 0:5
         execution_dir = joinpath(regenie_step2_dir, "shard-$shard", "execution")
         files = readdir(execution_dir)
         ## Covid-19
@@ -330,16 +329,17 @@ if dorun
         push!(ancestries_and_chrs, (ancestry, chr))
     end
     @test ancestries_and_chrs == Set([
-        ("AMR", "chr1"), ("AMR", "chr2"), ("AMR", "chr3"),
-        ("EUR", "chr1"), ("EUR", "chr2"), ("EUR", "chr3"),
-        ("EAS", "chr1"), ("EAS", "chr2"), ("EAS", "chr3"),
-        ("SAS", "chr1"), ("SAS", "chr2"), ("SAS", "chr3"),
-        ("AFR", "chr1"), ("AFR", "chr2"), ("AFR", "chr3")
+        ("AMR", "chr1"),
+        ("EAS", "chr1"),
+        ("AMR", "chr2"),
+        ("EAS", "chr2"),
+        ("AMR", "chr3"),
+        ("EAS", "chr3")
     ])
 
     # Test merge Regenie results
     merged_results_dir = joinpath(results_dir, "call-merge_regenie_chr_results", "execution")
-    for group in ["AFR", "AMR", "EAS", "EUR", "SAS"]
+    for group in ["AMR", "EAS"]
         for phenotype in ["SEVERE_COVID_19", "SEVERE_PNEUMONIA"]
             output_file = joinpath(merged_results_dir, "regenie.results.$group.$phenotype.tsv")
             results = CSV.read(output_file, DataFrame; delim="\t")
@@ -349,9 +349,8 @@ if dorun
     end
 
     # Test plots
-
     plots_dir = joinpath(results_dir, "call-gwas_plots")
-    for shard in 0:9
+    for shard in 0:3
         execution_dir = joinpath(plots_dir, "shard-$shard", "execution")
         files = readdir(execution_dir)
         manhattan_plot = only(filter(f -> endswith(f, ".manhattan.png"), files))

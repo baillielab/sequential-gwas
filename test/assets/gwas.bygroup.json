@@ -3,10 +3,10 @@
     "gwas.julia_use_sysimage": "false",
     "gwas.docker_image": "olivierlabayle/genomicc:analysis_workflow",
     "gwas.covariates_file": "test/assets/gwas/covariates/ukb_genomicc.covariates.csv",
-    "gwas.groupby": ["ANCESTRY_ESTIMATE"],
+    "gwas.groupby": ["SUPERPOPULATION"],
     "gwas.covariates": ["AGE", "SEX", "AGE_x_AGE"],
     "gwas.phenotypes": ["SEVERE_PNEUMONIA", "SEVERE_COVID_19"],
-    "gwas.min_group_size": "100",
+    "gwas.min_group_size": "2400",
     "gwas.approx_pca": "false",
     "gwas.genotypes": {
         "chr": "all",

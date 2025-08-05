@@ -1,15 +1,3 @@
-function process_genomicc_age(ages)
-    int_ages = map(ages) do age
-        if age == "NA"
-            return missing
-        else
-            return parse(Int, age)
-        end
-    end
-    μ = round(Int, mean(skipmissing(int_ages)))
-    return coalesce.(int_ages, μ)
-end
-
 function process_genomicc_sexes(sexes)
     return map(sexes) do sex
         if sex == "Male"
@@ -20,42 +8,6 @@ function process_genomicc_sexes(sexes)
             return missing
         end
     end
-end
-
-function process_severity(severities)
-    return map(severities) do severity
-        if severity == "case"
-            return 1
-        elseif severity == "control"
-            return 0
-        else
-            return missing
-        end
-    end
-end
-
-function process_primary_diagnosis(primary_diagnoses)
-    return map(primary_diagnoses) do primary_diagnosis
-        if primary_diagnosis == "NA"
-            return missing
-        else
-            return primary_diagnosis
-        end
-    end
-end
-
-function process_isaric_score(isaric_scores)
-    return map(isaric_scores) do isaric_score
-        if isaric_score == "NA"
-            return missing
-        else
-            return parse(Int, isaric_score)
-        end
-    end
-end
-
-function process_cohort(cohorts)
-    replace(cohorts, "NA" => missing, "severe" => "genomicc")
 end
 
 function process_ukb_age(years_of_birth)
@@ -83,7 +35,7 @@ function read_and_process_ancestry(ancestry_file)
 end
 
 function read_and_process_pcs(pcs_file)
-    return  CSV.read(pcs_file, DataFrame, drop=["#FID"])
+    return CSV.read(pcs_file, DataFrame, drop=["#FID"])
 end
 
 function map_sample_ids_to_platform(wgs_samples_file,
@@ -157,32 +109,6 @@ function is_severe_covid_19(row)
         return 0
     else
         throw(ArgumentError("Unknown cohort"))
-    end
-end
-
-function is_case(x)
-    if x == "case"
-        return 1
-    elseif x == "control"
-        return 0
-    else
-        return missing
-    end
-end
-
-function define_phenotypes!(covariates, phenotypes)
-    for phenotype in phenotypes
-        if phenotype == "SEVERE_COVID_19"
-            covariates.SEVERE_COVID_19 = map(eachrow(covariates)) do row
-                is_severe_covid_19(row)
-            end
-        elseif phenotype == "case_or_control"
-            covariates.case_or_control = map(covariates.case_or_control) do x
-                is_case(x)
-            end
-        else
-            throw(ArgumentError("Unsupported phenotype: $phenotype"))
-        end
     end
 end
 

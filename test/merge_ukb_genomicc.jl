@@ -37,13 +37,41 @@ TESTDIR = joinpath(PKGDIR, "test")
     unmapped_ids = GenomiccWorkflows.update_variant_ids_with_map!(bim, variant_ids_map)
     @test all(bim.VARIANT_ID .== ["rs1_kgp", "rsY1", "rsM1"])
     @test unmapped_ids == Set(["rsM1", "rsY1"])
+
+    # Test is_severe_covid_19
+    covariates = DataFrame(
+        PRIM_DIAGNOSIS_ODAP=["covid-19", "flu", "covid-19", "covid-19", "covid-19", "covid-19", "covid-19", "covid-19"],
+        COHORT=["genomicc_severe", "genomicc_severe", "gen_int_pakistan", "genomicc_mild", "genomicc_react", "isaric4c", "isaric4c", "isaric4c"],
+        ISARIC_MAX_SEVERITY_SCORE=[missing, missing, missing, missing, missing, "NA", "3", "4"],
+        EXPECTED_SEVERE_COVID_19=[1, missing, 1, 0, 0, missing, 0, 1]
+    )
+    covariates.SEVERE_COVID_19 = map(GenomiccWorkflows.is_severe_covid_19, eachrow(covariates))
+    @test all(covariates.SEVERE_COVID_19 .=== covariates.EXPECTED_SEVERE_COVID_19)
+    unknown_cohort_covariates = DataFrame(
+        PRIM_DIAGNOSIS_ODAP=["covid-19"],
+        COHORT=["unknown cohort"],
+    )
+    @test_throws ArgumentError("Unknown cohort: unknown cohort") map(GenomiccWorkflows.is_severe_covid_19, eachrow(unknown_cohort_covariates))
+    
+    # Test is_severe_infection
+    covariates = DataFrame(
+        PRIM_DIAGNOSIS_ODAP=["covid-19", "flu", "flu"],
+        COHORT=["genomicc_severe", "genomicc_severe", "gen_int_pakistan"],
+        EXPECTED_SEVERE_INFLUENZA=[missing, 1, 1]
+    )
+    covariates.SEVERE_INFLUENZA = map(x -> GenomiccWorkflows.is_severe_infection(x, "flu"), eachrow(covariates))
+    @test all(covariates.SEVERE_INFLUENZA .=== covariates.EXPECTED_SEVERE_INFLUENZA)
+    unknown_cohort_covariates = DataFrame(
+        PRIM_DIAGNOSIS_ODAP=["flu"],
+        COHORT=["unknown cohort"],
+    )
+    @test_throws ArgumentError("Unknown cohort: unknown cohort, while processing infection: flu") map(x -> GenomiccWorkflows.is_severe_infection(x, "flu"), eachrow(unknown_cohort_covariates))
 end
 
 @testset "Test merge_ukb_genomicc_covariates" begin
     tmpdir = mktempdir()
     output_file = joinpath(tmpdir, "ukb_genomicc.covariates.csv")
     genomicc_covariates_file = joinpath("test", "assets", "genomicc", "mock.covariates.csv")
-    genomicc_inferred_covariates_file = joinpath("test", "assets", "genomicc", "inferred_covariates.csv")
     ukb_covariates_file = joinpath("test", "assets", "ukb", "covariates_table.csv")
     ukb_inferred_covariates_file = joinpath(tmpdir, "inferred_covariates.ukb.csv")
     file_with_eids_to_exclude = joinpath(TESTDIR, "assets", "ukb", "critical_table.csv")
@@ -66,7 +94,6 @@ end
     copy!(ARGS, [
         "merge-ukb-genomicc-covariates",
         genomicc_covariates_file,
-        genomicc_inferred_covariates_file,
         ukb_covariates_file,
         ukb_inferred_covariates_file,
         file_with_eids_to_exclude,
@@ -74,18 +101,29 @@ end
     ])
     julia_main()
     merged_covariates = CSV.read(output_file, DataFrame)
-    @test nrow(merged_covariates) == 14 + 12000 # ukb19 is dropped because in critical_table.csv
-    @test names(merged_covariates) == ["FID", "IID", "AGE", "SEX", "ANCESTRY_ESTIMATE", "AFR", "SAS", "EAS", "AMR", "EUR", "COHORT"]
-    @test Set(merged_covariates.COHORT) == Set(["GENOMICC", "UKB"])
-    @test eltype(merged_covariates.AGE) == Int
-    @test Set(merged_covariates.SEX) == Set([0, 1, missing])
-    @test Set(merged_covariates.ANCESTRY_ESTIMATE) == Set(["AFR", "SAS", "EAS", "AMR", "EUR"])
-    for col in [:AFR, :SAS, :EAS, :AMR, :EUR]
-        @test eltype(merged_covariates[!, col]) == Float64
-    end
+    @test nrow(merged_covariates) == 14 + 12911 # ukb19 is dropped because in critical_table.csv
+    @test names(merged_covariates) == [
+        "FID",
+        "IID",
+        "COHORT",
+        "AGE",
+        "SEX",
+        "SUPERPOPULATION",
+        "SEVERE_PNEUMONIA",
+        "SEVERE_COVID_19",
+        "SEVERE_PANCREATITIS",
+        "SEVERE_INFLUENZA",
+        "SEVERE_SOFT_TISSUE_INFECTION",
+        "SEVERE_RSV",
+        "SEVERE_ECLS",
+        "SEVERE_REACTION_TO_VACCINATION"
+    ]
+    @test Set(merged_covariates.COHORT) == Set(["isaric4c", "gen_int_pakistan", "genomicc_mild", "genomicc_severe", "genomicc_react", "ukbiobank"])
+    @test eltype(merged_covariates.AGE) == Int # No missing value in AGE
+    @test Set(merged_covariates.SEX) == Set([0, 1, missing]) # Individuals with missing Sex will be dropped in analyses
+    @test Set(merged_covariates.SUPERPOPULATION) == Set(["AFR", "SAS", "EAS", "AMR", "EUR", "ADMIXED"])
     @test merged_covariates.FID == merged_covariates.IID
 end
-
 
 @testset "Test make_ukb_bgen_qc_and_r2_filter_files" begin
     tmpdir = mktempdir()
@@ -240,7 +278,11 @@ if dorun
         # Test merging covariates
         ukb_genomicc_covariates_file = joinpath(results_dir, "call-merge_genomicc_ukb_covariates", "execution", "ukb_genomicc.covariates.csv")
         ukb_genomicc_covariates = CSV.read(ukb_genomicc_covariates_file, DataFrame)
-        @test names(ukb_genomicc_covariates) == ["FID", "IID", "AGE", "SEX", "ANCESTRY_ESTIMATE", "AFR", "SAS", "EAS", "AMR", "EUR", "COHORT"]
+        @test names(ukb_genomicc_covariates) == [
+            "FID", "IID", "COHORT", "AGE", "SEX", "SUPERPOPULATION", 
+            "SEVERE_PNEUMONIA", "SEVERE_COVID_19", "SEVERE_PANCREATITIS", 
+            "SEVERE_INFLUENZA", "SEVERE_SOFT_TISSUE_INFECTION", "SEVERE_RSV", 
+            "SEVERE_ECLS", "SEVERE_REACTION_TO_VACCINATION"]
         @test length(filter(startswith("ukb"), ukb_genomicc_covariates.IID)) > 0
         @test length(filter(startswith("odap"), ukb_genomicc_covariates.IID)) > 0
 
