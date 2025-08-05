@@ -80,7 +80,19 @@ You can monitor the workflow on the RAP, once finished you should have two outpu
 
 ## 3. Merging Cohorts
 
-First you need to compile the WDL workflow and upload it to the RAP. However, a workflow is compiled for specific set of inputs which need to be provided first. All inputs are provided in the `rap_workflows/ukb_merge/inputs.json` file. Unfortunately all file paths are project specific and must be manually set using their `project-id:file-id` format which is quite tedious and error prone (file-ids can be found on the RAP). Then compiling the workflow can be done with the following:
+First you need to compile the WDL workflow and upload it to the RAP. However, a workflow is compiled for specific set of inputs which need to be provided first. All inputs are provided in the `rap_workflows/ukb_merge/inputs.json` file. Unfortunately all file paths are project specific and must be manually set using their `project-id:file-id` format which is quite tedious and error prone (file-ids can be found on the RAP). The inputs are as follows:
+
+- `high_ld_regions`: The `assets/rap/exclude_b38.txt` file.
+- `reference_genome`: The `assets/rap/Homo_sapiens_assembly38.fasta` file.
+- `ukb_bgen_filesets`: The files are the imputed genotypes found in the RAP's `Bulk/Imputation/Imputation_from_genotype_TOPmed` folder.
+- `ukb_covariates`: The output of the previous step, `covariates_table.csv`.
+- `hesin_critical_table`: The output of the previous step, `critical_table.csv`.
+- `genomicc_genotypes`: The typed variants in plink format in `assets/rap/genomicc/genotypes`.
+- `genomicc_pgen_filesets`: The imputed variants in plink2 format in `assets/rap/genomicc/imputed`.
+- `genomicc_covariates`: The covariates file in `assets/rap/genomicc/covariates`.
+- `kgp_genotypes`: The 1000 Genome Project variants in plink format in `assets/rap/kgp`.
+
+Then compiling the workflow can be done with the following:
 
 ```bash
 export DX_COMPILER_PATH=/Users/olabayle/dxCompiler/dxCompiler-2.13.0.jar
