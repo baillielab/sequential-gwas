@@ -76,15 +76,14 @@ dx run -y \
 /export_covariates
 ```
 
-You can monitor the workflow on the RAP, once finished you should have two outputs in the `/export_covariates_outputs` folder: `` and ``.
+You can monitor the workflow on the RAP, once finished you should have two outputs in the `/export_covariates_outputs` folder.
 
 ## 3. Merging Cohorts
 
-First you need to compile the WDL workflow and upload it to the RAP, this can be done with the following:
+First you need to compile the WDL workflow and upload it to the RAP. However, a workflow is compiled for specific set of inputs which need to be provided first. All inputs are provided in the `rap_workflows/ukb_merge/inputs.json` file. Unfortunately all file paths are project specific and must be manually set using their `project-id:file-id` format which is quite tedious and error prone (file-ids can be found on the RAP). Then compiling the workflow can be done with the following:
 
 ```bash
 export DX_COMPILER_PATH=/Users/olabayle/dxCompiler/dxCompiler-2.13.0.jar
-export PROJECT_ID=project-J0pkqyQJpYQ133JG1p2J1qzv
 java -jar $DX_COMPILER_PATH compile rap_workflows/ukb_merge/workflow.wdl -f -project $PROJECT_ID -folder /workflows/ukb_merge -inputs rap_workflows/ukb_merge/inputs.json
 ```
 
@@ -102,8 +101,6 @@ dx run -y \
 --destination /ukb_merge_outputs/ \
 /workflows/ukb_merge/merge_ukb_and_genomicc
 ```
-
-## Merging Cohorts Outputs
 
 All outputs will be located in the `ukb_merge_outputs` folder on the RAP.
 
