@@ -183,35 +183,149 @@
     "merge_ukb_and_genomicc.hesin_critical_table": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1Kbzg8Jyy8KbzX0pk5pZjPz",
     "merge_ukb_and_genomicc.genomicc_genotypes": {
         "chr": "all",
-        "bed": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J11K790JpYQ22b3kZZqkKgG0",
-        "bim": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J11K4FQJpYQ2J9G77ZbGvq21",
-        "fam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J11K798JpYQ0qbfpf52bF6xJ"
+        "bed": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910y0JpYQPXF4YQ1G14YPP",
+        "bim": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910xQJpYQPJjGK7FV56Jyx",
+        "fam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910xjJpYQPXF4YQ1G14YPJ"
     },
         "merge_ukb_and_genomicc.genomicc_pgen_filesets": [
         {
+            "chr": "1",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910vjJpYQG64kXfy2QPg18",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910fQJpYQGbJjQPB4ZK6Y8",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910p0JpYQ4050875kv9Qg8"
+        },
+        {
+            "chr": "2",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910g8JpYQ5378Bjx3FkXJy",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910VQJpYQ5378Bjx3FkXJv",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910gQJpYQG67pp2q9PB7Fk"
+        },
+        {
+            "chr": "3",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J29107QJpYQ51zkFKKVXfX5p",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910J8JpYQ4zqjYgpjkZBK6",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J29109jJpYQ4zqjYgpjkZBJf"
+        },
+        {
+            "chr": "4",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910YQJpYQ7kj0yp8FF66gX",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910pQJpYQBgvqzvvyBP0F5",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910f8JpYQPJjGK7FV56JyZ"
+        },
+        {
+            "chr": "5",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910BjJpYQFyv4KvB4f025Z",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J29106QJpYQJ1F041Jx7xvqx",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910F0JpYQPJjGK7FV56Jy2"
+        },
+        {
+            "chr": "6",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910P8JpYQG67pp2q9PB7Fb",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910B0JpYQ7kj0yp8FF66g8",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910J0JpYQPjZ4Y3PBfg1qF"
+        },
+        {
+            "chr": "7",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910XQJpYQ27Z34qff9FqPq",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910j0JpYQByf3kB3B9QgJG",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910V0JpYQ5JKF92j5y06f1"
+        },
+        {
+            "chr": "8",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910P0JpYQ99qkJg6Jqy830",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J291098JpYQFjxZfPQYk727Q",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910JjJpYQ4zqjYgpjkZBKG"
+        },
+        {
+            "chr": "9",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910XjJpYQF8BZk79Qy7VZz",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910j8JpYQP5yBJzy1gf6F4",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910QjJpYQByf3kB3B9QgGy"
+        },
+        {
+            "chr": "10",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910Y8JpYQFQj39KqY2Fp01",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910k8JpYQ98X0z4j1k6z9B",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910Q0JpYQBgvqzvvyBP0BV"
+        },
+        {
+            "chr": "11",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910KjJpYQ7kj0yp8FF66gK",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J29108QJpYQ3BG82XQXkKxyX",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910K0JpYQ5jZZ3X2BB4G36"
+        },
+        {
+            "chr": "12",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910BQJpYQ0fQ6vVqF7gq8G",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J29105jJpYQ5378Bjx3FkXJ9",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910FjJpYQPJjGK7FV56Jy4"
+        },
+        {
+            "chr": "13",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910Z8JpYQFQj39KqY2Fp03",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910qQJpYQKXVVKz3721K6b",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910ZQJpYQPXF4YQ1G14YJ2"
+        },
+        {
+            "chr": "14",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J291080JpYQK59gV4V6jgx2z",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910K8JpYQJG95Q7XKZ0Kvv",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J291088JpYQ1vP3QZ00p4bqV"
+        },
+        {
+            "chr": "15",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910g0JpYQ9ykFKvy5YKz41",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910QQJpYQ46z62xq3Bg1fg",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910k0JpYQ7GJjpY2KjzBK6"
+        },
+        {
+            "chr": "16",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910v0JpYQ01VZk3KpvQ12V",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910b0JpYQ3BG82XQXkKxzQ",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910q0JpYQ15qJXyQQzxPQP"
+        },
+        {
+            "chr": "17",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J291078JpYQ5jZZ3X2BB4G13",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910G8JpYQ7kj0yp8FF66gB",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J29105QJpYQ53yKfQvg64P9G"
+        },
+        {
+            "chr": "18",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910vQJpYQFjxZfPQYk727p",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910b8JpYQ9ykFKvy5YKz3z",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910pjJpYQ6FpYJk63B4593"
+        },
+        {
+            "chr": "19",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J29106jJpYQ5JKF92j5y06bg",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910FQJpYQJF3PY82f761pv",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J291068JpYQ8z6qYQbVp07G6"
+        },
+        {
             "chr": "20",
-            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KV0FQJpYQ36JpvxGZ2Jqqk",
-            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KV04QJpYQBxQPvK56Qg6y5",
-            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KV0G0JpYQKyg0KqPxkk2PF"
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910PjJpYQKXVVKz3721K6B",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J291090JpYQK900JkyFpG63V",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910GQJpYQP2Y9KkxxPvP91"
         },
         {
             "chr": "21",
-            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KV040JpYQ3v03Pxp50fpJK",
-            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KV0FjJpYQ5bPPyP77j806x",
-            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KV05jJpYQ1Z3Fz0gVv0qBv"
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910X8JpYQ1YK1PpBYb886B",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910jjJpYQ75k3g973P5Pq3",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910VjJpYQByf3kB3B9QgJB"
         },
         {
             "chr": "22",
-            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KQzyjJpYQ88231Xfv7QK98",
-            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KQzq8JpYQ0XJFJgY44Vf2f",
-            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1KV00jJpYQ1xJFvkG53FQxp"
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910YjJpYQ1YK1PpBYb886G",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910kjJpYQPJjGK7FV56Jyq",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910bQJpYQ8fjXYQ1z45qGj"
         }
     ],
-    "merge_ukb_and_genomicc.genomicc_covariates": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J10644QJpYQ0qbfpf52ZqPfB",
+    "merge_ukb_and_genomicc.genomicc_covariates": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910x0JpYQ1J7BXPP0P75g5",
     "merge_ukb_and_genomicc.kgp_genotypes": {
         "chr": "all",
-        "bed": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1GXyJ0JpYQ4vzXYXPX593KV",
-        "bim": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1GXyJ8JpYQJ0B8VQfyf9X2V",
-        "fam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1GXyGjJpYQ4vzXYXPX593KP"
+        "bed": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J291048JpYQ75k3g973P5PpG",
+        "bim": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J29104QJpYQP2Y9KkxxPvP8z",
+        "fam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J29103jJpYQK59gV4V6jgx2Z"
     }
 }
