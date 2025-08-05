@@ -88,30 +88,6 @@ function combine_covariates(
     return merged
 end
 
-function is_severe_covid_19(row)
-    if row.COHORT == "genomicc"
-        if row.GENOMICC_PRIMARY_DIAGNOSIS == "COVID-19"
-            return 1
-        else
-            return missing
-        end
-    elseif row.COHORT == "isaric4c"
-        if row.ISARIC_MAX_SEVERITY_SCORE >= 4
-            return 1
-        else
-            return missing
-        end
-    elseif row.COHORT == "mild"
-        return 0
-    elseif row.COHORT == "react"
-        return 0
-    elseif row.COHORT == "ukb"
-        return 0
-    else
-        throw(ArgumentError("Unknown cohort"))
-    end
-end
-
 function add_user_defined_covariates!(covariates, covariates_string)
     required_covariate_variables = split(covariates_string, ",")
     all_colnames = names(covariates)
