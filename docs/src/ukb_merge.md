@@ -22,9 +22,7 @@ In particular we need to populate the `genomicc` and `kgp` subfolders as display
 We will need the following GenOMICC data, at the present time, the name of the file does not matter since it seems impossible to reference a file by its path on the RAP, instead we will have to use file IDs: 
 
 - genotypes: Output by [Combining GenOMICC Datasets](@ref).
-- covariates: 
-  - General covariates provided by Dominique, it should contain an `age_years` and a `sex` column.
-  - Inferred covariates output by [Combining GenOMICC Datasets](@ref) containing ancestry estimates.
+- covariates (provided by Dominique): It should contain the following columns: `IID`,`FID`,`PRIM_DIAGNOSIS_ODAP`,`COHORT`,`ISARIC_MAX_SEVERITY_SCORE`,`SEX_SELF_REPORTED`,`AGE_YEARS_AT_RECRUITMENT`,`SUPERPOPULATION`
 - imputed genotypes: Output by [GenOMICC Genotypes Imputation](@ref).
 
 I recommend to organise them as follows:
@@ -53,9 +51,9 @@ wget -O assets/rap/Homo_sapiens_assembly38.fasta https://storage.googleapis.com/
 Since this is a lot of data, we need to use the [upload agent](https://documentation.dnanexus.com/downloads#installing-the-upload-agent). Asumming `ua` is in your path, run:
 
 ```bash
-export PROJECT_ID=PPP
 export AUTH_TOKEN=XXX
-ua --project $PROJECT_ID --auth-token $AUTH_TOKEN --folder /assets assets/rap/ --recursive
+export PROJECT_ID=project-J0pkqyQJpYQ133JG1p2J1qzv
+ua --project $PROJECT_ID --auth-token $AUTH_TOKEN --recursive --do-not-compress --folder /assets assets/rap/
 ```
 
 ## 2. Extracting Phenotypes
