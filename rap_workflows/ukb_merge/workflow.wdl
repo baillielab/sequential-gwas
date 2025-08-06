@@ -1,39 +1,13 @@
 version 1.0
 
-struct PGENFileset {
-    String chr
-    File pgen
-    File psam
-    File pvar
-}
-
-struct BGENFileset {
-    String chr
-    File bgen
-    File bgi
-    File sample
-    File vcf_info
-    File vcf_info_index
-}
-
-struct PLINKFileset {
-    String chr
-    File bed
-    File bim
-    File fam
-}
-
-struct BCFFileset {
-    String chr
-    File bcf
-    File csi
-}
+import "../common/structs.wdl"
+import "../common/tasks.wdl"
 
 workflow merge_ukb_and_genomicc {
     # Inputs
 
     input {
-        String docker_image = "olivierlabayle/genomicc:main"
+        String docker_image = "olivierlabayle/genomicc:analysis_workflow"
 
         Array[BGENFileset]+ ukb_bgen_filesets
         File ukb_covariates
@@ -42,7 +16,6 @@ workflow merge_ukb_and_genomicc {
         PLINKFileset genomicc_genotypes
         Array[PGENFileset]+ genomicc_pgen_filesets
         File genomicc_covariates
-        File genomicc_inferred_covariates
 
         PLINKFileset kgp_genotypes
 
@@ -149,7 +122,7 @@ workflow merge_ukb_and_genomicc {
 
     # LD Pruning of the merged UKB and KGP genotypes
 
-    call ld_prune as ld_prune_ukb_kgp {
+    call tasks.ld_prune as ld_prune_ukb_kgp {
         input:
             docker_image = docker_image,
             high_ld_regions = high_ld_regions,
@@ -243,7 +216,6 @@ workflow merge_ukb_and_genomicc {
         input:
             docker_image = docker_image,
             genomicc_covariates = genomicc_covariates,
-            genomicc_inferred_covariates = genomicc_inferred_covariates,
             ukb_covariates = ukb_covariates,
             ukb_inferred_covariates = estimate_ukb_ancestry_from_kgp.ancestry_estimate,
             table_with_eids_to_exclude = hesin_critical_table,
@@ -544,50 +516,6 @@ task merge_genotypes_plink {
     }
 }
 
-task ld_prune {
-    input {
-        String docker_image
-        File high_ld_regions
-        String chr
-        File bed_file
-        File bim_file
-        File fam_file
-        String output_prefix = "ld_pruned"
-        String ip_values = "1000 50 0.05"
-        String maf = "0.01"
-    }
-
-    command <<<
-        bed_prefix=$(dirname "~{bed_file}")/$(basename "~{bed_file}" .bed)
-
-        plink2 \
-            --bfile ${bed_prefix} \
-            --indep-pairwise ~{ip_values}
-        
-        plink2 \
-            --bfile ${bed_prefix} \
-            --extract plink2.prune.in \
-            --maf ~{maf} \
-            --make-bed \
-            --exclude range ~{high_ld_regions} \
-            --out ~{output_prefix}
-    >>>
-
-    output {
-        PLINKFileset ld_pruned_fileset = object {
-            chr: chr,
-            bed: "${output_prefix}.bed",
-            bim: "${output_prefix}.bim",
-            fam: "${output_prefix}.fam"
-        }
-    }
-
-    runtime {
-        docker: docker_image
-        dx_instance_type: "mem1_ssd1_v2_x8"
-    }
-}
-
 task estimate_ukb_ancestry_from_kgp {
     input {
         String docker_image
@@ -757,7 +685,6 @@ task merge_genomicc_ukb_covariates {
     input {
         String docker_image
         File genomicc_covariates
-        File genomicc_inferred_covariates
         File ukb_covariates
         File ukb_inferred_covariates
         File table_with_eids_to_exclude
@@ -778,7 +705,6 @@ task merge_genomicc_ukb_covariates {
         ${julia_cmd} /opt/genomicc-workflows/bin/genomicc.jl \
             merge-ukb-genomicc-covariates \
             ~{genomicc_covariates} \
-            ~{genomicc_inferred_covariates} \
             ~{ukb_covariates} \
             ~{ukb_inferred_covariates} \
             ~{table_with_eids_to_exclude} \

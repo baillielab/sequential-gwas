@@ -145,11 +145,6 @@ function cli_settings()
             required = true
             help = "Path to GenOMICC covariates file."
 
-        "genomicc-inferred-covariates"
-            arg_type = String
-            required = true
-            help = "Path to GenOMICC inferred covariates file."
-
         "ukb-covariates"
             arg_type = String
             required = true
@@ -194,15 +189,14 @@ function cli_settings()
     end
 
     @add_arg_table! s["merge-regenie-chr-results"] begin
-        "input-prefix"
+        "merge-list"
             arg_type = String
             required = true
-            help = "Prefix to input files."
-
-        "--output"
+            help = "File with list of files to be merged."
+        "--output-prefix"
             arg_type = String
-            help = "Output file name."
-            default = "results.csv"
+            help = "Prefix to output files."
+            default = "regenie.results"
     end
 
     @add_arg_table! s["download-topmed-file"] begin
@@ -314,15 +308,10 @@ function cli_settings()
             required = true
             help = "Path to GWAS results file."
         
-        "group"
-            arg_type = String
-            required = true
-            help = "Group name."
-        
         "--output-prefix"
             arg_type = String
             help = "Prefix to output files."
-            default = "gwas"
+            default = "gwas.plot"
     end
 
     @add_arg_table! s["merge-covariates-pcs"] begin
@@ -343,20 +332,20 @@ function cli_settings()
     end
 
     @add_arg_table! s["make-gwas-groups"] begin
-        "covariates"
+        "covariates-file"
             arg_type = String
             required = true
             help = "Path to covariates file."
 
-        "variables-file"
+        "--groupby"
             arg_type = String
-            required = true
-            help = "Path to variables file."
-
-        "--inferred-covariates"
-            arg_type = String
+            help = "Comma separated list of variables to use to stratify the GWAS."
             default = nothing
-            help = "Path to covariates inferred from genotypes."
+        
+        "--covariates"
+            arg_type = String
+            help = "Comma separated list of covariates to include in the output file."
+            default = "AGE"
 
         "--output-prefix"
             arg_type = String
@@ -870,9 +859,9 @@ function julia_main()::Cint
         )
     elseif cmd == "make-gwas-groups"
         make_gwas_groups(
-            cmd_settings["covariates"],
-            cmd_settings["variables-file"];
-            inferred_covariates_file=cmd_settings["inferred-covariates"],
+            cmd_settings["covariates-file"];
+            groupby_string=cmd_settings["groupby"],
+            covariates_string=cmd_settings["covariates"],
             output_prefix=cmd_settings["output-prefix"],
             min_group_size=cmd_settings["min-group-size"]
         )
@@ -884,8 +873,7 @@ function julia_main()::Cint
         )
     elseif cmd == "gwas-plots"
         gwas_plots(
-            cmd_settings["results"],
-            cmd_settings["group"];
+            cmd_settings["results"];
             output_prefix=cmd_settings["output-prefix"]
         )
     elseif cmd == "write-imputation-split-lists"
@@ -919,9 +907,8 @@ function julia_main()::Cint
             refresh_rate=cmd_settings["refresh-rate"]
             )
     elseif cmd == "merge-regenie-chr-results"
-        merge_regenie_chr_results(
-            cmd_settings["input-prefix"];
-            output=cmd_settings["output"]
+        merge_regenie_chr_results(cmd_settings["merge-list"];
+            output_prefix=cmd_settings["output-prefix"]
         )
     elseif cmd == "align-ukb-variants-with-kgp-and-keep-unrelated"
         align_ukb_variants_with_kgp_and_keep_unrelated(
@@ -933,7 +920,6 @@ function julia_main()::Cint
     elseif cmd == "merge-ukb-genomicc-covariates"
         merge_ukb_genomicc_covariates(
             cmd_settings["genomicc-covariates"],
-            cmd_settings["genomicc-inferred-covariates"],
             cmd_settings["ukb-covariates"],
             cmd_settings["ukb-inferred-covariates"],
             cmd_settings["file-with-eids-to-exclude"];
