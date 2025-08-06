@@ -324,8 +324,8 @@
     "merge_ukb_and_genomicc.genomicc_covariates": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2910x0JpYQ1J7BXPP0P75g5",
     "merge_ukb_and_genomicc.kgp_genotypes": {
         "chr": "all",
-        "bed": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J291048JpYQ75k3g973P5PpG",
-        "bim": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J29104QJpYQP2Y9KkxxPvP8z",
-        "fam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J29103jJpYQK59gV4V6jgx2Z"
+        "bed": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J29Vj50JpYQ70483gk1KK1ZK",
+        "bim": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J29Vj48JpYQK62G3VVXbPkKV",
+        "fam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J29Vj4jJpYQJQbpV8jVq9jgQ"
     }
 }
