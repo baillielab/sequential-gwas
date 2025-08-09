@@ -98,26 +98,47 @@ function cli_settings()
             action = :command
             help = "Generates a report after merging UKB and GenOMICC data."
 
-        "make-ukb-bgen-qc-and-r2-filter-files"
+        "fill-chr-pvar-with-variant-id"
             action = :command
             help = "Generates UKB BGEN QC and R2 filter files."
+
+        "make-ukb-individuals-list"
+            action = :command
+            help = "Generates a list of UKB individuals to be used in the workflow."
     end
 
-    @add_arg_table! s["make-ukb-bgen-qc-and-r2-filter-files"] begin
-        "prefix"
+    @add_arg_table! s["make-ukb-individuals-list"] begin
+        "covariates-file"
             arg_type = String
             required = true
-            help = "Prefix to the UKB file."
+            help = "Covariates file."
 
-        "--threshold"
-            arg_type = Float64
-            help = "R2 threshold for filtering variants."
-            default = 0.9
-
+        "critical-table-file"
+            arg_type = String
+            required = true
+            help = "File containing critical IDs."
+        
         "--output"
             arg_type = String
-            help = "Output file containing variants to extract."
-            default = "extract_list.txt"
+            help = "Output file."
+            default = "ukb_eids_to_keep.txt"
+
+        "--max-samples"
+            arg_type = Int
+            help = "Maximum number of samples to keep."
+            default = nothing
+    end
+
+    @add_arg_table! s["fill-chr-pvar-with-variant-id"] begin
+        "pvar-file"
+            arg_type = String
+            required = true
+            help = "pvar file."
+
+        "variants-info-file"
+            arg_type = String
+            required = true
+            help = "File containing variants info (CHROM, POS, ID)."
     end
 
     @add_arg_table! s["make-ukb-genomicc-merge-report"] begin
@@ -154,11 +175,6 @@ function cli_settings()
             arg_type = String
             required = true
             help = "Path to UKB inferred covariates file."
-
-        "file-with-eids-to-exclude"
-            arg_type = String
-            required = true
-            help = "Path to file with EIDs to exclude from the merged covariates."
 
         "--output-file"
             arg_type = String
@@ -921,8 +937,7 @@ function julia_main()::Cint
         merge_ukb_genomicc_covariates(
             cmd_settings["genomicc-covariates"],
             cmd_settings["ukb-covariates"],
-            cmd_settings["ukb-inferred-covariates"],
-            cmd_settings["file-with-eids-to-exclude"];
+            cmd_settings["ukb-inferred-covariates"];
             output_file=cmd_settings["output-file"]
         )
     elseif cmd == "make-ukb-genomicc-merge-report"
@@ -932,11 +947,17 @@ function julia_main()::Cint
             ukb_genomicc_imputed_files_list=cmd_settings["ukb-genomicc-imputed-files-list"],
             ukb_genomicc_covariates_file=cmd_settings["ukb-genomicc-covariates-file"]
         )
-    elseif cmd == "make-ukb-bgen-qc-and-r2-filter-files"
-        make_ukb_bgen_qc_and_r2_filter_files(
-            cmd_settings["prefix"];
-            threshold=cmd_settings["threshold"],
-            output=cmd_settings["output"]
+    elseif cmd == "fill-chr-pvar-with-variant-id"
+        fill_chr_pvar_with_variant_id(
+            cmd_settings["pvar-file"],
+            cmd_settings["variants-info-file"]
+        )
+    elseif cmd == "make-ukb-individuals-list"
+        make_ukb_individuals_list(
+            cmd_settings["covariates-file"],
+            cmd_settings["critical-table-file"];
+            output=cmd_settings["output"],
+            max_samples=cmd_settings["max-samples"]
         )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))

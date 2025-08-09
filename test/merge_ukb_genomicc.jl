@@ -74,8 +74,8 @@ end
     genomicc_covariates_file = joinpath("test", "assets", "genomicc", "mock.covariates.csv")
     ukb_covariates_file = joinpath("test", "assets", "ukb", "covariates_table.csv")
     ukb_inferred_covariates_file = joinpath(tmpdir, "inferred_covariates.ukb.csv")
-    file_with_eids_to_exclude = joinpath(TESTDIR, "assets", "ukb", "critical_table.csv")
-    # Make UKB inferred covariates (ancestry estimates and downsample to mimic loss of samples)
+    unrelated_ukb_individuals_file = joinpath(tmpdir, "kingunrelated.txt")
+    # Make UKB inferred covariates (ancestry estimates and downsample to mimic loss of samples due to both relatedness and critical patients)
     ukb_covariates = CSV.read(ukb_covariates_file, DataFrame)
     n = nrow(ukb_covariates)
     ukb_inferred_covariates = DataFrame(
@@ -96,12 +96,12 @@ end
         genomicc_covariates_file,
         ukb_covariates_file,
         ukb_inferred_covariates_file,
-        file_with_eids_to_exclude,
         "--output-file", output_file
     ])
     julia_main()
     merged_covariates = CSV.read(output_file, DataFrame)
-    @test nrow(merged_covariates) == 14 + 12911 # ukb19 is dropped because in critical_table.csv
+    ukb_individuals = merged_covariates.IID[merged_covariates.IID .|> x -> startswith(x, "ukb")]
+    @test nrow(merged_covariates) == 15 + 12911 # ukb19 is dropped because in critical_table.csv
     @test names(merged_covariates) == [
         "FID",
         "IID",
@@ -125,32 +125,23 @@ end
     @test merged_covariates.FID == merged_covariates.IID
 end
 
-@testset "Test make_ukb_bgen_qc_and_r2_filter_files" begin
+@testset "Test fill_chr_pvar_with_variant_id" begin
     tmpdir = mktempdir()
-    prefix = joinpath(TESTDIR, "assets", "ukb", "imputed", "ukb21007_c1_b0_v1")
-    output_file = joinpath(tmpdir, "extract_list.txt")
-    pvar = CSV.read(string(prefix, ".pvar"), DataFrame; delim='\t')
+    # The file is modified inplace so we need to copy it to preserve the test dir
+    pvar_file = joinpath(tmpdir, "temp.pvar")
+    src_pvar_file = joinpath(TESTDIR, "assets", "ukb", "imputed", "ukb21007_c1_b0_v1.pvar")
+    cp(src_pvar_file, pvar_file)
+    variants_info_file = joinpath(TESTDIR, "assets", "ukb", "imputed", "ukb21007_c1_b0_v1.tsv")
+    
     copy!(ARGS, [
-        "make-ukb-bgen-qc-and-r2-filter-files",
-        prefix,
-        "--threshold", "0.9",
-        "--output", output_file
+        "fill-chr-pvar-with-variant-id",
+        pvar_file, variants_info_file
     ])
     julia_main()
-    # First variant with R2 < 0.9 is dropped
-    extract_list = readlines(output_file)
-    @test extract_list == [
-        "chr1:14012312:T:C",
-        "chr1:18100537:G:A",
-        "chr1:22542609:T:C",
-        "chr1:40310265:G:A",
-        "chr1:92682820:C:T",
-        "chr1:111622622:C:A",
-        "chr1:183905563:G:A",
-        "chr1:231799576:C:T"
-    ]
     # pvar file has updated ID
-    new_pvar = CSV.read(string(prefix, ".pvar"), DataFrame; delim='\t')
+    src_pvar = CSV.read(src_pvar_file, DataFrame; delim='\t')
+    @test all(src_pvar.ID .== ".")
+    new_pvar = CSV.read(pvar_file, DataFrame; delim='\t')
     @test new_pvar.ID == [
         "chr1:9694126:C:T",
         "chr1:14012312:T:C",
@@ -162,13 +153,39 @@ end
         "chr1:183905563:G:A",
         "chr1:231799576:C:T"
     ]
-    # Write back the original pvar file
-    CSV.write(
-        string(prefix, ".pvar"),
-        pvar,
-        delim='\t',
-        writeheader=true
-    )
+end
+
+@testset "Test make_ukb_individuals_list" begin
+    tmpdir = mktempdir()
+    covariates_file = joinpath(TESTDIR, "assets", "ukb", "covariates_table.csv")
+    critical_table_file = joinpath(TESTDIR, "assets", "ukb", "critical_table.csv")
+    original_eids = unique(CSV.read(covariates_file, DataFrame).eid)
+    # Make UKB individuals list
+    # This will filter out individuals with critical conditions
+    output_file = joinpath(tmpdir, "ukb_eids_to_keep.txt")
+
+    copy!(ARGS, [
+        "make-ukb-individuals-list",
+        covariates_file,
+        critical_table_file,
+        "--output", output_file,
+    ])
+    julia_main()
+
+    eids_to_keep = readlines(output_file)
+    @test length(eids_to_keep) == length(original_eids) - 1 # One individual (ukb19) is in critical_table.csv
+    # Now further limit the number of individuals to 5
+    copy!(ARGS, [
+        "make-ukb-individuals-list",
+        covariates_file,
+        critical_table_file,
+        "--output", output_file,
+        "--max-samples", "5"
+    ])
+    julia_main()
+    eids_to_keep = readlines(output_file)
+    @test length(eids_to_keep) == 5
+    @test "ukb19" ∉ eids_to_keep # ukb19 is still excluded
 end
 
 # End to End Workflow run
@@ -199,6 +216,15 @@ if dorun
         results_dirs = readdir("ukb_genomicc_merge_results/merge_ukb_and_genomicc/", join=true)
         results_dir = results_dirs[argmax(mtime(d) for d in results_dirs)]
 
+        # Test get_ukb_individuals
+        ukb_individuals = CSV.read(
+            joinpath(results_dir, "call-get_ukb_individuals", "execution", "ukb_eids_to_keep.txt"), 
+            DataFrame;
+            header=["FID", "IID"]
+        )
+        @test length(ukb_individuals.IID) == 15
+        @test "ukb19" ∉ ukb_individuals.IID # ukb19 is excluded from the list
+
         # Test R2 filter and critical samples removed
         samples_in_critical_care = CSV.read(
                 joinpath(TESTDIR, "assets", "ukb", "critical_table.csv"), 
@@ -214,6 +240,7 @@ if dorun
                 DataFrame
             )
             @test isempty(intersect(samples.IID, samples_in_critical_care))
+            @test length(samples.IID) <= 15 # missing rate may result in less than 15 individuals
             # Check R2 filter is applied
             pvar = CSV.read(
                 only(filter(x -> endswith(x, ".pvar"), results_files)),
@@ -244,6 +271,14 @@ if dorun
         # Test variant Ids alignement and filterting of unrelated individuals
         kgp_qc_dir = joinpath(results_dir, "call-align_ukb_variants_with_kgp_and_keep_unrelated", "execution")
         ukb_unrelated_bim = GenomiccWorkflows.read_bim(joinpath(kgp_qc_dir, "ukb_unrelated.bim"))
+        unrelated_ukb_indivifuals = CSV.read(
+            joinpath(kgp_qc_dir, "kingunrelated.txt"), 
+            DataFrame; 
+            delim="\t", 
+            header=["FID", "IID"]
+        )
+        @test nrow(unrelated_ukb_indivifuals) <= 15
+
         ## One variant is dropped because it is not in the KGP dataset
         @test 9694126 ∉ ukb_unrelated_bim.BP_COORD
         ## Samples, none is removed here.
@@ -285,6 +320,23 @@ if dorun
             "SEVERE_ECLS", "SEVERE_REACTION_TO_VACCINATION"]
         @test length(filter(startswith("ukb"), ukb_genomicc_covariates.IID)) > 0
         @test length(filter(startswith("odap"), ukb_genomicc_covariates.IID)) > 0
+
+        # Imputed genotypes Merged
+        ukb_genomicc_imputed_dir = joinpath(results_dir, "call-merge_genomicc_ukb_bcfs_and_convert_to_pgen")
+        imputed_genotypes_individuals = []
+        for shard in [0, 1, 2]
+            subdir = joinpath(ukb_genomicc_imputed_dir, "shard-$shard", "execution")
+            files = readdir(subdir)
+            psam_file = files[findfirst(endswith(".psam"), files)]
+            psam = CSV.read(joinpath(subdir, psam_file), DataFrame; delim='\t')
+            rename!(psam, "#FID" => "FID")
+            push!(imputed_genotypes_individuals, sort(psam[!, ["FID", "IID"]]))
+        end
+
+        # Test imputed genotypes, genotypes and genotypes have the same individuals
+        for imputed_chr in imputed_genotypes_individuals
+            @test imputed_chr == sort(ukb_genomicc_merged_fam[!, ["FID", "IID"]])
+        end
 
         # Test report generation
         @test isfile(joinpath(results_dir, "call-make_report", "execution", "report.md"))
