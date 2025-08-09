@@ -386,7 +386,7 @@ task get_ukb_individuals {
         File ukb_covariates
         File hesin_critical_table
         String julia_cmd
-        Int max_samples = "nothing"
+        String max_samples = "nothing"
     }
 
     command <<<
