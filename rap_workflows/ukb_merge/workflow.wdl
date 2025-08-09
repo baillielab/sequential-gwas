@@ -21,6 +21,7 @@ workflow merge_ukb_and_genomicc {
 
         File high_ld_regions
         File reference_genome
+        String max_ukb_samples = "nothing"
         String qc_genotype_missing_rate = "0.02"
         String qc_individual_missing_rate = "0.02"
         String qc_hwe_p = "1e-10"
@@ -34,12 +35,31 @@ workflow merge_ukb_and_genomicc {
         String julia_use_sysimage = "true"
     }
 
+    # Get Julia command template
+
+    call tasks.get_julia_cmd as get_julia_cmd {
+        input:
+            use_sysimage = julia_use_sysimage,
+            threads = julia_threads
+    }
+
     # Index Reference Genome
 
     call index_reference_genome {
         input:
             docker_image = docker_image,
             reference_genome = reference_genome
+    }
+
+    # Get a list of UKB individuals to keep
+
+    call get_ukb_individuals {
+        input:
+            docker_image = docker_image,
+            ukb_covariates = ukb_covariates,
+            hesin_critical_table = hesin_critical_table,
+            julia_cmd = get_julia_cmd.julia_cmd,
+            max_samples = max_ukb_samples
     }
 
     # Filter UKB chromosomes with R2 and critical samples
@@ -53,16 +73,15 @@ workflow merge_ukb_and_genomicc {
                 bgen_sample_file = bgen_fileset.sample,
                 vcf_info_file = bgen_fileset.vcf_info,
                 vcf_info_file_index = bgen_fileset.vcf_info_index,
-                table_with_eids_to_exclude = hesin_critical_table,
+                individuals_to_keep = get_ukb_individuals.eids_to_keep,
                 qc_genotype_missing_rate = qc_genotype_missing_rate,
                 qc_individual_missing_rate = qc_individual_missing_rate,
                 r2_threshold = r2_threshold,
-                julia_threads = julia_threads,
-                julia_use_sysimage = julia_use_sysimage
+                julia_cmd = get_julia_cmd.julia_cmd
         }
     }
 
-    # Filter UKB BGEN files to keep only variants in GenOMICC
+    # Filter UKB PGEN files to keep only variants in GenOMICC and make PLINK files
 
     scatter (pgen_fileset in filter_ukb_chr_with_r2_and_critical_samples.pgen_fileset) {
         call extract_genomicc_variants {
@@ -80,7 +99,7 @@ workflow merge_ukb_and_genomicc {
         File bed_files = set.bed
     }
     
-    # Merge al lchromosomes together
+    # Merge all chromosomes together
 
     call merge_ukb_chrs {
         input:
@@ -101,8 +120,7 @@ workflow merge_ukb_and_genomicc {
             kgp_bim = kgp_genotypes.bim,
             kgp_fam = kgp_genotypes.fam,
             relatedness_degree = relatedness_degree,
-            julia_threads = julia_threads,
-            julia_use_sysimage = julia_use_sysimage
+            julia_cmd = get_julia_cmd.julia_cmd,
     }
 
     # Merging KGP genotypes with UKB genotypes for ancestry estimation
@@ -145,8 +163,7 @@ workflow merge_ukb_and_genomicc {
             fam_file = ld_prune_ukb_kgp.ld_pruned_fileset.fam,
             output_filename = "ukb.ancestry_estimate.csv",
             ancestry_threshold = ancestry_threshold,
-            julia_threads = julia_threads,
-            julia_use_sysimage = julia_use_sysimage
+            julia_cmd = get_julia_cmd.julia_cmd
     }
 
     # Merging GenOMICC genotypes with UKB matched genotypes (from imputed)
@@ -177,7 +194,9 @@ workflow merge_ukb_and_genomicc {
                 pvar_file = pgen_fileset.pvar,
                 psam_file = pgen_fileset.psam,
                 reference_genome = reference_genome,
-                reference_genome_index = index_reference_genome.reference_genome_index
+                reference_genome_index = index_reference_genome.reference_genome_index,
+                individuals_to_keep = align_ukb_variants_with_kgp_and_keep_unrelated.ukb_unrelated_individuals,
+                use_individuals_to_keep = "true"
         }
     }
 
@@ -191,7 +210,9 @@ workflow merge_ukb_and_genomicc {
                 psam_file = pgen_fileset.psam,
                 pvar_file = pgen_fileset.pvar,
                 reference_genome = reference_genome,
-                reference_genome_index = index_reference_genome.reference_genome_index
+                reference_genome_index = index_reference_genome.reference_genome_index,
+                individuals_to_keep = align_ukb_variants_with_kgp_and_keep_unrelated.ukb_unrelated_individuals,
+                use_individuals_to_keep = "false"
         }
     }
 
@@ -218,10 +239,9 @@ workflow merge_ukb_and_genomicc {
             genomicc_covariates = genomicc_covariates,
             ukb_covariates = ukb_covariates,
             ukb_inferred_covariates = estimate_ukb_ancestry_from_kgp.ancestry_estimate,
-            table_with_eids_to_exclude = hesin_critical_table,
             output_file = "ukb_genomicc.covariates.csv",
-            julia_threads = julia_threads,
-            julia_use_sysimage = julia_use_sysimage
+            ukb_individuals_to_keep = align_ukb_variants_with_kgp_and_keep_unrelated.ukb_unrelated_individuals,
+            julia_cmd = get_julia_cmd.julia_cmd
     }
 
     # Make Report
@@ -242,17 +262,18 @@ workflow merge_ukb_and_genomicc {
             ukb_genomicc_merged_bim = merge_ukb_genomicc.plink_fileset.bim,
             ukb_genomicc_merged_fam = merge_ukb_genomicc.plink_fileset.fam,
             merged_covariates = merge_genomicc_ukb_covariates.merged_covariates,
-            julia_threads = julia_threads,
-            julia_use_sysimage = julia_use_sysimage
+            julia_cmd = get_julia_cmd.julia_cmd
     }
 
     # Outputs
 
     output {
+        File ukb_individuals = get_ukb_individuals.eids_to_keep
         Array[PGENFileset] filtered_ukb_r2_critical_pgen = filter_ukb_chr_with_r2_and_critical_samples.pgen_fileset
         Array[PLINKFileset] filtered_ukb_genomicc_variants_bed = extract_genomicc_variants.plink_fileset
         PLINKFileset merged_ukb_bed = merge_ukb_chrs.plink_fileset
         PLINKFileset ukb_unrelated_bed = align_ukb_variants_with_kgp_and_keep_unrelated.ukb_unrelated_fileset
+        File ukb_unrelated_individuals = align_ukb_variants_with_kgp_and_keep_unrelated.ukb_unrelated_individuals
         PLINKFileset ukb_kgp_merged_bed = merge_ukb_kgp.plink_fileset
         PLINKFileset ukb_kgp_ld_pruned_bed = ld_prune_ukb_kgp.ld_pruned_fileset
         File ukb_ancestry_estimates = estimate_ukb_ancestry_from_kgp.ancestry_estimate
@@ -311,51 +332,36 @@ task filter_ukb_chr_with_r2_and_critical_samples {
         File bgen_sample_file
         File vcf_info_file
         File vcf_info_file_index
-        File table_with_eids_to_exclude
+        File individuals_to_keep
         String qc_genotype_missing_rate
         String qc_individual_missing_rate
         String r2_threshold = "0.9"
-        String julia_threads = "auto"
-        String julia_use_sysimage = "true"
+        String julia_cmd
     }
 
     String input_prefix = basename(bgen_file, ".bgen")
 
     command <<<
-        # Extract sample IDs to from table_with_eids_to_exclude
-        awk -F',' 'NR==1 {for (i=1; i<=NF; i++) if ($i == "eid") col=i; next} {print $col "\t" $col}' ~{table_with_eids_to_exclude} | sort -u > samples_to_remove.txt
-        # Convert to PGEN file
+        # Get variants with R2 > r2_threshold
+        mamba run -n bcftools_env bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%INFO/R2\n' ~{vcf_info_file} > ~{input_prefix}.tsv
+        awk -v t="~{r2_threshold}" 'BEGIN { OFS="\t" } $6 > t { print $1, $2, $3 }' ~{input_prefix}.tsv > variant_passing_r2.tsv
+        awk 'BEGIN { OFS="\t" } { print $1, $2, $2 }' variant_passing_r2.tsv > extract_list.txt
+        # Filter BGEN file and write PGEN
         plink2 \
             --bgen ~{bgen_file} ref-first \
             --sample ~{bgen_sample_file} \
-            --output-chr chr26 \
-            --make-pgen \
-            --out ~{input_prefix}
-        # Extract variant info from vcf file
-        mamba run -n bcftools_env bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%INFO/R2\n' ~{vcf_info_file} > ~{input_prefix}.tsv
-        # Check variants and get list of variants to extract
-        julia_cmd="julia --project=/opt/genomicc-workflows --startup-file=no"
-        if [[ "~{julia_use_sysimage}" == "true" ]]; then
-            julia_cmd+=" --sysimage=/opt/genomicc-workflows/GenomiccWorkflows.so"
-        fi
-        if [[ "~{julia_threads}" == "auto" ]]; then
-            julia_cmd+=" --threads=auto"
-        fi
-        ${julia_cmd} /opt/genomicc-workflows/bin/genomicc.jl \
-            make-ukb-bgen-qc-and-r2-filter-files \
-            ~{input_prefix} \
-            --threshold=~{r2_threshold} \
-            --output=extract_list.txt
-        # Filter PGEN file
-        plink2 \
-            --pfile ~{input_prefix} \
-            --extract extract_list.txt \
-            --remove samples_to_remove.txt \
+            --extract range extract_list.txt \
+            --keep ~{individuals_to_keep} \
             --geno ~{qc_genotype_missing_rate} \
             --mind ~{qc_individual_missing_rate} \
             --output-chr chr26 \
             --make-pgen \
             --out "~{input_prefix}.filtered"
+        # Update variant IDs in PVAR file to match the extracted list
+        ~{julia_cmd} \
+            fill-chr-pvar-with-variant-id \
+            ~{input_prefix}.filtered.pvar \
+            variant_passing_r2.tsv
     >>>
 
     output {
@@ -372,6 +378,37 @@ task filter_ukb_chr_with_r2_and_critical_samples {
         dx_instance_type: "mem1_ssd1_v2_x16"
     }
 
+}
+
+task get_ukb_individuals {
+    input {
+        String docker_image
+        File ukb_covariates
+        File hesin_critical_table
+        String julia_cmd
+        Int max_samples = "nothing"
+    }
+
+    command <<<
+        max_samples_arg=""
+            if [[ "~{max_samples}" != "nothing" ]]; then
+                max_samples_arg="--max-samples ~{max_samples}"
+        fi
+        ~{julia_cmd} \
+            make-ukb-individuals-list \
+            ~{ukb_covariates} \
+            ~{hesin_critical_table} \
+            --output ukb_eids_to_keep.txt ${max_samples_arg}
+    >>>
+
+    output {
+        File eids_to_keep = "ukb_eids_to_keep.txt"
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem2_ssd1_v2_x4"
+    }
 }
 
 task extract_genomicc_variants {
@@ -433,21 +470,13 @@ task align_ukb_variants_with_kgp_and_keep_unrelated {
         File kgp_bim
         File kgp_fam
         String relatedness_degree = "3"
-        String julia_threads = "auto"
-        String julia_use_sysimage = "true"
+        String julia_cmd
     }
 
     command <<<
-        julia_cmd="julia --project=/opt/genomicc-workflows --startup-file=no"
-        if [[ "~{julia_use_sysimage}" == "true" ]]; then
-            julia_cmd+=" --sysimage=/opt/genomicc-workflows/GenomiccWorkflows.so"
-        fi
-        if [[ "~{julia_threads}" == "auto" ]]; then
-            julia_cmd+=" --threads=auto"
-        fi
         ukb_bed_prefix=$(dirname "~{ukb_bed}")/$(basename "~{ukb_bed}" .bed)
         kgp_bed_prefix=$(dirname "~{kgp_bed}")/$(basename "~{kgp_bed}" .bed)
-        ${julia_cmd} /opt/genomicc-workflows/bin/genomicc.jl \
+        ~{julia_cmd} \
             align-ukb-variants-with-kgp-and-keep-unrelated \
             ${ukb_bed_prefix} \
             ${kgp_bed_prefix} \
@@ -461,6 +490,7 @@ task align_ukb_variants_with_kgp_and_keep_unrelated {
             bim: "ukb_unrelated.bim",
             fam: "ukb_unrelated.fam"
         }
+        File ukb_unrelated_individuals = "kingunrelated.txt"
     }
 
     runtime {
@@ -524,24 +554,15 @@ task estimate_ukb_ancestry_from_kgp {
         File fam_file
         String output_filename = "ukb.ancestry_estimate.csv"
         String ancestry_threshold = "0.8"
-        String julia_threads = "auto"
-        String julia_use_sysimage = "true"
+        String julia_cmd
     }
 
     command <<<
-        julia_cmd="julia --project=/opt/genomicc-workflows --startup-file=no"
-        if [[ "~{julia_use_sysimage}" == "true" ]]; then
-            julia_cmd+=" --sysimage=/opt/genomicc-workflows/GenomiccWorkflows.so"
-        fi
-        if [[ "~{julia_threads}" == "auto" ]]; then
-            julia_cmd+=" --threads=auto"
-        fi
-
         wget -O 20130606_g1k_3202_samples_ped_population.txt ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/20130606_g1k_3202_samples_ped_population.txt
 
         bed_prefix=$(dirname "~{bed_file}")/$(basename "~{bed_file}" .bed)
 
-        ${julia_cmd} /opt/genomicc-workflows/bin/genomicc.jl \
+        ~{julia_cmd} \
             estimate-ancestry \
             ${bed_prefix} \
             20130606_g1k_3202_samples_ped_population.txt \
@@ -569,15 +590,21 @@ task pgen_to_bcf {
         File psam_file
         File reference_genome
         File reference_genome_index
+        File individuals_to_keep
+        String use_individuals_to_keep = "true"
     }
 
     command <<<
         pgen_prefix=$(dirname "~{pgen_file}")/$(basename "~{pgen_file}" .pgen)
 
+        keep_option=""
+        if [[ "~{use_individuals_to_keep}" == "true" ]]; then
+            keep_option="--keep ~{individuals_to_keep}"
+        fi
         plink2 \
             --pfile ${pgen_prefix} \
             --fa ~{reference_genome} \
-            --output-chr chr26 \
+            --output-chr chr26 ${keep_option}\
             --export bcf \
             --out "~{output_prefix}.chr_~{chr}.temp"
 
@@ -635,11 +662,12 @@ task merge_genomicc_ukb_bcfs_and_convert_to_pgen {
             --write-index=csi \
             ~{genomicc_bcf} ~{ukb_bcf}
 
-        # Convert merged BCF to PGEN format
+        # Convert merged BCF to PGEN format: reverses merge of FID_IID  that happened when converting to BCF
         plink2 \
             --bcf "~{output_prefix}.chr_~{ukb_chr}.bcf" \
             --geno ~{qc_genotype_missing_rate} \
             --make-pgen \
+            --id-delim \
             --out "~{output_prefix}.chr_~{ukb_chr}"
     >>>
 
@@ -687,27 +715,17 @@ task merge_genomicc_ukb_covariates {
         File genomicc_covariates
         File ukb_covariates
         File ukb_inferred_covariates
-        File table_with_eids_to_exclude
         String output_file = "ukb_genomicc.covariates.csv"
-        String julia_threads = "auto"
-        String julia_use_sysimage = "true"
+        File ukb_individuals_to_keep
+        String julia_cmd
     }
 
     command <<<
-        julia_cmd="julia --project=/opt/genomicc-workflows --startup-file=no"
-        if [[ "~{julia_use_sysimage}" == "true" ]]; then
-            julia_cmd+=" --sysimage=/opt/genomicc-workflows/GenomiccWorkflows.so"
-        fi
-        if [[ "~{julia_threads}" == "auto" ]]; then
-            julia_cmd+=" --threads=auto"
-        fi
-
-        ${julia_cmd} /opt/genomicc-workflows/bin/genomicc.jl \
+        ~{julia_cmd} \
             merge-ukb-genomicc-covariates \
             ~{genomicc_covariates} \
             ~{ukb_covariates} \
             ~{ukb_inferred_covariates} \
-            ~{table_with_eids_to_exclude} \
             --output-file ~{output_file}
     >>>
 
@@ -737,24 +755,15 @@ task make_report {
 
         File merged_covariates
 
-        String julia_threads = "auto"
-        String julia_use_sysimage = "true"
+        String julia_cmd
     }
 
     command <<<
-       julia_cmd="julia --project=/opt/genomicc-workflows --startup-file=no"
-        if [[ "~{julia_use_sysimage}" == "true" ]]; then
-            julia_cmd+=" --sysimage=/opt/genomicc-workflows/GenomiccWorkflows.so"
-        fi
-        if [[ "~{julia_threads}" == "auto" ]]; then
-            julia_cmd+=" --threads=auto"
-        fi
-
         for f in ~{sep=" " ukb_genomicc_merged_imputed_pvar} ~{sep=" " ukb_genomicc_merged_imputed_psam}; do
             echo "${f%.bed}"
         done > ukb_genomicc_imputed_files_list.txt
 
-        ${julia_cmd} /opt/genomicc-workflows/bin/genomicc.jl \
+        ~{julia_cmd} \
             make-ukb-genomicc-merge-report \
             ~{ukb_genomicc_merged_bim} \
             ~{ukb_genomicc_merged_fam} \
