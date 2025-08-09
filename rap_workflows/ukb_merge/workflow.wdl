@@ -7,7 +7,7 @@ workflow merge_ukb_and_genomicc {
     # Inputs
 
     input {
-        String docker_image = "olivierlabayle/genomicc:analysis_workflow"
+        String docker_image = "olivierlabayle/genomicc:limit_ukb_samples"
 
         Array[BGENFileset]+ ukb_bgen_filesets
         File ukb_covariates
