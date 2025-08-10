@@ -1,6 +1,7 @@
 {
     "merge_ukb_and_genomicc.high_ld_regions": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J291058JpYQ2Zq0fzfz1yp0Y",
     "merge_ukb_and_genomicc.reference_genome": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J291030JpYQFQj39KqY2Fkzk",
+    "merge_ukb_and_genomicc.max_ukb_samples": "100000",
     "merge_ukb_and_genomicc.ukb_bgen_filesets": [
         {
             "chr": "1",

@@ -57,7 +57,7 @@ To debug errors, it may be useful to run the code interactively, for this, you c
 
 ```bash
 dx run \
-  --instance-type mem1_ssd1_v2_x16 \
+  --instance-type mem2_ssd1_v2_x8 \
   -imax_session_length="10h" \
   -y \
   --ssh app-cloud_workstation

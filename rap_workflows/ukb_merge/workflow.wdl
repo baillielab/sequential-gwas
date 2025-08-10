@@ -597,6 +597,12 @@ task pgen_to_bcf {
     command <<<
         pgen_prefix=$(dirname "~{pgen_file}")/$(basename "~{pgen_file}" .pgen)
 
+        # If the PGEN file does not contain an FID column, add it
+        if ! head -n 1 ~{psam_file} | grep -q '^#FID'; then
+            awk 'BEGIN{OFS="\t"} NR==1 {$1=substr($1,2); print "#FID", $0; next} { print $1, $0 }' ~{psam_file} > temp.psam
+            mv temp.psam ~{psam_file}
+        fi
+
         keep_option=""
         if [[ "~{use_individuals_to_keep}" == "true" ]]; then
             keep_option="--keep ~{individuals_to_keep}"
