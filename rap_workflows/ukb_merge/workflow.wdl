@@ -375,7 +375,7 @@ task filter_ukb_chr_with_r2_and_critical_samples {
 
     runtime {
         docker: docker_image
-        dx_instance_type: "mem1_ssd1_v2_x16"
+        dx_instance_type: "mem2_ssd1_v2_x16"
     }
 
 }
