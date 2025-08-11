@@ -1,5 +1,5 @@
 {
-    "gwas.docker_image": "olivierlabayle/genomicc:limit_ukb_samples",
+    "gwas.docker_image": "olivierlabayle/genomicc:scope",
     "gwas.covariates_file": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1gFGv8JppvzKkzF0q357jk4",
     "gwas.genotypes": {
         "chr": "all",
