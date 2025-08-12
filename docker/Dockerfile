@@ -1,4 +1,4 @@
-FROM olivierlabayle/genomicc-base:main
+FROM olivierlabayle/genomicc-base:scope
 
 RUN apt-get clean \
     && apt-get update 

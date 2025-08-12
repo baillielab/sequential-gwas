@@ -2117,6 +2117,7 @@
       "project": "project-J0pkqyQJpYQ133JG1p2J1qzv"
     }
   },
+  "stage-common.max_ukb_samples": "100000",
   "stage-common.genomicc_genotypes___dxfiles": [{
     "$dnanexus_link": {
       "id": "file-J2910y0JpYQPXF4YQ1G14YPP",

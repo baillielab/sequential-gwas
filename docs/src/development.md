@@ -43,7 +43,7 @@ JULIA_DEPOT_PATH=$JULIA_DEPOT_PATH:/root/.julia julia --project=/mnt/genomicc-wo
 Most tools are available within their conda environment, for instance regenie:
 
 ```bash
-docker run -it --rm genomicc-workflows /opt/miniforge3/bin/mamba run -n regenie_env regenie --help
+docker run -it --rm genomicc-workflows /opt/miniforge3/bin/conda run -n regenie_env regenie --help
 ```
 
 (If running on MacOS with arm platform, add: `--platform linux/amd64`)
@@ -57,7 +57,7 @@ To debug errors, it may be useful to run the code interactively, for this, you c
 
 ```bash
 dx run \
-  --instance-type mem1_ssd1_v2_x16 \
+  --instance-type mem2_ssd1_v2_x8 \
   -imax_session_length="10h" \
   -y \
   --ssh app-cloud_workstation
@@ -72,7 +72,7 @@ dx download file-J1P9y88JjZjXfq4Y5gYBxk86 file-J1P9y88JjZjbX18xFZ38qY2P
 Then you can download the docker image and enter a container:
 
 ```bash
-docker run -it --rm -v $PWD:/mnt/data olivierlabayle/genomicc:analysis_workflow /bin/bash
+docker run -it --rm -v $PWD:/mnt/data olivierlabayle/genomicc:scope /bin/bash
 ```
 
 The current directory is mounted to `/mnt/data`. From there, work as usual, for instance to start a Julia REPL:

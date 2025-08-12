@@ -159,8 +159,7 @@ end
 function merge_ukb_genomicc_covariates(
     genomicc_covariates_file,
     ukb_covariates_file,
-    ukb_inferred_covariates_file,
-    file_with_eids_to_exclude,;
+    ukb_inferred_covariates_file;
     output_file="ukb_genomicc.covariates.csv"
     )
     severe_infections_map = get_severe_infections_map()
@@ -187,7 +186,6 @@ function merge_ukb_genomicc_covariates(
         Symbol.(infection_names)...
     )
     # Process UKB covariates
-    table_with_eids_to_exclude = CSV.read(file_with_eids_to_exclude, DataFrame, select=[:eid])
     ukb_covariates = CSV.read(ukb_covariates_file, DataFrame)
     ukb_inferred_covariates = CSV.read(ukb_inferred_covariates_file, DataFrame)
     ukb_all_covariates = innerjoin(
@@ -195,7 +193,6 @@ function merge_ukb_genomicc_covariates(
         ukb_inferred_covariates,
         on=:eid => :IID
     )
-    filter!(:eid => ∉(table_with_eids_to_exclude.eid), ukb_all_covariates)
     DataFrames.select!(ukb_all_covariates,
         :eid => :FID,
         :eid => :IID,
@@ -230,26 +227,33 @@ function make_ukb_genomicc_merge_report(;kwargs...)
     )
 end
 
-function make_ukb_bgen_qc_and_r2_filter_files(prefix; threshold=0.9, output=string(prefix, ".extract_list.txt"))
-    variants_info = CSV.read(string(prefix, ".tsv"), DataFrame; delim='\t', header=["CHROM", "POS", "ID", "REF", "ALT", "R2"])
-    pvar = CSV.read(string(prefix, ".pvar"), DataFrame; delim='\t')
-    # Check REF, ALT, POS alleles match
-    @assert all(variants_info.REF .== pvar.REF)
-    @assert all(variants_info.ALT .== pvar.ALT)
-    @assert all(variants_info.POS .== pvar.POS)
-    # Write the variants_info with sufficient R2 to a file
-    open(output, "w") do f
-        println(filter(:R2 => >=(threshold), variants_info).ID)
-        for id in filter(:R2 => >=(threshold), variants_info).ID
-            println(f, id)
-        end
-    end
-    # Update the unknown ID column in the pvar file
-    pvar.ID = variants_info.ID
-    tmpdir = mktempdir()
-    tmpfile = joinpath(tmpdir, "temp.pvar")
-    CSV.write(tmpfile, pvar; delim='\t', writeheader=true)
-    mv(tmpfile, string(prefix, ".pvar"), force=true)
+function fill_chr_pvar_with_variant_id(pvar_file, variants_info_file)
+    # Read variants info and pvar files
+    pvar = CSV.read(pvar_file, DataFrame; delim='\t')
+    variants_info = CSV.read(variants_info_file, DataFrame; delim='\t', header=["CHROM", "POS", "ID"])
+    # Make mapping from position to variant ID
+    variants_info_dict = Dict{Int, String}(v.POS => v.ID for v in Tables.namedtupleiterator(variants_info))
+    # Update pvar with variant IDs
+    pvar.ID = map(pos -> variants_info_dict[pos], pvar.POS)
+    # Write updated pvar
+    CSV.write(pvar_file, pvar; delim='\t', writeheader=true)
 
     return 0
+end
+
+function make_ukb_individuals_list(covariates_file, critical_table_file; output="ukb_eids_to_keep.txt", max_samples=nothing)
+    # Read all IDs and critical IDs
+    all_ids = unique(CSV.read(covariates_file, DataFrame; select=[:eid]).eid)
+    critical_ids = unique(CSV.read(critical_table_file, DataFrame; select=[:eid]).eid)
+    # Filter out critical IDs from all IDs and limit to max_samples if specified
+    remaining_ids = setdiff(all_ids, critical_ids)
+    if !isnothing(max_samples)
+        remaining_ids = remaining_ids[1:max_samples]
+    end
+    # Write remaining eids
+    open(output, "w") do f
+        for id in remaining_ids
+            println(f, string(id, "\t", id))
+        end
+    end
 end

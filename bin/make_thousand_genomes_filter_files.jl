@@ -58,7 +58,7 @@ for (chr_key, chr_group) in pairs(groupby(map_file_genomic, :CHR))
         header=false
     )
     # Filter and Index
-    run(`mamba run -n bcftools_env bcftools view -Oz -R $variants_file $input_vcf -S $subpop_file -o $output_vcf`)
+    run(`conda run -n bcftools_env bcftools view -Oz -R $variants_file $input_vcf -S $subpop_file -o $output_vcf`)
     run(`tabix -p vcf $output_vcf`)
     # Clean
     rm(variants_file)

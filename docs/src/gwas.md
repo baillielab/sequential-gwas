@@ -6,14 +6,14 @@ This WDL workflow performs a genome-wide association study across all defined su
 
 Depending on your phenotypes of interest, some of the input files to the workflow will be different. For a mortality study, typically only GenOMICC is used and the workflow can be run on ODAP. For a susceptibility study, typically both GenOMICC and UK Biobank participants are used and the workflow will be run on the UK Biobank RAP. As such some inputs to the workflow will either be outputs of [Combining GenOMICC Datasets](@ref) or [Merging the GenOMICC and UK Biobank Cohorts](@ref).
 
-- `docker_image` (default: olivierlabayle/genomicc:analysis_workflow): The docker image used to run the workflow.
+- `docker_image` (default: olivierlabayle/genomicc:scope): The docker image used to run the workflow.
 - `covariates_file`: TODO
 - `genotypes`: 
   - For a mortality study, these are the `genotypes.aggregated.qced.final.{bed,bim,fam}` output by [Combining GenOMICC Datasets](@ref).
-  - For a susceptibility study, these are the genotypes from [Merging Cohorts Outputs](@ref).
+  - For a susceptibility study, these are the genotypes from [Merging the GenOMICC and UK Biobank Cohorts](@ref).
 - `imputed_genotypes`:
   - For a mortality study, these are the imputed genotypes from [Imputation Outputs](@ref).
-  - For a susceptibility study, these are the imputed genotypes from [Merging Cohorts Outputs](@ref).
+  - For a susceptibility study, these are the imputed genotypes from [Merging the GenOMICC and UK Biobank Cohorts](@ref).
 - `groupby`: A set of variables used to stratify individuals for which a GWAS will be run independently. If empty, the full dataset is used.
 - `covariates`: A set of covariates used to adjust for confounding or increase power in the association testing step. Product of variables can be defined using the `_x_` syntax, for example: ["AGE", "SEX", "AGE_x_SEX", "AGE_x_AGE"].
 - `phenotypes`: The set of binary phenotypes for which a GWAS will be run independently.

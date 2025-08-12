@@ -1,8 +1,11 @@
 {
     "merge_ukb_and_genomicc.julia_threads": "1",
     "merge_ukb_and_genomicc.julia_use_sysimage": "false",
-    "merge_ukb_and_genomicc.docker_image": "olivierlabayle/genomicc:analysis_workflow",
+    "merge_ukb_and_genomicc.docker_image": "olivierlabayle/genomicc:scope",
     "merge_ukb_and_genomicc.high_ld_regions": "assets/exclude_b38.txt",
+    "merge_ukb_and_genomicc.qc_genotype_missing_rate": "0.05",
+    "merge_ukb_and_genomicc.ancestry_program": "scope",
+    "merge_ukb_and_genomicc.max_ukb_samples": "150",
     "merge_ukb_and_genomicc.relatedness_degree": "3",
     "merge_ukb_and_genomicc.reference_genome": "assets/rap/Homo_sapiens_assembly38.fasta",
     "merge_ukb_and_genomicc.ukb_bgen_filesets": [
