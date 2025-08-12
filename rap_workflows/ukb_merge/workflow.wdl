@@ -21,6 +21,7 @@ workflow merge_ukb_and_genomicc {
 
         File high_ld_regions
         File reference_genome
+        String ancestry_program = "admixture"
         String max_ukb_samples = "nothing"
         String qc_genotype_missing_rate = "0.02"
         String qc_individual_missing_rate = "0.02"
@@ -81,6 +82,10 @@ workflow merge_ukb_and_genomicc {
         }
     }
 
+    scatter (mindrem_file in filter_ukb_chr_with_r2_and_critical_samples.mindrem_file) {
+        File mindrem_files = mindrem_file
+    }
+
     # Filter UKB PGEN files to keep only variants in GenOMICC and make PLINK files
 
     scatter (pgen_fileset in filter_ukb_chr_with_r2_and_critical_samples.pgen_fileset) {
@@ -91,7 +96,8 @@ workflow merge_ukb_and_genomicc {
                 pgen_file = pgen_fileset.pgen,
                 pvar_file = pgen_fileset.pvar,
                 psam_file = pgen_fileset.psam,
-                genomicc_genotyped_bim = genomicc_genotypes.bim
+                genomicc_genotyped_bim = genomicc_genotypes.bim,
+                mindrem_files = mindrem_files
         }
     }
 
@@ -162,6 +168,7 @@ workflow merge_ukb_and_genomicc {
             bim_file = ld_prune_ukb_kgp.ld_pruned_fileset.bim,
             fam_file = ld_prune_ukb_kgp.ld_pruned_fileset.fam,
             output_filename = "ukb.ancestry_estimate.csv",
+            ancestry_program = ancestry_program,
             ancestry_threshold = ancestry_threshold,
             julia_cmd = get_julia_cmd.julia_cmd
     }
@@ -362,6 +369,9 @@ task filter_ukb_chr_with_r2_and_critical_samples {
             fill-chr-pvar-with-variant-id \
             ~{input_prefix}.filtered.pvar \
             variant_passing_r2.tsv
+        # Create a mindrem file if not already created for downstream compatibility
+        [ -f "~{input_prefix}.filtered.mindrem.id" ] || echo -e "#FID\tIID" > "~{input_prefix}.filtered.mindrem.id"
+
     >>>
 
     output {
@@ -371,6 +381,7 @@ task filter_ukb_chr_with_r2_and_critical_samples {
             pvar: "${input_prefix}.filtered.pvar",
             psam: "${input_prefix}.filtered.psam"
         }
+        File mindrem_file = "${input_prefix}.filtered.mindrem.id"
     }
 
     runtime {
@@ -419,6 +430,7 @@ task extract_genomicc_variants {
         File pvar_file
         File psam_file
         File genomicc_genotyped_bim
+        Array[File] mindrem_files
     }
 
     String pgen_prefix = basename(pgen_file, ".pgen")
@@ -427,12 +439,21 @@ task extract_genomicc_variants {
         full_pgen_prefix=$(dirname "~{pgen_file}")/$(basename "~{pgen_file}" .pgen)
         # Extract genomicc genotyped locations
         awk '{print $1, $4, $4}' ~{genomicc_genotyped_bim} > ranges_to_extract.txt
+        # Concatenate all mindrem files into one for filtering
+        touch toremove.txt
+        for f in ~{sep=" " mindrem_files}; do
+            tail -n +2 "$f" >> toremove.txt
+            echo >> toremove.txt
+        done
+        sed -i '/^$/d' toremove.txt
         # Convert PGEN to PLINK, keep only bi-allelic SNPS, variant_IDS are reset to be unique to prevent multi-allelic variants obn multiple 
         # lines to cause problems during the merge. These are dropped later on and IDS set to match the 1000 GP ids.
+        # We also remove all samples in any of the mindrem files
         plink2 \
             --pfile ${full_pgen_prefix} \
             --extract range ranges_to_extract.txt \
             --set-all-var-ids @:#:\$1:\$2 \
+            --remove toremove.txt \
             --snps-only \
             --output-chr chr26 \
             --max-alleles 2 \
@@ -553,6 +574,7 @@ task estimate_ukb_ancestry_from_kgp {
         File bim_file
         File fam_file
         String output_filename = "ukb.ancestry_estimate.csv"
+        String ancestry_program = "admixture"
         String ancestry_threshold = "0.8"
         String julia_cmd
     }
@@ -567,6 +589,7 @@ task estimate_ukb_ancestry_from_kgp {
             ${bed_prefix} \
             20130606_g1k_3202_samples_ped_population.txt \
             --output=~{output_filename} \
+            --program=~{ancestry_program} \
             --threshold=~{ancestry_threshold}
     >>>
 
@@ -668,7 +691,7 @@ task merge_genomicc_ukb_bcfs_and_convert_to_pgen {
             --write-index=csi \
             ~{genomicc_bcf} ~{ukb_bcf}
 
-        # Convert merged BCF to PGEN format: reverses merge of FID_IID  that happened when converting to BCF
+        # Convert merged BCF to PGEN format: reverses merge of FID_IID that happened when converting to BCF
         plink2 \
             --bcf "~{output_prefix}.chr_~{ukb_chr}.bcf" \
             --geno ~{qc_genotype_missing_rate} \

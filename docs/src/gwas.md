@@ -10,10 +10,10 @@ Depending on your phenotypes of interest, some of the input files to the workflo
 - `covariates_file`: TODO
 - `genotypes`: 
   - For a mortality study, these are the `genotypes.aggregated.qced.final.{bed,bim,fam}` output by [Combining GenOMICC Datasets](@ref).
-  - For a susceptibility study, these are the genotypes from [Merging Cohorts Outputs](@ref).
+  - For a susceptibility study, these are the genotypes from [Merging the GenOMICC and UK Biobank Cohorts](@ref).
 - `imputed_genotypes`:
   - For a mortality study, these are the imputed genotypes from [Imputation Outputs](@ref).
-  - For a susceptibility study, these are the imputed genotypes from [Merging Cohorts Outputs](@ref).
+  - For a susceptibility study, these are the imputed genotypes from [Merging the GenOMICC and UK Biobank Cohorts](@ref).
 - `groupby`: A set of variables used to stratify individuals for which a GWAS will be run independently. If empty, the full dataset is used.
 - `covariates`: A set of covariates used to adjust for confounding or increase power in the association testing step. Product of variables can be defined using the `_x_` syntax, for example: ["AGE", "SEX", "AGE_x_SEX", "AGE_x_AGE"].
 - `phenotypes`: The set of binary phenotypes for which a GWAS will be run independently.

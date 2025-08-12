@@ -173,7 +173,7 @@ end
     julia_main()
 
     eids_to_keep = readlines(output_file)
-    @test length(eids_to_keep) == length(original_eids) - 1 # One individual (ukb19) is in critical_table.csv
+    @test length(eids_to_keep) == length(original_eids) - 5 # One individual (ukb19) is in critical_table.csv
     # Now further limit the number of individuals to 5
     copy!(ARGS, [
         "make-ukb-individuals-list",
@@ -222,7 +222,7 @@ if dorun
             DataFrame;
             header=["FID", "IID"]
         )
-        @test length(ukb_individuals.IID) == 15
+        @test length(ukb_individuals.IID) == 150
         @test "ukb19" ∉ ukb_individuals.IID # ukb19 is excluded from the list
 
         # Test R2 filter and critical samples removed
@@ -240,7 +240,7 @@ if dorun
                 DataFrame
             )
             @test isempty(intersect(samples.IID, samples_in_critical_care))
-            @test length(samples.IID) <= 15 # missing rate may result in less than 15 individuals
+            @test length(samples.IID) <= 150 # missing rate may result in less than 15 individuals
             # Check R2 filter is applied
             pvar = CSV.read(
                 only(filter(x -> endswith(x, ".pvar"), results_files)),
@@ -253,6 +253,7 @@ if dorun
 
         # Test extract genomicc variants
         all_chr_bim = DataFrame()
+        nindiv_per_files = []
         for shard in [0, 1, 2]
             execution_dir = joinpath(results_dir, "call-extract_genomicc_variants", "shard-$shard", "execution")
             results_files = readdir(execution_dir, join=true)
@@ -260,13 +261,20 @@ if dorun
             bim_file = only(filter(x -> endswith(x, ".bim"), results_files))
             bim = GenomiccWorkflows.read_bim(bim_file)
             append!(all_chr_bim, DataFrame(bim))
+            # Read fam file
+            fam_file = only(filter(x -> endswith(x, ".fam"), results_files))
+            fam = GenomiccWorkflows.read_fam(fam_file)
+            push!(nindiv_per_files, nrow(fam))
         end
+        ## Each imputed file dros some individuals, here we make sure only the intersection is kept for downstream analysis
+        @test all(nindiv_per_files .== 145)
 
         # Test merging chromosome files
         merged_ukb_chr_dir = joinpath(results_dir, "call-merge_ukb_chrs", "execution")
         merged_chr_bim = GenomiccWorkflows.read_bim(joinpath(merged_ukb_chr_dir, "ukb_all_chr.bim"))
         @test sort(merged_chr_bim) == sort(all_chr_bim)
         merged_chr_fam = GenomiccWorkflows.read_fam(joinpath(merged_ukb_chr_dir, "ukb_all_chr.fam"))
+        @test nrow(merged_chr_fam) == 145 # no more filtering of individuals
 
         # Test variant Ids alignement and filterting of unrelated individuals
         kgp_qc_dir = joinpath(results_dir, "call-align_ukb_variants_with_kgp_and_keep_unrelated", "execution")
@@ -277,7 +285,7 @@ if dorun
             delim="\t", 
             header=["FID", "IID"]
         )
-        @test nrow(unrelated_ukb_indivifuals) <= 15
+        @test nrow(unrelated_ukb_indivifuals) <= 145
 
         ## One variant is dropped because it is not in the KGP dataset
         @test 9694126 ∉ ukb_unrelated_bim.BP_COORD
@@ -301,7 +309,7 @@ if dorun
         ancestry_file = joinpath(results_dir, "call-estimate_ukb_ancestry_from_kgp", "execution", "ukb.ancestry_estimate.csv")
         ancestry_df = CSV.read(ancestry_file, DataFrame)
         @test length(ancestry_df.IID) == length(ukb_unrelated_fam.IID)
-        @test names(ancestry_df) == ["FID", "IID", "Superpopulation", "AFR", "SAS", "EAS", "AMR", "EUR"]
+        @test names(ancestry_df) == ["FID", "IID", "Superpopulation", "AFR", "AMR", "EAS",  "EUR", "SAS"]
 
         # Test merging with GenOMICC
         ukb_genomicc_merged_dir = joinpath(results_dir, "call-merge_ukb_genomicc", "execution")

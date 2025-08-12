@@ -572,6 +572,11 @@ function cli_settings()
             arg_type = Float64
             help = "Threshold for ancestry assignment."
             default = 0.8
+
+        "--program"
+            arg_type = String
+            help = "Ancestry estimation program (scope or admixture)."
+            default = "admixture"
     end
 
     @add_arg_table! s["plot-pca"] begin
@@ -811,7 +816,8 @@ function julia_main()::Cint
             cmd_settings["genotypes-prefix"],
             cmd_settings["pedigree-file"];
             output=cmd_settings["output"],
-            threshold=cmd_settings["threshold"]
+            threshold=cmd_settings["threshold"],
+            mode=cmd_settings["program"]
         )
     elseif cmd == "mock"
         mock_data(
