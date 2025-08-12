@@ -32,9 +32,9 @@ RUN git clone https://github.com/sriramlab/SCOPE.git \
     && mv scope /usr/local/bin/
 
 # Install GCTA
-RUN wget https://yanglab.westlake.edu.cn/software/gcta/bin/gcta-1.95.0-linux-kernel-3-x86_64.zip \
-    && unzip gcta-1.95.0-linux-kernel-3-x86_64.zip \
-    && mv gcta-1.95.0-linux-kernel-3-x86_64/gcta64 /usr/local/bin \
+RUN wget https://yanglab.westlake.edu.cn/software/gcta/bin/gcta-1.94.1-linux-kernel-2-x86_64.zip \
+    && unzip gcta-1.94.1-linux-kernel-2-x86_64.zip \
+    && mv gcta-1.94.1-linux-kernel-2-x86_64/gcta64 /usr/local/bin \
     && chmod +x /usr/local/bin/gcta64
 
 # Install QCTOOL
@@ -72,11 +72,11 @@ RUN wget https://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20241022.zip 
 # Install conda
 RUN wget -O Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh" \
     && bash Miniforge3.sh -b -p /opt/miniforge3 \
-    && /opt/miniforge3/bin/mamba create -n bcftools_env -c conda-forge -c bioconda bcftools samtools \
-    && /opt/miniforge3/bin/mamba create -y -n regenie_env -c conda-forge -c bioconda regenie==4.1 \
-    && /opt/miniforge3/bin/mamba create -y -n liftover_env python=3 \
-    && /opt/miniforge3/bin/mamba run -n liftover_env pip install pyliftover pandas \
-    && /opt/miniforge3/bin/mamba clean -a -y \
+    && /opt/miniforge3/bin/conda create -n bcftools_env -c conda-forge -c bioconda bcftools samtools \
+    && /opt/miniforge3/bin/conda create -y -n regenie_env -c conda-forge -c bioconda regenie==4.1 \
+    && /opt/miniforge3/bin/conda create -y -n liftover_env python=3 \
+    && /opt/miniforge3/bin/conda run -n liftover_env pip install pyliftover pandas \
+    && /opt/miniforge3/bin/conda clean -a -y \
     && chmod -R 777 /opt/miniforge3/
 
 # Install Admixture

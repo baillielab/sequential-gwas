@@ -70,7 +70,7 @@ process RegenieStep1 {
     script:
         genotypes_prefix = get_prefix(bed)
         """
-        mamba run -n regenie_env regenie \
+        conda run -n regenie_env regenie \
             --step 1 \
             --bed ${genotypes_prefix} \
             --keep ${samples} \
@@ -103,7 +103,7 @@ process RegenieStep2 {
         input_prefix = get_prefix(imputed_genotypes[0])
         outprefix = "${chr}.${group}.step2"
         """
-        mamba run -n regenie_env regenie \
+        conda run -n regenie_env regenie \
             --step 2 \
             --pgen ${input_prefix} \
             --phenoFile ${phenotypes} \

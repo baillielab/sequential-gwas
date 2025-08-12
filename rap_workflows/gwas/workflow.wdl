@@ -256,7 +256,7 @@ task regenie_step_2 {
         pc_list=$(printf "CHR~{chr}_OUT_PC%s," {1..~{npcs}} | sed 's/,$//')
         full_covariates_list="~{sep="," covariates_list},${pc_list}"
 
-        mamba run -n regenie_env regenie \
+        conda run -n regenie_env regenie \
             --step 2 \
             --pgen ${input_prefix} \
             --keep ~{sample_list} \
@@ -301,7 +301,7 @@ task regenie_step1 {
     command <<<
         genotypes_prefix=$(dirname "~{bed_file}")/$(basename "~{bed_file}" .bed)
 
-        mamba run -n regenie_env regenie \
+        conda run -n regenie_env regenie \
             --step 1 \
             --bed ${genotypes_prefix} \
             --keep ~{sample_list} \
