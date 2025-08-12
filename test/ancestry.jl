@@ -19,7 +19,7 @@ TESTDIR = joinpath(pkgdir(GenomiccWorkflows), "test")
     @test all(scope_freqs.MAC .== "N")
     @test all(scope_freqs.NCHROBS .== "N")
     # Test reading scope estimates
-    scope_ancestry_file = "test/assets/scope_inputs/scope_resultsQhat.txt"
+    scope_ancestry_file = joinpath(TESTDIR, "assets", "scope_inputs", "scope_resultsQhat.txt")
     n_indiv = 150
     fam = DataFrame(FID=1:150, IID=1:150)
     Q = GenomiccWorkflows.read_scope_ancestry_estimates(n_indiv, scope_ancestry_file)
