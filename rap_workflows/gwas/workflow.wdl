@@ -10,7 +10,7 @@ struct RegenieStep1Files {
 
 workflow gwas {
     input {
-        String docker_image = "olivierlabayle/genomicc:scope"
+        String docker_image = "olivierlabayle/genomicc:analysis_workflow"
         File covariates_file
         PLINKFileset genotypes
         Array[PGENFileset]+ imputed_genotypes

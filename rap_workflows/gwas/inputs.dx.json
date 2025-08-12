@@ -1,7 +1,7 @@
 {
   "stage-common.min_group_size": "100",
   "stage-common.julia_use_sysimage": "true",
-  "stage-common.docker_image": "olivierlabayle/genomicc:limit_ukb_samples",
+  "stage-common.docker_image": "olivierlabayle/genomicc:analysis_workflow",
   "stage-common.high_ld_regions": {
     "$dnanexus_link": {
       "id": "file-J199PpjJpYQ3vypJx7PJg3gb",
