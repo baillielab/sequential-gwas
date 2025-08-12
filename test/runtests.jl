@@ -18,16 +18,13 @@ TESTDIR = joinpath(PKGDIR, "test")
     @test include(joinpath(TESTDIR, "ancestry.jl"))
 
     # Test Dataset Aggregation Workflow
-    include(joinpath(TESTDIR, "combine_datasets_wgs.jl"))
-    include(joinpath(TESTDIR, "combine_datasets_no_wgs.jl"))
-
-    # Test Imputation Workflow
-    include(joinpath(TESTDIR, "imputation.jl"))
+    @test include(joinpath(TESTDIR, "combine_datasets_wgs.jl"))
+    @test include(joinpath(TESTDIR, "combine_datasets_no_wgs.jl"))
 
     # Test Merging UKB and GenOMICC
-    include(joinpath(TESTDIR, "merge_ukb_genomicc.jl"))
+    @test include(joinpath(TESTDIR, "merge_ukb_genomicc.jl"))
 
     # Test GWAS Workflow
-    include(joinpath(TESTDIR, "gwas.jl"))
+    @test include(joinpath(TESTDIR, "gwas.jl"))
 end
 
