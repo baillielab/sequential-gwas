@@ -1,35 +1,149 @@
 {
     "gwas.docker_image": "olivierlabayle/genomicc:analysis_workflow",
-    "gwas.covariates_file": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1gFGv8JppvzKkzF0q357jk4",
+    "gwas.covariates_file": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2KJ2K8JqVy6yk6P1g8X0vkq",
     "gwas.genotypes": {
         "chr": "all",
-        "bed": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1g5zQQJ5q60G0Qy9Z56Z54j",
-        "bim": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1g5zQQJ5q67kvFkZg5YbpQZ",
-        "fam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1g5zQQJ5q6GV3Jk9ykx6pVF"
+        "bed": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2JxQ30Jb1pf5k73bqKKF760",
+        "bim": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2JxQ30Jb1pfvpgkfZZKFQ8V",
+        "fam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2JxQ30Jb1pv7fBYg436Bg4g"
     },
     "gwas.imputed_genotypes": [
         {
+            "chr": "1",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K4JzQJkxp3qjp1k8BvqJzg",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K4JzQJkxp38Y6JVQ5Bq32p",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K4JzQJkxp6f7fbqGXVQ22Q"
+        },
+        {
+            "chr": "2",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K5628JkfjkfXFxqpQ1Kqq7",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K5628Jkfjg60P22BKVVxxz",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K5628JkfjfvpgkfZZP6Z3G"
+        },
+        {
+            "chr": "3",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K41Y8JxF9ykKyKGZX5Y1Kx",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K41Y8JxF9XkJj2J66kp2BF",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K41Y8JxF9yvqZV64V97XVq"
+        },
+        {
+            "chr": "4",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K3ypQJpj02kJj2J66kjq19",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K3ypQJpj0K90fpqkX0z347",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K3ypQJpj0KvqZV64V96yVQ"
+        },
+        {
+            "chr": "5",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K3XB8J9bZbj4P9fJFk912b",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K3XB8J9bZY30X8xXgPpvfy",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K3XB8J9bZZ91Zxx0Q8vYYF"
+        },
+        {
+            "chr": "6",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K3V8QJvg4YV1FP9V4JJZ8x",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K3V8QJvg4QZVf17gGgpXV7",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K3V8QJvg4jVQbz07j8F7gJ"
+        },
+                {
+            "chr": "7",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K3208J5KZkyfVGq7751z6X",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K3208J5KZZQF0Q2gx4Xk9P",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K3208J5KZZQkQFZJvJyy0Y"
+        },
+        {
+            "chr": "8",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K2y40JjQVPP5Xjz89FGgFK",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K2y48JjQV330X8xXgPp6KJ",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K2y40JjQV8ZQ6JYKg932Gy"
+        },
+        {
+            "chr": "9",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K2118J4p80qbGV63Y0BY83",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K2118J4p89PF23PpPf9yQq",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K2118J4p8074b0zg9B1bbz"
+        },
+                {
+            "chr": "10",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K2KG0Jz8qQZVf17gGgkqXv",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K2KG0Jz8qYX877JkVbqXG9",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K2KG0Jz8qgBy98q04f4Pz4"
+        },
+        {
+            "chr": "11",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K2Pz8JkQPYyBv0kfgZq8XQ",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K2Pz8JkQPVGK8j4q8Kz5b2",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K2Pz8JkQPYzqb1Z8130vjK"
+        },
+        {
+            "chr": "12",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K2KzjJZ4YyGkkvqZp73vQ8",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K2KzjJZ4YYyBv0kfgZq8Q5",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K2KzjJZ4YZQF0Q2gx4XfjK"
+        },
+        {
+            "chr": "13",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K1XQ8Jy4b3kY87BFB3VK50",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K1XQ8Jy4b98YQ0vqGqV7Bf",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K1XQ8Jy4b591f1zjvgjPjg"
+        },
+        {
+            "chr": "14",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K18vjJ7kgF836GF32Zyp2Y",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K18x0J7kg3X877JkVbgfyb",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K18x0J7kg7gPJPy5XZFZ6Y"
+        },
+        {
+            "chr": "15",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K1058Jf3VKvX6XxpZ6Jzvx",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K1058Jf3V3YGgXq1605fK8",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K1058Jf3V2p1fbX5Y5vb8K"
+        },
+                {
+            "chr": "16",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K14xQJ2v3z20JxfJf9J4K3",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K14xQJ2v3QGf6q5gBjYBGV",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K14xQJ2v3q836GF32Zy663"
+        },
+        {
+            "chr": "17",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K0pKjJPvk3V1FP9V4J74Pv",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K0pKjJPvk4Pyk2xzp6gXK4",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K0pKjJPvk5j4P9fJFjxXk4"
+        },
+        {
+            "chr": "18",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K0zFjJ0qGvF8X8jGk6Xg4b",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K0zFjJ0qGv7fBYg436Kzkz",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K0zFjJ0qGVGK8j4q8Kq70G"
+        },
+        {
+            "chr": "19",
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K0JvQJfx50v8jVkFz4PVjj",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K0JvQJfx5KvqZV64V8yG0Z",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K0JvQJfx54Pyk2xzp6gQxp"
+        },
+        {
             "chr": "20",
-            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1gFP3QJxj33FqGX25Bf605K",
-            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1gFP3QJxj37JvqXjVzQx511",
-            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1gFP3QJxj34KBFzFJB3fQg8"
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K0QjjJzGvZQF0Q2gx44Kz6",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K0QjjJzGvY30X8xXgPf6Y6",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2K0QjjJzGvpXqZjpFbp7zz1"
         },
         {
             "chr": "21",
-            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1g9VxjJXK9Xj5k8fB7zypgz",
-            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1g9VxjJXK9Qkb0KFGXFFjZP",
-            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1g9VxjJXK9xG983Gy3V9yVF"
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2JzxJQJq81F9Kzy779Jk0K7",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2JzxJQJq813X877JkVbJ3yG",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2JzxJQJq810qbGV63Y06f1p"
         },
         {
             "chr": "22",
-            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1g9VJjJ8Jy465v4vy5pGvXg",
-            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1g9VJjJ8Jy0b81bXFJ09Kpv",
-            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J1g9VJjJ8Jy91FXzxGv0F2V8"
+            "pgen": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2Jzx2jJ93fQGf6q5gBjJb4j",
+            "psam": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2Jzx2jJ93fVkgXJKPvbppzF",
+            "pvar": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J2Jzx2jJ93fXB27fj285bxvp"
         }
     ],
-    "gwas.phenotypes": ["SEX"],
-    "gwas.covariates": ["AGE", "AGE_x_AGE"],
-    "gwas.groupby": ["ANCESTRY_ESTIMATE"],
+    "gwas.covariates": ["SEX", "AGE", "AGE_x_AGE"],
+    "gwas.groupby": ["SUPERPOPULATION"],
+    "gwas.phenotypes": ["SEVERE_COVID_19", "SEVERE_PANCREATITIS", "SEVERE_INFLUENZA", "SEVERE_SOFT_TISSUE_INFECTION", "SEVERE_RSV", "SEVERE_ECLS", "SEVERE_REACTION_TO_VACCINATION"],
     "gwas.min_group_size": "100",
     "gwas.julia_use_sysimage": "true",
     "gwas.julia_threads": "auto",
@@ -39,5 +153,5 @@
     "gwas.approx_pca": "true",
     "gwas.regenie_cv_folds": "5",
     "gwas.regenie_bsize": "1000",
-    "gwas.high_ld_regions": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J199PpjJpYQ3vypJx7PJg3gb"
+    "gwas.high_ld_regions": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J291058JpYQ2Zq0fzfz1yp0Y"
 }
