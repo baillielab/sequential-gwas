@@ -143,7 +143,8 @@ function scope_ancestry_estimation(genotypes_prefix, kgp_pedigree_file; output="
     )
     # Run SCOPE
     output_prefix = joinpath(tmpdir, "scope.results")
-    run(`scope -g $other_prefix -k 5 -seed 123 -freq $scope_freq_file -o $output_prefix`)
+    J = max(1, nthreads() - 1)
+    run(`scope -g $other_prefix -k 5 -seed 123 -freq $scope_freq_file -o $output_prefix -nt $J`)
     # Read SCOPE results
     other_fam = GenomiccWorkflows.read_fam(string(other_prefix, ".fam"))
     Q = read_scope_ancestry_estimates(nrow(other_fam), string(output_prefix, "Qhat.txt"))
