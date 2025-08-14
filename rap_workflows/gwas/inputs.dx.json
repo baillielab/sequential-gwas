@@ -808,7 +808,7 @@
     }
   },
   "stage-common.phenotypes": ["SEVERE_COVID_19", "SEVERE_PANCREATITIS", "SEVERE_INFLUENZA", "SEVERE_SOFT_TISSUE_INFECTION", "SEVERE_RSV", "SEVERE_ECLS", "SEVERE_REACTION_TO_VACCINATION"],
-  "stage-common.regenie_cv_folds": "5",
+  "stage-common.regenie_cv_folds": "loocv",
   "stage-common.covariates_file": {
     "$dnanexus_link": {
       "id": "file-J2KJ2K8JqVy6yk6P1g8X0vkq",

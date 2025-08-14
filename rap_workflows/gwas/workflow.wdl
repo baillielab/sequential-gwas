@@ -253,12 +253,20 @@ task regenie_step_2 {
 
         input_prefix=$(dirname "~{pgen_file}")/$(basename "~{pgen_file}" .pgen)
 
+        # Only retain bi-allelic variants because REGENIE can't handle them
+        plink2 \
+            --pfile ${input_prefix} \
+            --max-alleles 2 \
+            --make-pgen \
+            --out ${input_prefix}.biallelic
+            
+        # Make covariates list
         pc_list=$(printf "CHR~{chr}_OUT_PC%s," {1..~{npcs}} | sed 's/,$//')
         full_covariates_list="~{sep="," covariates_list},${pc_list}"
 
         conda run -n regenie_env regenie \
             --step 2 \
-            --pgen ${input_prefix} \
+            --pgen ${input_prefix}.biallelic \
             --keep ~{sample_list} \
             --phenoFile ~{covariates_file} \
             --phenoColList ~{sep="," phenotypes_list} \
