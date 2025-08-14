@@ -195,7 +195,7 @@ task gwas_plots {
 
     runtime {
         docker: docker_image
-        dx_instance_type: "mem1_ssd1_v2_x2"
+        dx_instance_type: "mem2_ssd1_v2_x8"
     }
 }
 
@@ -222,7 +222,7 @@ task merge_regenie_chr_results {
 
     runtime {
         docker: docker_image
-        dx_instance_type: "mem1_ssd1_v2_x2"
+        dx_instance_type: "mem2_ssd1_v2_x8"
     }
 }
 
@@ -277,7 +277,7 @@ task regenie_step_2 {
 
     runtime {
         docker: docker_image
-        dx_instance_type: "mem1_ssd1_v2_x16"
+        dx_instance_type: "mem2_ssd1_v2_x16"
     }
 }
 
@@ -326,7 +326,7 @@ task regenie_step1 {
 
     runtime {
         docker: docker_image
-        dx_instance_type: "mem1_ssd1_v2_x16"
+        dx_instance_type: "mem2_ssd1_v2_x16"
     }
 }
 
@@ -356,7 +356,7 @@ task merge_covariates_and_pcs {
 
     runtime {
         docker: docker_image
-        dx_instance_type: "mem1_ssd1_v2_x2"
+        dx_instance_type: "mem2_ssd1_v2_x16"
     }
 }
 
@@ -395,7 +395,7 @@ task loco_pca {
 
     runtime {
         docker: docker_image
-        dx_instance_type: "mem1_ssd1_v2_x16"
+        dx_instance_type: "mem2_ssd1_v2_x16"
     }
 }
 
@@ -434,7 +434,7 @@ task make_covariates_and_groups {
 
     runtime {
         docker: docker_image
-        dx_instance_type: "mem1_ssd1_v2_x2"
+        dx_instance_type: "mem2_ssd1_v2_x8"
     }
 }
 
@@ -475,6 +475,6 @@ task make_group_bed_qced {
 
     runtime {
         docker: docker_image
-        dx_instance_type: "mem1_ssd1_v2_x2"
+        dx_instance_type: "mem2_ssd1_v2_x8"
     }
 }
