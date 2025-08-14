@@ -1,10 +1,21 @@
+function parse_pvalue(log10_pval::AbstractString)
+    if log10_pval == "NA"
+        return NaN
+    else
+        return parse_pvalue(parse(Float64, log10_pval))
+    end
+end
+
+parse_pvalue(log10_pval::Real) = exp10(-log10_pval)
+
 function harmonize(results)
-    return DataFrames.select(results, 
+    harmonized_results =  DataFrames.select(results, 
         :CHROM => (x -> string.(x)) => :CHR,
         :GENPOS => :BP,
         :ID => :SNP,
-        :LOG10P => (x -> exp10.(-x))  => :P,
+        :LOG10P => (x -> parse_pvalue.(x))  => :P,
     )
+    return filter(:P => !(isnan), harmonized_results)
 end
 
 function gwas_plots(results_path; output_prefix = "gwas.plot")

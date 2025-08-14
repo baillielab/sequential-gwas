@@ -9,6 +9,39 @@ using DelimitedFiles
 PKGDIR = pkgdir(GenomiccWorkflows)
 TESTDIR = joinpath(PKGDIR, "test")
 
+@testset "Test harmonize" begin
+    # If the LOG10P contains NA it will be read as a string column
+    ## The NaNs are filtered for plotting
+    results = DataFrame(
+        LOG10P = ["NA", "1", "1", "2"],
+        CHROM = [1, 1, 2, 2],
+        GENPOS = [1000, 2000, 3000, 4000],
+        ID = ["rs1", "rs2", "rs3", "rs4"]
+    )
+    harmonized_resulst = GenomiccWorkflows.harmonize(results)
+    @test harmonized_resulst == DataFrame(
+        CHR = ["1", "2", "2"],
+        BP = [2000, 3000, 4000],
+        SNP = ["rs2", "rs3", "rs4"],
+        P = [0.1, 0.1, 0.01]
+    )
+    # If the LOG10P has no NA it will be read as a float column
+    results = DataFrame(
+        LOG10P = [1, 1, 2, 2],
+        CHROM = [1, 1, 2, 2],
+        GENPOS = [1000, 2000, 3000, 4000],
+        ID = ["rs1", "rs2", "rs3", "rs4"]
+    )
+    harmonized_resulst = GenomiccWorkflows.harmonize(results)
+    @test harmonized_resulst == DataFrame(
+        CHR = ["1", "1", "2", "2"],
+        BP = [1000, 2000, 3000, 4000],
+        SNP = ["rs1", "rs2", "rs3", "rs4"],
+        P = [0.1, 0.1, 0.01, 0.01]
+    )
+end
+
+
 @testset "Test make-gwas-groups" begin
     tmpdir = mktempdir()
     output_prefix = joinpath(tmpdir, "gwas")
