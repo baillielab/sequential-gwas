@@ -151,7 +151,7 @@
     "gwas.maf": "0.01",
     "gwas.mac": "10",
     "gwas.approx_pca": "true",
-    "gwas.regenie_cv_folds": "5",
+    "gwas.regenie_cv_folds": "loocv",
     "gwas.regenie_bsize": "1000",
     "gwas.high_ld_regions": "dx://project-J0pkqyQJpYQ133JG1p2J1qzv:file-J291058JpYQ2Zq0fzfz1yp0Y"
 }

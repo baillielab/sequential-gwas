@@ -301,6 +301,11 @@ task regenie_step1 {
     command <<<
         genotypes_prefix=$(dirname "~{bed_file}")/$(basename "~{bed_file}" .bed)
 
+        cv_option="--cv ~{cv_folds}"
+        if [[ ~{cv_folds} == "loocv" ]]; then
+            cv_option="--loocv"
+        fi
+
         conda run -n regenie_env regenie \
             --step 1 \
             --bed ${genotypes_prefix} \
@@ -309,7 +314,7 @@ task regenie_step1 {
             --phenoColList ~{sep="," phenotypes_list} \
             --covarFile ~{covariates_file} \
             --covarColList ~{sep="," covariates_list} \
-            --cv ~{cv_folds} \
+            ${cv_option} \
             --bt \
             --bsize ~{bsize} \
             --lowmem \

@@ -1,5 +1,6 @@
 {
     "gwas.julia_threads": "1",
+    "gwas.regenie_cv_folds": "loocv",
     "gwas.julia_use_sysimage": "false",
     "gwas.docker_image": "olivierlabayle/genomicc:analysis_workflow",
     "gwas.covariates_file": "test/assets/gwas/covariates/ukb_genomicc.covariates.csv",
