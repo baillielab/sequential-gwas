@@ -31,10 +31,10 @@ function make_imputed_counts_table(ukb_genomicc_imputed_files_list) #hide
 end #hide
 function ancestry_counts(ukb_genomicc_covariates_file) #hide
     covariates_df = CSV.read(ukb_genomicc_covariates_file, DataFrame) #hide
+    cohorts = unique(covariates_df.COHORT) #hide
     counts = combine( #hide
-        groupby(covariates_df, [:ANCESTRY_ESTIMATE]), #hide
-        :COHORT => (col -> sum(x == "GENOMICC" for x in col)) => :GENOMICC, #hide
-        :COHORT => (col -> sum(x == "UKB" for x in col)) => :UKB, #hide
+        groupby(covariates_df, [:SUPERPOPULATION]), #hide
+        (:COHORT => (col -> sum(x == cohort for x in col)) => Symbol(cohort) for cohort in cohorts)..., #hide
         nrow => :TOTAL #hide
     ) #hide
     return counts |> markdown_table() #hide
