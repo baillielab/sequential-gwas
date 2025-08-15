@@ -56,7 +56,7 @@ process BEDGroupsQCed {
 
 process RegenieStep1 {
     label "multithreaded"
-    publishDir "${params.PUBLISH_DIR}/gwas/${group}/regenie_step1", mode: 'symlink'
+    publishDir "${params.PUBLISH_DIR}/gwas/${group}/regenie_step_1", mode: 'symlink'
 
     input:
         path(phenotypes)

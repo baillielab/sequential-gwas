@@ -115,7 +115,7 @@ workflow gwas {
         File sample_list = group_individuals_and_plink_filesets.left
         PLINKFileset plink_fileset = group_individuals_and_plink_filesets.right
 
-        call regenie_step1 {
+        call regenie_step_1 {
             input:
                 docker_image = docker_image,
                 bed_file = plink_fileset.bed,
@@ -126,13 +126,15 @@ workflow gwas {
                 phenotypes_list = phenotypes,
                 covariates_list = make_covariates_and_groups.covariates_list,
                 cv_folds = regenie_cv_folds,
-                bsize = regenie_bsize
+                bsize = regenie_bsize,
+                maf = maf,
+                mac = mac
         }
     }
 
     # Regenie Step 2
 
-    scatter (pair in zip(make_covariates_and_groups.groups_lists, regenie_step1.step1_files)) {
+    scatter (pair in zip(make_covariates_and_groups.groups_lists, regenie_step_1.step1_files)) {
         Pair[File, RegenieStep1Files] group_samples_and_regenie_step_1_files = pair
     }
 
@@ -153,7 +155,9 @@ workflow gwas {
                 phenotypes_list = phenotypes,
                 covariates_list = make_covariates_and_groups.covariates_list,
                 npcs = npcs,
-                bsize = regenie_bsize
+                bsize = regenie_bsize,
+                maf = maf,
+                mac = mac
         }
     }
 
@@ -241,6 +245,8 @@ task regenie_step_2 {
         Array[String] covariates_list
         String npcs = "10"
         String bsize = "1000"
+        String maf = "0.01"
+        String mac = "10"
     }
 
     String group_name = sub(basename(sample_list, ".txt"), "grouped.individuals.", "")
@@ -253,12 +259,15 @@ task regenie_step_2 {
 
         input_prefix=$(dirname "~{pgen_file}")/$(basename "~{pgen_file}" .pgen)
 
-        # Only retain bi-allelic variants because REGENIE can't handle them
+        # Only retain bi-allelic (REGENIE can't handle non-biallelic) and frequent variants within the sample list
         plink2 \
             --pfile ${input_prefix} \
+            --keep ~{sample_list} \
+            --mac ~{mac} \
+            --maf ~{maf} \
             --max-alleles 2 \
-            --make-pgen \
-            --out ${input_prefix}.biallelic
+            --write-snplist \
+            --out biallelic_frequent
             
         # Make covariates list
         pc_list=$(printf "CHR~{chr}_OUT_PC%s," {1..~{npcs}} | sed 's/,$//')
@@ -266,14 +275,16 @@ task regenie_step_2 {
 
         conda run -n regenie_env regenie \
             --step 2 \
-            --pgen ${input_prefix}.biallelic \
+            --pgen ${input_prefix} \
             --keep ~{sample_list} \
+            --extract biallelic_frequent.snplist \
             --phenoFile ~{covariates_file} \
             --phenoColList ~{sep="," phenotypes_list} \
             --covarFile ~{covariates_file} \
             --covarColList ${full_covariates_list} \
             --bt \
             --firth --approx --pThresh 0.01 \
+            --minMAC ~{mac} \
             --pred ~{regenie_list} \
             --bsize ~{bsize} \
             --out ~{group_name}.chr~{chr}.step2
@@ -290,7 +301,7 @@ task regenie_step_2 {
 }
 
 
-task regenie_step1 {
+task regenie_step_1 {
     input {
         String docker_image
         File bed_file
@@ -302,6 +313,8 @@ task regenie_step1 {
         Array[String] covariates_list
         String cv_folds = "5"
         String bsize = "1000"
+        String maf = "0.01"
+        String mac = "10"
     }
 
     String group_name = sub(basename(sample_list, ".txt"), "grouped.individuals.", "")
@@ -309,6 +322,18 @@ task regenie_step1 {
     command <<<
         genotypes_prefix=$(dirname "~{bed_file}")/$(basename "~{bed_file}" .bed)
 
+        # In principle this is already taken care of in `make_group_bed_qced`, but we ensure here that the input is correct because it is cheap.
+        # Only retain bi-allelic (REGENIE can't handle non-biallelic) and frequent variants within the sample list
+        plink2 \
+            --bfile ${genotypes_prefix} \
+            --keep ~{sample_list} \
+            --mac ~{mac} \
+            --maf ~{maf} \
+            --max-alleles 2 \
+            --write-snplist \
+            --out biallelic_frequent
+
+        # Parse cross-validation option
         cv_option="--cv ~{cv_folds}"
         if [[ ~{cv_folds} == "loocv" ]]; then
             cv_option="--loocv"
@@ -318,10 +343,12 @@ task regenie_step1 {
             --step 1 \
             --bed ${genotypes_prefix} \
             --keep ~{sample_list} \
+            --extract biallelic_frequent.snplist \
             --phenoFile ~{covariates_file} \
             --phenoColList ~{sep="," phenotypes_list} \
             --covarFile ~{covariates_file} \
             --covarColList ~{sep="," covariates_list} \
+            --minMAC ~{mac} \
             ${cv_option} \
             --bt \
             --bsize ~{bsize} \

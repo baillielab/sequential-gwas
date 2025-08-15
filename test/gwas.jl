@@ -307,6 +307,7 @@ if dorun
     ## These are ordered by group and chromosome
     pca_dir = joinpath(results_dir, "call-loco_pca")
     local shard = 0
+    shard = 0
     for group in ["AMR", "EAS"]
         for chr in 1:3
             execution_dir = joinpath(pca_dir, "shard-$shard", "execution")
@@ -328,9 +329,9 @@ if dorun
     end
 
     # Test Regenie Step 1
-    regenie_step1_dir = joinpath(results_dir, "call-regenie_step1")
+    regenie_step_1_dir = joinpath(results_dir, "call-regenie_step_1")
     for shard in 0:1
-        execution_dir = joinpath(regenie_step1_dir, "shard-$shard", "execution")
+        execution_dir = joinpath(regenie_step_1_dir, "shard-$shard", "execution")
         files = readdir(execution_dir)
         pred_list = files[findfirst(endswith(".step1_pred.listrelative"), files)]
         phenotype_pred_files = readlines(joinpath(execution_dir, pred_list))
@@ -347,10 +348,14 @@ if dorun
     for shard in 0:5
         execution_dir = joinpath(regenie_step2_dir, "shard-$shard", "execution")
         files = readdir(execution_dir)
+        ## snplist
+        snplist_file = only(filter(f -> endswith(f, ".snplist"), files))
+        n_expected_tests = countlines(joinpath(execution_dir, snplist_file))
         ## Covid-19
         covid_results_file = only(filter(f -> endswith(f, "step2_SEVERE_COVID_19.regenie"), files))
         covid_results = CSV.read(joinpath(execution_dir, covid_results_file), DataFrame)
         @test names(covid_results) == results_expected_cols
+        @test nrow(covid_results) <= n_expected_tests # Due to phenotype missingness in phenotype within groups, REGENIE's filter may remove more: https://github.com/baillielab/genomicc-workflows/issues/88
         @test nrow(covid_results) > 0
         ## Pneumonia
         pneumonia_results_file = only(filter(f -> endswith(f, "step2_SEVERE_PNEUMONIA.regenie"), files))
