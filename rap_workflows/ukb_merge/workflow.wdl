@@ -446,9 +446,11 @@ task extract_genomicc_variants {
             echo >> toremove.txt
         done
         sed -i '/^$/d' toremove.txt
-        # Convert PGEN to PLINK, keep only bi-allelic SNPS, variant_IDS are reset to be unique to prevent multi-allelic variants obn multiple 
-        # lines to cause problems during the merge. These are dropped later on and IDS set to match the 1000 GP ids.
-        # We also remove all samples in any of the mindrem files
+        # Convert PGEN to PLINK:
+        ## - keep only bi-allelic SNPS
+        ## - variant_IDS are reset to be unique to prevent multi-allelic variants on multiple lines to cause problems later during the merge (they will be dropped)
+        ## - variant IDS are set to CHROM:POS:REF:ALT.
+        ## - We also remove all samples in any of the mindrem files to keep exactly the same samples as in the imputed files
         plink2 \
             --pfile ${full_pgen_prefix} \
             --extract range ranges_to_extract.txt \
