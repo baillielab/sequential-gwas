@@ -348,14 +348,10 @@ if dorun
     for shard in 0:5
         execution_dir = joinpath(regenie_step2_dir, "shard-$shard", "execution")
         files = readdir(execution_dir)
-        ## snplist
-        snplist_file = only(filter(f -> endswith(f, ".snplist"), files))
-        n_expected_tests = countlines(joinpath(execution_dir, snplist_file))
         ## Covid-19
         covid_results_file = only(filter(f -> endswith(f, "step2_SEVERE_COVID_19.regenie"), files))
         covid_results = CSV.read(joinpath(execution_dir, covid_results_file), DataFrame)
         @test names(covid_results) == results_expected_cols
-        @test nrow(covid_results) <= n_expected_tests # Due to phenotype missingness in phenotype within groups, REGENIE's filter may remove more: https://github.com/baillielab/genomicc-workflows/issues/88
         @test nrow(covid_results) > 0
         ## Pneumonia
         pneumonia_results_file = only(filter(f -> endswith(f, "step2_SEVERE_PNEUMONIA.regenie"), files))

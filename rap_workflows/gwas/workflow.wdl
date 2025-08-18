@@ -266,8 +266,9 @@ task regenie_step_2 {
             --mac ~{mac} \
             --maf ~{maf} \
             --max-alleles 2 \
-            --write-snplist \
-            --out biallelic_frequent
+            --rm-dup exclude-all list \
+            --make-pgen \
+            --out ${input_prefix}.biallelic_frequent
             
         # Make covariates list
         pc_list=$(printf "CHR~{chr}_OUT_PC%s," {1..~{npcs}} | sed 's/,$//')
@@ -275,9 +276,8 @@ task regenie_step_2 {
 
         conda run -n regenie_env regenie \
             --step 2 \
-            --pgen ${input_prefix} \
+            --pgen ${input_prefix}.biallelic_frequent \
             --keep ~{sample_list} \
-            --extract biallelic_frequent.snplist \
             --phenoFile ~{covariates_file} \
             --phenoColList ~{sep="," phenotypes_list} \
             --covarFile ~{covariates_file} \
