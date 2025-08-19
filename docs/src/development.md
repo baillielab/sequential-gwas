@@ -81,6 +81,12 @@ The current directory is mounted to `/mnt/data`. From there, work as usual, for 
 julia --project=/opt/genomicc-workflows --sysimage=/opt/genomicc-workflows/GenomiccWorkflows.so --startup-file=no
 ```
 
+You can upload generated data to your project with `dx upload`:
+
+```bash
+dx upload --path "$DX_PROJECT_CONTEXT_ID:" <FILE>
+```
+
 Finally, when you are finished, terminate the job with the appropriate job-id:
 
 ```bash
