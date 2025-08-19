@@ -323,6 +323,11 @@ function cli_settings()
             arg_type = String
             required = true
             help = "Path to GWAS results file."
+
+        "--maf"
+            arg_type = Float64
+            help = "Minor allele frequency threshold to filter results."
+            default = 0.01
         
         "--output-prefix"
             arg_type = String
@@ -896,6 +901,7 @@ function julia_main()::Cint
     elseif cmd == "gwas-plots"
         gwas_plots(
             cmd_settings["results"];
+            maf=cmd_settings["maf"],
             output_prefix=cmd_settings["output-prefix"]
         )
     elseif cmd == "write-imputation-split-lists"

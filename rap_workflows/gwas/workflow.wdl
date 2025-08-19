@@ -156,7 +156,6 @@ workflow gwas {
                 covariates_list = make_covariates_and_groups.covariates_list,
                 npcs = npcs,
                 bsize = regenie_bsize,
-                maf = maf,
                 mac = mac
         }
     }
@@ -175,7 +174,8 @@ workflow gwas {
             input:
                 docker_image = docker_image,
                 julia_cmd = get_julia_cmd.julia_cmd,
-                results = merged_results
+                results = merged_results,
+                maf = maf
         }
     }
 }
@@ -185,11 +185,13 @@ task gwas_plots {
         String docker_image
         String julia_cmd
         File results
+        String maf = "0.01"
     }
 
     command <<<
         ~{julia_cmd} gwas-plots \
             ~{results} \
+            --maf=~{maf} \
             --output-prefix=gwas.plot
     >>>
 
@@ -245,7 +247,6 @@ task regenie_step_2 {
         Array[String] covariates_list
         String npcs = "10"
         String bsize = "1000"
-        String maf = "0.01"
         String mac = "10"
     }
 
@@ -259,12 +260,10 @@ task regenie_step_2 {
 
         input_prefix=$(dirname "~{pgen_file}")/$(basename "~{pgen_file}" .pgen)
 
-        # Only retain bi-allelic (REGENIE can't handle non-biallelic) and frequent variants within the sample list
+        # Only retain bi-allelic (REGENIE can't handle non-biallelic)
         plink2 \
             --pfile ${input_prefix} \
             --keep ~{sample_list} \
-            --mac ~{mac} \
-            --maf ~{maf} \
             --max-alleles 2 \
             --rm-dup exclude-all list \
             --make-pgen \
@@ -280,6 +279,7 @@ task regenie_step_2 {
             --keep ~{sample_list} \
             --phenoFile ~{covariates_file} \
             --phenoColList ~{sep="," phenotypes_list} \
+            --write-samples \
             --covarFile ~{covariates_file} \
             --covarColList ${full_covariates_list} \
             --bt \
@@ -292,6 +292,7 @@ task regenie_step_2 {
 
     output {
         Array[File] regenie_step2 = glob("${group_name}.chr${chr}.step2*.regenie")
+        Array[File] regenie_step2_ids = glob("${group_name}.chr${chr}.step2*.regenie.ids")
     }
 
     runtime {

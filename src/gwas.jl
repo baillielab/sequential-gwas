@@ -8,20 +8,29 @@ end
 
 parse_pvalue(log10_pval::Real) = exp10(-log10_pval)
 
-function harmonize(results)
+parse_a1freq(freq::AbstractString) = freq == "NA" ? NaN : parse(Float64, freq)
+
+parse_a1freq(freq::Real) = freq
+
+function harmonize(results; maf=0.01)
     harmonized_results =  DataFrames.select(results, 
         :CHROM => (x -> string.(x)) => :CHR,
         :GENPOS => :BP,
         :ID => :SNP,
         :LOG10P => (x -> parse_pvalue.(x))  => :P,
+        :A1FREQ => (x -> parse_a1freq.(x)) => :A1FREQ
     )
-    return filter(:P => !(isnan), harmonized_results)
+    filtered_results = filter(
+        x -> !isnan(x.P) && x.A1FREQ > maf, 
+        harmonized_results
+    )
+    return filtered_results[!, [:CHR, :BP, :SNP, :P]]
 end
 
-function gwas_plots(results_path; output_prefix = "gwas.plot")
+function gwas_plots(results_path; maf=0.01, output_prefix = "gwas.plot")
     group_phenotype_string = replace(splitext(basename(results_path))[1], "regenie.results." => "")
     group, phenotype = split(group_phenotype_string, ".")
-    results = harmonize(CSV.read(results_path, DataFrame))
+    results = harmonize(CSV.read(results_path, DataFrame), maf=maf)
     # Plot Manhattan
     fig = Figure(size = (600, 400))
     ax = Axis(fig[1, 1], xlabel="Chromosome")

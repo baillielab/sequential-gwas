@@ -16,28 +16,30 @@ TESTDIR = joinpath(PKGDIR, "test")
         LOG10P = ["NA", "1", "1", "2"],
         CHROM = [1, 1, 2, 2],
         GENPOS = [1000, 2000, 3000, 4000],
-        ID = ["rs1", "rs2", "rs3", "rs4"]
+        ID = ["rs1", "rs2", "rs3", "rs4"],
+        A1FREQ = ["0.1", "0.2", "NA", "0.4"]
     )
     harmonized_resulst = GenomiccWorkflows.harmonize(results)
     @test harmonized_resulst == DataFrame(
-        CHR = ["1", "2", "2"],
-        BP = [2000, 3000, 4000],
-        SNP = ["rs2", "rs3", "rs4"],
-        P = [0.1, 0.1, 0.01]
+        CHR = ["1", "2"],
+        BP = [2000, 4000],
+        SNP = ["rs2", "rs4"],
+        P = [0.1, 0.01]
     )
     # If the LOG10P has no NA it will be read as a float column
     results = DataFrame(
         LOG10P = [1, 1, 2, 2],
         CHROM = [1, 1, 2, 2],
         GENPOS = [1000, 2000, 3000, 4000],
-        ID = ["rs1", "rs2", "rs3", "rs4"]
+        ID = ["rs1", "rs2", "rs3", "rs4"],
+        A1FREQ = [0.1, 0.2, 0.3, 0.4]
     )
-    harmonized_resulst = GenomiccWorkflows.harmonize(results)
+    harmonized_resulst = GenomiccWorkflows.harmonize(results, maf=0.25)
     @test harmonized_resulst == DataFrame(
-        CHR = ["1", "1", "2", "2"],
-        BP = [1000, 2000, 3000, 4000],
-        SNP = ["rs1", "rs2", "rs3", "rs4"],
-        P = [0.1, 0.1, 0.01, 0.01]
+        CHR = ["2", "2"],
+        BP = [3000, 4000],
+        SNP = ["rs3", "rs4"],
+        P = [0.01, 0.01]
     )
 end
 
@@ -327,6 +329,13 @@ if dorun
             @test "CHR$(chr)_OUT_PC$(pc)" in names(covariates_and_pcs)
         end
     end
+    @test "NA" in covariates_and_pcs.SEVERE_COVID_19 # missing are coded as NA
+    @test "NA" in covariates_and_pcs.SEVERE_PNEUMONIA # missing are coded as NA
+    covariates_and_pcs = CSV.read(
+        joinpath(results_dir, "call-merge_covariates_and_pcs", "execution", "merged_covariates_and_pcs.tsv"), 
+        DataFrame,
+        missingstring="NA"
+    )
 
     # Test Regenie Step 1
     regenie_step_1_dir = joinpath(results_dir, "call-regenie_step_1")
@@ -350,14 +359,29 @@ if dorun
         files = readdir(execution_dir)
         ## Covid-19
         covid_results_file = only(filter(f -> endswith(f, "step2_SEVERE_COVID_19.regenie"), files))
+        group = first(split(covid_results_file, "."))
         covid_results = CSV.read(joinpath(execution_dir, covid_results_file), DataFrame)
         @test names(covid_results) == results_expected_cols
         @test nrow(covid_results) > 0
+        ids_file = only(filter(f -> endswith(f, "step2_SEVERE_COVID_19.regenie.ids"), files))
+        used_ids = CSV.read(joinpath(execution_dir, ids_file), DataFrame, header=["FID", "IID"])
+        expected_ids = dropmissing(
+            filter(:SUPERPOPULATION => ==(group), covariates_and_pcs), 
+            [:SEVERE_COVID_19]
+        )
+        @test sort(used_ids) == sort(expected_ids[!, [:FID, :IID]])
         ## Pneumonia
         pneumonia_results_file = only(filter(f -> endswith(f, "step2_SEVERE_PNEUMONIA.regenie"), files))
         pneumonia_results = CSV.read(joinpath(execution_dir, pneumonia_results_file), DataFrame)
         @test names(pneumonia_results) == results_expected_cols
         @test nrow(pneumonia_results) > 0
+        ids_file = only(filter(f -> endswith(f, "step2_SEVERE_PNEUMONIA.regenie.ids"), files))
+        used_ids = CSV.read(joinpath(execution_dir, ids_file), DataFrame, header=["FID", "IID"])
+        expected_ids = dropmissing(
+            filter(:SUPERPOPULATION => ==(group), covariates_and_pcs), 
+            [:SEVERE_PNEUMONIA]
+        )
+        @test sort(used_ids) == sort(expected_ids[!, [:FID, :IID]])
         # ancestry, chr 
         ancestry, chr, _ = split(covid_results_file, ".")
         push!(ancestries_and_chrs, (ancestry, chr))
