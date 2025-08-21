@@ -21,7 +21,7 @@ workflow merge_ukb_and_genomicc {
 
         File high_ld_regions
         File reference_genome
-        String ancestry_program = "admixture"
+        String ancestry_program = "scope"
         String max_ukb_samples = "nothing"
         String qc_genotype_missing_rate = "0.02"
         String qc_individual_missing_rate = "0.02"
@@ -576,7 +576,7 @@ task estimate_ukb_ancestry_from_kgp {
         File bim_file
         File fam_file
         String output_filename = "ukb.ancestry_estimate.csv"
-        String ancestry_program = "admixture"
+        String ancestry_program = "scope"
         String ancestry_threshold = "0.8"
         String julia_cmd
     }
