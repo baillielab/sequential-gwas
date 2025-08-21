@@ -98,26 +98,47 @@ function cli_settings()
             action = :command
             help = "Generates a report after merging UKB and GenOMICC data."
 
-        "make-ukb-bgen-qc-and-r2-filter-files"
+        "fill-chr-pvar-with-variant-id"
             action = :command
             help = "Generates UKB BGEN QC and R2 filter files."
+
+        "make-ukb-individuals-list"
+            action = :command
+            help = "Generates a list of UKB individuals to be used in the workflow."
     end
 
-    @add_arg_table! s["make-ukb-bgen-qc-and-r2-filter-files"] begin
-        "prefix"
+    @add_arg_table! s["make-ukb-individuals-list"] begin
+        "covariates-file"
             arg_type = String
             required = true
-            help = "Prefix to the UKB file."
+            help = "Covariates file."
 
-        "--threshold"
-            arg_type = Float64
-            help = "R2 threshold for filtering variants."
-            default = 0.9
-
+        "critical-table-file"
+            arg_type = String
+            required = true
+            help = "File containing critical IDs."
+        
         "--output"
             arg_type = String
-            help = "Output file containing variants to extract."
-            default = "extract_list.txt"
+            help = "Output file."
+            default = "ukb_eids_to_keep.txt"
+
+        "--max-samples"
+            arg_type = Int
+            help = "Maximum number of samples to keep."
+            default = nothing
+    end
+
+    @add_arg_table! s["fill-chr-pvar-with-variant-id"] begin
+        "pvar-file"
+            arg_type = String
+            required = true
+            help = "pvar file."
+
+        "variants-info-file"
+            arg_type = String
+            required = true
+            help = "File containing variants info (CHROM, POS, ID)."
     end
 
     @add_arg_table! s["make-ukb-genomicc-merge-report"] begin
@@ -145,11 +166,6 @@ function cli_settings()
             required = true
             help = "Path to GenOMICC covariates file."
 
-        "genomicc-inferred-covariates"
-            arg_type = String
-            required = true
-            help = "Path to GenOMICC inferred covariates file."
-
         "ukb-covariates"
             arg_type = String
             required = true
@@ -159,11 +175,6 @@ function cli_settings()
             arg_type = String
             required = true
             help = "Path to UKB inferred covariates file."
-
-        "file-with-eids-to-exclude"
-            arg_type = String
-            required = true
-            help = "Path to file with EIDs to exclude from the merged covariates."
 
         "--output-file"
             arg_type = String
@@ -194,15 +205,14 @@ function cli_settings()
     end
 
     @add_arg_table! s["merge-regenie-chr-results"] begin
-        "input-prefix"
+        "merge-list"
             arg_type = String
             required = true
-            help = "Prefix to input files."
-
+            help = "File with list of files to be merged."
         "--output"
             arg_type = String
-            help = "Output file name."
-            default = "results.csv"
+            help = "Output path"
+            default = "regenie.results.tsv"
     end
 
     @add_arg_table! s["download-topmed-file"] begin
@@ -313,16 +323,16 @@ function cli_settings()
             arg_type = String
             required = true
             help = "Path to GWAS results file."
-        
-        "group"
-            arg_type = String
-            required = true
-            help = "Group name."
+
+        "--maf"
+            arg_type = Float64
+            help = "Minor allele frequency threshold to filter results."
+            default = 0.01
         
         "--output-prefix"
             arg_type = String
             help = "Prefix to output files."
-            default = "gwas"
+            default = "gwas.plot"
     end
 
     @add_arg_table! s["merge-covariates-pcs"] begin
@@ -343,27 +353,32 @@ function cli_settings()
     end
 
     @add_arg_table! s["make-gwas-groups"] begin
-        "covariates"
+        "covariates-file"
             arg_type = String
             required = true
             help = "Path to covariates file."
 
-        "variables-file"
+        "--groupby"
             arg_type = String
-            required = true
-            help = "Path to variables file."
-
-        "--inferred-covariates"
-            arg_type = String
+            help = "Comma separated list of variables to use to stratify the GWAS."
             default = nothing
-            help = "Path to covariates inferred from genotypes."
+        
+        "--covariates"
+            arg_type = String
+            help = "Comma separated list of covariates to include in the output file."
+            default = "AGE"
+
+        "--phenotypes"
+            arg_type = String
+            help = "Comma separated list of phenotypes to include in the output file."
+            default = "SEVERE_COVID_19"
 
         "--output-prefix"
             arg_type = String
             help = "Prefix to output files."
             default = "group"
         
-        "--min-group-size"
+        "--min-cases-controls"
             arg_type = Int
             help = "Minimum group size."
             default = 100
@@ -567,6 +582,11 @@ function cli_settings()
             arg_type = Float64
             help = "Threshold for ancestry assignment."
             default = 0.8
+
+        "--program"
+            arg_type = String
+            help = "Ancestry estimation program (scope or admixture)."
+            default = "admixture"
     end
 
     @add_arg_table! s["plot-pca"] begin
@@ -806,7 +826,8 @@ function julia_main()::Cint
             cmd_settings["genotypes-prefix"],
             cmd_settings["pedigree-file"];
             output=cmd_settings["output"],
-            threshold=cmd_settings["threshold"]
+            threshold=cmd_settings["threshold"],
+            mode=cmd_settings["program"]
         )
     elseif cmd == "mock"
         mock_data(
@@ -870,11 +891,12 @@ function julia_main()::Cint
         )
     elseif cmd == "make-gwas-groups"
         make_gwas_groups(
-            cmd_settings["covariates"],
-            cmd_settings["variables-file"];
-            inferred_covariates_file=cmd_settings["inferred-covariates"],
+            cmd_settings["covariates-file"];
+            groupby_string=cmd_settings["groupby"],
+            covariates_string=cmd_settings["covariates"],
+            phenotypes_string=cmd_settings["phenotypes"],
             output_prefix=cmd_settings["output-prefix"],
-            min_group_size=cmd_settings["min-group-size"]
+            min_cases_controls=cmd_settings["min-cases-controls"]
         )
     elseif cmd == "merge-covariates-pcs"
         merge_covariates_and_pcs(
@@ -884,8 +906,8 @@ function julia_main()::Cint
         )
     elseif cmd == "gwas-plots"
         gwas_plots(
-            cmd_settings["results"],
-            cmd_settings["group"];
+            cmd_settings["results"];
+            maf=cmd_settings["maf"],
             output_prefix=cmd_settings["output-prefix"]
         )
     elseif cmd == "write-imputation-split-lists"
@@ -919,8 +941,7 @@ function julia_main()::Cint
             refresh_rate=cmd_settings["refresh-rate"]
             )
     elseif cmd == "merge-regenie-chr-results"
-        merge_regenie_chr_results(
-            cmd_settings["input-prefix"];
+        merge_regenie_chr_results(cmd_settings["merge-list"];
             output=cmd_settings["output"]
         )
     elseif cmd == "align-ukb-variants-with-kgp-and-keep-unrelated"
@@ -933,10 +954,8 @@ function julia_main()::Cint
     elseif cmd == "merge-ukb-genomicc-covariates"
         merge_ukb_genomicc_covariates(
             cmd_settings["genomicc-covariates"],
-            cmd_settings["genomicc-inferred-covariates"],
             cmd_settings["ukb-covariates"],
-            cmd_settings["ukb-inferred-covariates"],
-            cmd_settings["file-with-eids-to-exclude"];
+            cmd_settings["ukb-inferred-covariates"];
             output_file=cmd_settings["output-file"]
         )
     elseif cmd == "make-ukb-genomicc-merge-report"
@@ -946,11 +965,17 @@ function julia_main()::Cint
             ukb_genomicc_imputed_files_list=cmd_settings["ukb-genomicc-imputed-files-list"],
             ukb_genomicc_covariates_file=cmd_settings["ukb-genomicc-covariates-file"]
         )
-    elseif cmd == "make-ukb-bgen-qc-and-r2-filter-files"
-        make_ukb_bgen_qc_and_r2_filter_files(
-            cmd_settings["prefix"];
-            threshold=cmd_settings["threshold"],
-            output=cmd_settings["output"]
+    elseif cmd == "fill-chr-pvar-with-variant-id"
+        fill_chr_pvar_with_variant_id(
+            cmd_settings["pvar-file"],
+            cmd_settings["variants-info-file"]
+        )
+    elseif cmd == "make-ukb-individuals-list"
+        make_ukb_individuals_list(
+            cmd_settings["covariates-file"],
+            cmd_settings["critical-table-file"];
+            output=cmd_settings["output"],
+            max_samples=cmd_settings["max-samples"]
         )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))
