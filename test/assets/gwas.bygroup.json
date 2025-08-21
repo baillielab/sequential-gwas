@@ -7,7 +7,7 @@
     "gwas.groupby": ["SUPERPOPULATION"],
     "gwas.covariates": ["AGE", "SEX", "AGE_x_AGE"],
     "gwas.phenotypes": ["SEVERE_PNEUMONIA", "SEVERE_COVID_19"],
-    "gwas.min_group_size": "2400",
+    "gwas.min_cases_controls": "600",
     "gwas.approx_pca": "false",
     "gwas.genotypes": {
         "chr": "all",

@@ -368,12 +368,17 @@ function cli_settings()
             help = "Comma separated list of covariates to include in the output file."
             default = "AGE"
 
+        "--phenotypes"
+            arg_type = String
+            help = "Comma separated list of phenotypes to include in the output file."
+            default = "SEVERE_COVID_19"
+
         "--output-prefix"
             arg_type = String
             help = "Prefix to output files."
             default = "group"
         
-        "--min-group-size"
+        "--min-cases-controls"
             arg_type = Int
             help = "Minimum group size."
             default = 100
@@ -889,8 +894,9 @@ function julia_main()::Cint
             cmd_settings["covariates-file"];
             groupby_string=cmd_settings["groupby"],
             covariates_string=cmd_settings["covariates"],
+            phenotypes_string=cmd_settings["phenotypes"],
             output_prefix=cmd_settings["output-prefix"],
-            min_group_size=cmd_settings["min-group-size"]
+            min_cases_controls=cmd_settings["min-cases-controls"]
         )
     elseif cmd == "merge-covariates-pcs"
         merge_covariates_and_pcs(

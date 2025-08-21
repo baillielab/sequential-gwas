@@ -53,14 +53,17 @@ end
 
 function merge_regenie_chr_results(merge_list_file; output_prefix = "regenie.results")
     merge_list = CSV.read(merge_list_file, DataFrame; header=["FILE"])
+    # Identify group and phenotype from the file names
     merge_list.BASENAME = basename.(merge_list.FILE)
     merge_list.GROUP = getindex.(split.(merge_list.BASENAME, "."), 1)
+    group = only(unique(merge_list.GROUP)) # Checking files all correspond to the same group
     merge_list.PHENOTYPE = replace.(getindex.(split.(merge_list.BASENAME, "."), 3), "step2_" => "")
-    for (groupkey, group) in pairs(groupby(merge_list, [:GROUP, :PHENOTYPE]))
-        results = mapreduce(f -> CSV.read(f, DataFrame), vcat, group.FILE)
-        output_file = string(output_prefix, ".", groupkey.GROUP, ".", groupkey.PHENOTYPE, ".tsv")
-        CSV.write(output_file, results; delim="\t", header=true)
-    end
+    phenotype = only(unique(merge_list.PHENOTYPE)) # Checking files all correspond to the same phenotype
+    # Concatenating the files
+    results = mapreduce(f -> CSV.read(f, DataFrame), vcat, merge_list.FILE)
+    # Writing the output
+    output_file = string(output_prefix, ".", group, ".", phenotype, ".tsv")
+    CSV.write(output_file, results; delim="\t", header=true)
     return 0
 end
 
@@ -95,10 +98,11 @@ function make_gwas_groups(
     covariates_file; 
     groupby_string=nothing,
     covariates_string="AGE",
+    phenotypes_string="SEVERE_COVID_19",
     output_prefix="gwas", 
-    min_group_size=100
+    min_cases_controls=100
     )
-
+    phenotypes = split(phenotypes_string, ",")
     # Define additional covariates
     covariates, required_covariate_variables = read_and_process_covariates(covariates_file; covariates_string=covariates_string)
     # Write new covariates to file
@@ -118,17 +122,19 @@ function make_gwas_groups(
         groupby_variables = split(groupby_string, ",")
         for (groupkey, group) in pairs(groupby(covariates, groupby_variables, skipmissing=true, sort=true))
             group_id = join(groupkey, "_")
-            write_covariates_and_phenotypes_group(group; 
-                group_id=group_id, 
-                output_prefix=output_prefix, 
-                min_group_size=min_group_size
+            write_covariates_and_phenotypes_group(group;
+                group_id=group_id,
+                phenotypes=phenotypes,
+                output_prefix=output_prefix,
+                min_cases_controls=min_cases_controls
             )
         end
     else
         write_covariates_and_phenotypes_group(covariates; 
-                group_id="all", 
+                group_id="all",
+                phenotypes=phenotypes, 
                 output_prefix=output_prefix, 
-                min_group_size=min_group_size
+                min_cases_controls=min_cases_controls
         )
     end
 end

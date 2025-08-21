@@ -119,12 +119,33 @@ function add_user_defined_covariates!(covariates, covariates_string)
     return updated_required_covariate_variables
 end
 
-function write_covariates_and_phenotypes_group(data; group_id="all", output_prefix="gwas", min_group_size=100)
+function write_covariates_and_phenotypes_group(data; group_id="all", phenotypes=["SEVERE_COVID_19"], output_prefix="gwas", min_cases_controls=100)
+    group_phenotypes = []
+    for phenotype in phenotypes
+        group_cases_controls_df = combine(groupby(data, phenotype, skipmissing=true), nrow)
+        group_cases_controls_dict = Dict(
+            string(val) => n for (val, n) in 
+                zip(group_cases_controls_df[!, phenotype], group_cases_controls_df.nrow)
+        ) # Stringify the phenotype values, in case the input is already in format [0, 1, NA]
+        cases = get(group_cases_controls_dict, "1", 0)
+        controls = get(group_cases_controls_dict, "0", 0)
+        if controls < min_cases_controls || cases < min_cases_controls
+            @info "Skipping phenotype $phenotype for group $group_id because it has fewer than $min_cases_controls cases/controls: (cases: $(cases), controls: $(controls))."
+        else
+            push!(group_phenotypes, phenotype)
+        end
+    end
     # Only retain individuals with no missing values for all covariates and phenotypes
-    if nrow(data) < min_group_size
-        @info "Skipping group $group_id because it has fewer than $min_group_size individuals."
+    if isempty(group_phenotypes)
+        @info "No phenotype passing the min cases/controls threshold for group $group_id, which will be skipped ."
         return
     end
     # Write group individuals
     CSV.write(string(output_prefix, ".individuals.", group_id, ".txt"), DataFrames.select(data, ["FID", "IID"]), header=false, delim="\t")
+    # Write group phenotypes
+    open(string(output_prefix, ".phenotypes.", group_id, ".txt"), "w") do io
+        for phenotype in group_phenotypes
+            println(io, phenotype)
+        end
+    end
 end
