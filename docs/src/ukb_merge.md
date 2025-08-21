@@ -22,7 +22,7 @@ In particular we need to populate the `genomicc` and `kgp` subfolders as display
 We will need the following GenOMICC data, at the present time, the name of the file does not matter since it seems impossible to reference a file by its path on the RAP, instead we will have to use file IDs: 
 
 - genotypes: Output by [Combining GenOMICC Datasets](@ref).
-- covariates (provided by Dominique): It should contain the following columns: `IID`,`FID`,`PRIM_DIAGNOSIS_ODAP`,`COHORT`,`ISARIC_MAX_SEVERITY_SCORE`,`SEX_SELF_REPORTED`,`AGE_YEARS_AT_RECRUITMENT`,`SUPERPOPULATION`
+- covariates: A covariate file provided by the ODAP team, currently this file contains the following columns: `IID`,`FID`,`PRIM_DIAGNOSIS_ODAP`,`COHORT`,`ISARIC_MAX_SEVERITY_SCORE`,`SEX_SELF_REPORTED`,`AGE_YEARS_AT_RECRUITMENT`,`SUPERPOPULATION`.
 - imputed genotypes: Output by [GenOMICC Genotypes Imputation](@ref).
 
 I recommend to organise them as follows:

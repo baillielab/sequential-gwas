@@ -30,6 +30,7 @@ workflow gwas {
         String regenie_bsize = "1000"
     }
 
+    # Get generic Julia command
     call tasks.get_julia_cmd as get_julia_cmd {
         input:
             use_sysimage = julia_use_sysimage,
@@ -37,7 +38,6 @@ workflow gwas {
     }
 
     # Create groups and update covariates
-
     call make_covariates_and_groups {
         input:
             docker_image=docker_image,
@@ -49,17 +49,10 @@ workflow gwas {
             julia_cmd=get_julia_cmd.julia_cmd
     }
 
-    # Group individuals and phenotypes files
-    scatter (paired_files in zip(make_covariates_and_groups.groups_lists, make_covariates_and_groups.groups_phenotypes)) {
-        Pair[File, File] individuals_and_phenotypes = paired_files
-    }
 
-    # A GWAS is performed for each group defined by the user provided `groupby`
-    scatter (group_individuals in individuals_and_phenotypes) {
-        File sample_list = group_individuals.left
-        String group_name = sub(basename(sample_list, ".txt"), "grouped.individuals.", "")
-        File phenotypes_file = group_individuals.right
-        Array[String] phenotypes_list = read_lines(phenotypes_file)
+    # A GWAS is performed for each group defined by a combination of the user provided `groupby` and a phenotype
+    scatter (sample_list in make_covariates_and_groups.groups_individuals) {
+        String group_name = sub(basename(sample_list, ".txt"), "gwas.individuals.", "")
 
         # Make plink bed files for the group 
         call make_group_bed_qced {
@@ -87,6 +80,7 @@ workflow gwas {
                 ip_values = ip_values,
                 maf = maf
         }
+
         # Perform LOCO PCA
         scatter (imputed_chr_fileset in imputed_genotypes) {
             call loco_pca {
@@ -100,6 +94,7 @@ workflow gwas {
                     approx = approx_pca
             }
         }
+
         # Merge covariates and PCs
         call merge_covariates_and_pcs {
             input:
@@ -110,63 +105,61 @@ workflow gwas {
                 julia_cmd = get_julia_cmd.julia_cmd 
         }
 
-        # A GWAS is performed for each phenotype that passes filtering for that group
-        scatter (phenotype in phenotypes_list) {
-            # First run regenie step 1 using plink genotypes
-            call regenie_step_1 {
+        # First run regenie step 1 using plink genotypes
+        call regenie_step_1 {
+            input:
+                docker_image = docker_image,
+                group_name = group_name,
+                bed_file = make_group_bed_qced.plink_fileset.bed,
+                bim_file = make_group_bed_qced.plink_fileset.bim,
+                fam_file = make_group_bed_qced.plink_fileset.fam,
+                sample_list = sample_list,
+                covariates_file = merge_covariates_and_pcs.covariates_and_pcs,
+                covariates_list = make_covariates_and_groups.covariates_list,
+                cv_folds = regenie_cv_folds,
+                bsize = regenie_bsize,
+                maf = maf,
+                mac = mac
+        }
+
+        # Second run regenie step 2 across imputed chromosomes filesets
+        scatter (imputed_chr_fileset in imputed_genotypes) {
+            # Perform Regenie Step 2
+            call regenie_step_2 {
                 input:
                     docker_image = docker_image,
                     group_name = group_name,
-                    bed_file = make_group_bed_qced.plink_fileset.bed,
-                    bim_file = make_group_bed_qced.plink_fileset.bim,
-                    fam_file = make_group_bed_qced.plink_fileset.fam,
+                    chr = imputed_chr_fileset.chr,
+                    pgen_file = imputed_chr_fileset.pgen,
+                    pvar_file = imputed_chr_fileset.pvar,
+                    psam_file = imputed_chr_fileset.psam,
                     sample_list = sample_list,
                     covariates_file = merge_covariates_and_pcs.covariates_and_pcs,
-                    phenotype = phenotype,
+                    regenie_loco = regenie_step_1.step1_files.phenotypes_loco,
+                    regenie_list = regenie_step_1.step1_files.list,
                     covariates_list = make_covariates_and_groups.covariates_list,
-                    cv_folds = regenie_cv_folds,
+                    npcs = npcs,
                     bsize = regenie_bsize,
-                    maf = maf,
                     mac = mac
             }
-            # Second run regenie step 2 across imputed chromosomes filesets
-            scatter (imputed_chr_fileset in imputed_genotypes) {
-                # Perform Regenie Step 2
-                call regenie_step_2 {
-                    input:
-                        docker_image = docker_image,
-                        chr = imputed_chr_fileset.chr,
-                        pgen_file = imputed_chr_fileset.pgen,
-                        pvar_file = imputed_chr_fileset.pvar,
-                        psam_file = imputed_chr_fileset.psam,
-                        sample_list = sample_list,
-                        covariates_file = merge_covariates_and_pcs.covariates_and_pcs,
-                        regenie_loco = regenie_step_1.step1_files.phenotypes_loco,
-                        regenie_list = regenie_step_1.step1_files.list,
-                        phenotype = phenotype,
-                        covariates_list = make_covariates_and_groups.covariates_list,
-                        npcs = npcs,
-                        bsize = regenie_bsize,
-                        mac = mac
-                }
-            }
-            # Merge Regenie Step 2 results
-            call merge_regenie_chr_results {
-                input:
-                    docker_image = docker_image,
-                    group_name = group_name,
-                    phenotype = phenotype,
-                    julia_cmd = get_julia_cmd.julia_cmd,
-                    regenie_step2_files = flatten(regenie_step_2.regenie_step2)
-            }
-            # Generate GWAS plots
-            call gwas_plots {
-                input:
-                    docker_image = docker_image,
-                    julia_cmd = get_julia_cmd.julia_cmd,
-                    results = merge_regenie_chr_results.merged_results,
-                    maf = maf
-            }
+        }
+
+        # Merge Regenie Step 2 results
+        call merge_regenie_chr_results {
+            input:
+                docker_image = docker_image,
+                group_name = group_name,
+                julia_cmd = get_julia_cmd.julia_cmd,
+                regenie_step2_files = flatten(regenie_step_2.regenie_step2)
+        }
+
+        # Generate GWAS plots
+        call gwas_plots {
+            input:
+                docker_image = docker_image,
+                julia_cmd = get_julia_cmd.julia_cmd,
+                results = merge_regenie_chr_results.merged_results,
+                maf = maf
         }
     }
 }
@@ -200,7 +193,6 @@ task merge_regenie_chr_results {
     input {
         String docker_image
         String group_name
-        String phenotype
         String julia_cmd
         Array[File] regenie_step2_files
     }
@@ -212,11 +204,11 @@ task merge_regenie_chr_results {
 
         ~{julia_cmd} merge-regenie-chr-results \
             merge_list.txt \
-            --output-prefix=regenie.results
+            --output=regenie.results.~{group_name}.tsv
     >>>
 
     output {
-        File merged_results = "regenie.results.${group_name}.${phenotype}.tsv"
+        File merged_results = "regenie.results.${group_name}.tsv"
     }
 
     runtime {
@@ -228,6 +220,7 @@ task merge_regenie_chr_results {
 task regenie_step_2 {
     input {
         String docker_image
+        String group_name
         String chr
         File pgen_file
         File pvar_file
@@ -236,14 +229,11 @@ task regenie_step_2 {
         File covariates_file
         Array[File] regenie_loco
         File regenie_list
-        String phenotype
         Array[String] covariates_list
         String npcs = "10"
         String bsize = "1000"
         String mac = "10"
     }
-
-    String group_name = sub(basename(sample_list, ".txt"), "grouped.individuals.", "")
 
     command <<<
 
@@ -266,12 +256,15 @@ task regenie_step_2 {
         pc_list=$(printf "CHR~{chr}_OUT_PC%s," {1..~{npcs}} | sed 's/,$//')
         full_covariates_list="~{sep="," covariates_list},${pc_list}"
 
+        # phenotype from group_name
+        phenotype=$(echo ~{group_name} | cut -d'.' -f2)
+
         conda run -n regenie_env regenie \
             --step 2 \
             --pgen ${input_prefix}.biallelic_frequent \
             --keep ~{sample_list} \
             --phenoFile ~{covariates_file} \
-            --phenoColList ~{phenotype} \
+            --phenoColList ${phenotype} \
             --write-samples \
             --covarFile ~{covariates_file} \
             --covarColList ${full_covariates_list} \
@@ -304,7 +297,6 @@ task regenie_step_1 {
         File fam_file
         File sample_list
         File covariates_file
-        String phenotype
         Array[String] covariates_list
         String cv_folds = "5"
         String bsize = "1000"
@@ -312,7 +304,7 @@ task regenie_step_1 {
         String mac = "10"
     }
 
-    # String group_name = sub(basename(sample_list, ".txt"), "grouped.individuals.", "")
+    # String group_name = sub(basename(sample_list, ".txt"), "gwas.individuals.", "")
 
     command <<<
         genotypes_prefix=$(dirname "~{bed_file}")/$(basename "~{bed_file}" .bed)
@@ -324,6 +316,7 @@ task regenie_step_1 {
             --keep ~{sample_list} \
             --mac ~{mac} \
             --maf ~{maf} \
+            --min-alleles 2 \
             --max-alleles 2 \
             --write-snplist \
             --out biallelic_frequent
@@ -334,13 +327,16 @@ task regenie_step_1 {
             cv_option="--loocv"
         fi
 
+        # phenotype from group_name
+        phenotype=$(echo ~{group_name} | cut -d'.' -f2)
+
         conda run -n regenie_env regenie \
             --step 1 \
             --bed ${genotypes_prefix} \
             --keep ~{sample_list} \
             --extract biallelic_frequent.snplist \
             --phenoFile ~{covariates_file} \
-            --phenoColList ~{phenotype} \
+            --phenoColList ${phenotype} \
             --covarFile ~{covariates_file} \
             --covarColList ~{sep="," covariates_list} \
             --minMAC ~{mac} \
@@ -462,15 +458,14 @@ task make_covariates_and_groups {
             ~{covariates_file} \
             --covariates=${covariates_string} \
             --phenotypes=~{sep="," phenotypes_list} \
-            --output-prefix=grouped \
+            --output-prefix=gwas \
             --min-cases-controls=~{min_cases_controls} ${groupby_string_opt}
     >>>
 
     output {
-        File updated_covariates = "grouped.covariates.csv"
-        Array[String] covariates_list = read_lines("grouped.covariates_list.txt")
-        Array[File]+ groups_lists = glob("grouped.individuals.*.txt")
-        Array[File]+ groups_phenotypes = glob("grouped.phenotypes.*.txt")
+        File updated_covariates = "gwas.covariates.csv"
+        Array[String] covariates_list = read_lines("gwas.covariates_list.txt")
+        Array[File]+ groups_individuals = glob("gwas.individuals.*")
     }
 
     runtime {
@@ -491,7 +486,7 @@ task make_group_bed_qced {
         String mac = "10"
     }
 
-    String group_name = sub(basename(sample_list, ".txt"), "grouped.individuals.", "")
+    String group_name = sub(basename(sample_list, ".txt"), "gwas.individuals.", "")
 
     command <<<
         genotypes_prefix=$(dirname "~{genotypes_bed}")/$(basename "~{genotypes_bed}" .bed)

@@ -209,10 +209,10 @@ function cli_settings()
             arg_type = String
             required = true
             help = "File with list of files to be merged."
-        "--output-prefix"
+        "--output"
             arg_type = String
-            help = "Prefix to output files."
-            default = "regenie.results"
+            help = "Output path"
+            default = "regenie.results.tsv"
     end
 
     @add_arg_table! s["download-topmed-file"] begin
@@ -942,7 +942,7 @@ function julia_main()::Cint
             )
     elseif cmd == "merge-regenie-chr-results"
         merge_regenie_chr_results(cmd_settings["merge-list"];
-            output_prefix=cmd_settings["output-prefix"]
+            output=cmd_settings["output"]
         )
     elseif cmd == "align-ukb-variants-with-kgp-and-keep-unrelated"
         align_ukb_variants_with_kgp_and_keep_unrelated(

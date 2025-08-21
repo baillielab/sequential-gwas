@@ -119,33 +119,27 @@ function add_user_defined_covariates!(covariates, covariates_string)
     return updated_required_covariate_variables
 end
 
-function write_covariates_and_phenotypes_group(data; group_id="all", phenotypes=["SEVERE_COVID_19"], output_prefix="gwas", min_cases_controls=100)
-    group_phenotypes = []
+function write_covariates_and_phenotypes_group(data, covariates_list; group_id="all", phenotypes=["SEVERE_COVID_19"], output_prefix="gwas", min_cases_controls=100)
+    n_phenotypes_passed = 0
     for phenotype in phenotypes
-        group_cases_controls_df = combine(groupby(data, phenotype, skipmissing=true), nrow)
+        data_no_missing = dropmissing(data, [phenotype, covariates_list...])
+        group_cases_controls_df = combine(groupby(data_no_missing, phenotype, skipmissing=true), nrow)
         group_cases_controls_dict = Dict(
             string(val) => n for (val, n) in 
                 zip(group_cases_controls_df[!, phenotype], group_cases_controls_df.nrow)
-        ) # Stringify the phenotype values, in case the input is already in format [0, 1, NA]
-        cases = get(group_cases_controls_dict, "1", 0)
-        controls = get(group_cases_controls_dict, "0", 0)
-        if controls < min_cases_controls || cases < min_cases_controls
-            @info "Skipping phenotype $phenotype for group $group_id because it has fewer than $min_cases_controls cases/controls: (cases: $(cases), controls: $(controls))."
+        )
+        ncases = get(group_cases_controls_dict, "1", 0)
+        ncontrols = get(group_cases_controls_dict, "0", 0)
+        if ncontrols < min_cases_controls || ncases < min_cases_controls
+            @info "Skipping phenotype $phenotype for group $group_id because it has fewer than $min_cases_controls cases/controls: (cases: $(ncases), controls: $(ncontrols))."
         else
-            push!(group_phenotypes, phenotype)
+            CSV.write(
+                string(output_prefix, ".individuals.", group_id, ".", phenotype, ".txt"), 
+                DataFrames.select(data_no_missing, ["FID", "IID"]), header=false, delim="\t"
+            )
+            n_phenotypes_passed += 1
         end
     end
-    # Only retain individuals with no missing values for all covariates and phenotypes
-    if isempty(group_phenotypes)
-        @info "No phenotype passing the min cases/controls threshold for group $group_id, which will be skipped ."
-        return
-    end
-    # Write group individuals
-    CSV.write(string(output_prefix, ".individuals.", group_id, ".txt"), DataFrames.select(data, ["FID", "IID"]), header=false, delim="\t")
-    # Write group phenotypes
-    open(string(output_prefix, ".phenotypes.", group_id, ".txt"), "w") do io
-        for phenotype in group_phenotypes
-            println(io, phenotype)
-        end
-    end
+
+    return n_phenotypes_passed
 end

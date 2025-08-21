@@ -112,11 +112,11 @@ end
         for sex in [0, 1]
             if (ancestry, sex) ∉ groups_failing_min_case_control
                 group_key = string(ancestry, "_", sex)
-                individuals = CSV.read(joinpath(tmpdir, "gwas.individuals.$group_key.txt"), DataFrame; header=["FID", "IID"])
+                individuals = CSV.read(joinpath(tmpdir, "gwas.individuals.$group_key.SEVERE_COVID_19.txt"), DataFrame; header=["FID", "IID"])
                 joined = innerjoin(updated_covariates, individuals, on = [:FID, :IID])
                 @test all(==(ancestry), joined.SUPERPOPULATION)
                 @test all(==(sex), joined.SEX)
-                @test readlines(joinpath(tmpdir, "gwas.phenotypes.$group_key.txt")) == ["SEVERE_COVID_19"]
+                @test nrow(dropmissing(joined[!, ["SEVERE_COVID_19", "AGE", "AGE_x_AGE", "AGE_x_SEX", "COHORT__GENOMICC", "COHORT__UKB"]])) == nrow(joined)
             end
         end
     end
@@ -141,11 +141,15 @@ end
     covariates = CSV.read(joinpath(tmpdir, "gwas_all.covariates.csv"), DataFrame)
     # SEVERE_COVID_19 is dropped because it has fewer than 3500 cases/controls
     @test maximum(combine(groupby(covariates, :SEVERE_COVID_19, skipmissing=true), nrow).nrow) < min_cases_controls
-    @test ["SEVERE_PNEUMONIA"] == readlines(joinpath(tmpdir, "gwas_all.phenotypes.all.txt"))
+    @test !isfile(joinpath(tmpdir, "gwas_all.individuals.all.SEVERE_COVID_19.txt"))
     # The group consists in all individuals
-    individuals = CSV.read(joinpath(tmpdir, "gwas_all.individuals.all.txt"), DataFrame; header=["FID", "IID"])
-    @test covariates.FID == individuals.FID
-    @test covariates.IID == individuals.IID
+    individuals = sort(CSV.read(
+        joinpath(tmpdir, "gwas_all.individuals.all.SEVERE_PNEUMONIA.txt"), 
+        DataFrame; 
+        header=["FID", "IID"])
+    )
+    expected_individuals = sort(dropmissing(covariates, ["SEVERE_PNEUMONIA", "AGE"])[!, ["FID", "IID"]])
+    @test individuals == expected_individuals
 
     # Check covariates list
     @test readlines(joinpath(tmpdir, "gwas_all.covariates_list.txt"),) == ["AGE"]
@@ -209,9 +213,8 @@ end
 
 @testset "Test merge_regenie_chr_results" begin
     tmpdir = mktempdir()
-    group = "AFR"
+    group = "AFR.SEVERE_COVID_19"
     chrs = 1:2
-    phenotype = "SEVERE_COVID_19"
     merge_list = []
     for chr in chrs
         # Create dummy Regenie Step 1 results files
@@ -230,7 +233,7 @@ end
             LOG10P = [1.0],
             EXTRA = [""]
         )
-        output_file = joinpath(tmpdir, "$group.chr$(chr).step2_$phenotype.regenie")
+        output_file = joinpath(tmpdir, "$group.chr$(chr).step2_SEVERE_COVID_19.regenie")
         CSV.write(output_file, results)
         push!(merge_list, output_file)
     end
@@ -240,15 +243,14 @@ end
             println(io, file)
         end
     end
-    results_prefix = joinpath(tmpdir, "regenie.results")
+    output = joinpath(tmpdir, "regenie.results.tsv")
     copy!(ARGS, [
         "merge-regenie-chr-results",
         merge_list_file,
-        "--output-prefix", results_prefix
+        "--output", output
     ])
     julia_main()
-    output_file = joinpath(tmpdir, "$results_prefix.$group.$phenotype.tsv")
-    results = CSV.read(output_file, DataFrame; delim="\t")
+    results = CSV.read(output, DataFrame; delim="\t")
     expected_cols = [
         "CHROM", "GENPOS", "ID", "ALLELE0", "ALLELE1", 
         "A1FREQ", "N", "TEST", "BETA", "SE", 
@@ -278,10 +280,17 @@ if dorun
 
     results_dirs = readdir("cromwell-executions/gwas", join=true)
     results_dir = results_dirs[argmax(mtime(d) for d in results_dirs)]
-    expected_groups = Set(["AMR", "EAS", "EUR", "AFR", "SAS"])
+    expected_groups = Set([
+        "AFR.SEVERE_PNEUMONIA", 
+        "AMR.SEVERE_PNEUMONIA", 
+        "EAS.SEVERE_COVID_19", 
+        "EAS.SEVERE_PNEUMONIA", 
+        "EUR.SEVERE_PNEUMONIA",
+        "SAS.SEVERE_PNEUMONIA"
+    ])
     # Test groups and covariates: first see which groups make the case/control constraint
     groups_prep_dir = joinpath(results_dir, "call-make_covariates_and_groups", "execution")
-    covariates = CSV.read(joinpath(groups_prep_dir, "grouped.covariates.csv"), DataFrame)
+    covariates = CSV.read(joinpath(groups_prep_dir, "gwas.covariates.csv"), DataFrame)
     @test "AGE_x_AGE" in names(covariates)
     covid_19_groups_not_passing_cc_threshold = Set(filter(
         x -> x.nrow < 600,
@@ -294,26 +303,24 @@ if dorun
     ).SUPERPOPULATION)
     @test pneumonia_groups_not_passing_cc_threshold == Set(["ADMIXED"])
     # Now check the groups files
-    for group in ["EUR", "AFR", "SAS", "EAS", "AMR", "ADMIXED"]
-        if group == "ADMIXED"
-            @test !isfile(joinpath(groups_prep_dir, "grouped.individuals.ADMIXED.txt"))
-            @test !isfile(joinpath(groups_prep_dir, "grouped.phenotypes.ADMIXED.txt"))
+    for (ancestry, phenotype) in Iterators.product(
+            ["AFR", "AMR", "EAS", "EUR", "SAS"],
+            ["SEVERE_COVID_19", "SEVERE_PNEUMONIA"]
+        )
+        potential_sample_list = joinpath(groups_prep_dir, "gwas.individuals.$ancestry.$phenotype.txt")
+        if "$ancestry.$phenotype" in expected_groups
+            @test isfile(potential_sample_list)
         else
-            if group == "EAS"
-                @test Set(readlines(joinpath(groups_prep_dir, "grouped.phenotypes.EAS.txt"))) == Set(["SEVERE_COVID_19", "SEVERE_PNEUMONIA"])
-            else
-                @test readlines(joinpath(groups_prep_dir, "grouped.phenotypes.$group.txt")) == ["SEVERE_PNEUMONIA"]
-            end
-            @test countlines(joinpath(groups_prep_dir, "grouped.individuals.$group.txt")) < nrow(covariates) - 100 # not all individuals
+            @test !isfile(potential_sample_list)
         end
     end
-    covariate_list = readlines(joinpath(groups_prep_dir, "grouped.covariates_list.txt"))
+    covariate_list = readlines(joinpath(groups_prep_dir, "gwas.covariates_list.txt"))
     @test Set(covariate_list) == Set(["AGE", "SEX", "AGE_x_AGE"])
 
     # Test BED groups qced
     bed_dir = joinpath(results_dir, "call-make_group_bed_qced")
     groups = Set([])
-    for shard in [0, 1, 2, 3, 4]
+    for shard in [0, 1, 2, 3, 4, 5] # expected 6 shards for 6 sample lists
         execution_dir = joinpath(bed_dir, "shard-$shard", "execution")
         files = readdir(execution_dir)
         fam_file = files[findfirst(endswith(".fam"), files)]
@@ -324,7 +331,7 @@ if dorun
     # Test LD pruning
     ld_prune_dir = joinpath(results_dir, "call-groups_ld_prune")
     groups = Set([])
-    for shard in [0, 1, 2, 3, 4]
+    for shard in [0, 1, 2, 3, 4, 5]
         execution_dir = joinpath(ld_prune_dir, "shard-$shard", "execution")
         files = readdir(execution_dir)
         fam_file = files[findfirst(endswith(".fam"), files)]
@@ -338,98 +345,100 @@ if dorun
     ## One PCA per (group, chromosome) pair = 5 * 3 = 15
     ## These are ordered by group and chromosome
     pca_groups_and_chrs = Set([])
-    for group_shard in [0, 1, 2, 3, 4]
+    for group_shard in [0, 1, 2, 3, 4, 5]
         subdir = only(readdir(joinpath(loco_pca_dir, "shard-$group_shard"), join=true))
         subdir = joinpath(only(readdir(subdir, join=true)), "call-loco_pca")
         for chr_shard in [0, 1, 2]
             execution_dir = joinpath(subdir, "shard-$chr_shard", "execution")
             files = readdir(execution_dir)
             eigenvec_file = files[findfirst(endswith("eigenvec"), files)]
-            _, group, chr, _ = split(eigenvec_file, ".")
-            push!(pca_groups_and_chrs, (group, chr))
+            _, ancestry, phenotype, chr, _ = split(eigenvec_file, ".")
+            push!(pca_groups_and_chrs, ("$ancestry.$phenotype", chr))
         end
     end
-    @test pca_groups_and_chrs == Set(Iterators.product(["AFR", "AMR", "EAS", "EUR", "SAS"], ["chr1_out", "chr2_out", "chr3_out"]))
+    @test pca_groups_and_chrs == Set(Iterators.product(expected_groups, ["chr1_out", "chr2_out", "chr3_out"]))
 
     # Test merge covariates and PCs
     covariates_and_pcs_dir = joinpath(results_dir, "call-merge_covariates_and_pcs")
     merged_covariates_groups = Set([])
-    for group_shard in 0:4
+    for group_shard in 0:5
         execution_dir = joinpath(covariates_and_pcs_dir, "shard-$group_shard", "execution")
         files = readdir(execution_dir)
         merged_covariates_filename = files[findfirst(endswith("merged_covariates_and_pcs.tsv"), files)]
-        push!(merged_covariates_groups, split(merged_covariates_filename, ".")[1])
+        ancestry, phenotype, _ = split(merged_covariates_filename, ".")
+        push!(merged_covariates_groups, "$ancestry.$phenotype")
         covariates_and_pcs = CSV.read(joinpath(execution_dir, merged_covariates_filename), DataFrame)
         for chr in 1:3
             for pc in 1:10
                 @test "CHR$(chr)_OUT_PC$(pc)" in names(covariates_and_pcs)
             end
         end
-        @test "NA" in covariates_and_pcs.SEVERE_COVID_19 # missing are coded as NA
-        @test "NA" in covariates_and_pcs.SEVERE_PNEUMONIA # missing are coded as NA
+        # Since the dataset is merged with PCs which are computed from individuals with no missing data, there is no missing data for the phenotype of interest
+        @test "NA" ∉ covariates_and_pcs[!, phenotype] # missing are coded as NA
+        @test eltype(covariates_and_pcs[!, phenotype]) == Int
     end
     @test merged_covariates_groups == expected_groups
 
-    # Test GWAS per group / phenotype
-    gwas_dir = scatter_dirs[argmax(mtime(d) for d in scatter_dirs)] # loco pca is done first
-    gwas_groups = Set([])
+    # Test REGENIE Step 1
+    regenie_step_1_dir = joinpath(results_dir, "call-regenie_step_1")
+    regenie_groups = Set([])
+    for group_shard in 0:5
+        execution_dir = joinpath(regenie_step_1_dir, "shard-$group_shard", "execution")
+        files = readdir(execution_dir)
+        pred_list = files[findfirst(endswith(".step1_pred.listrelative"), files)]
+        ancestry, phenotype, _ = split(pred_list, ".")
+        push!(regenie_groups, "$ancestry.$phenotype")
+    end
+    @test regenie_groups == expected_groups
+
+    # Test REGENIE Step 2
+
+    top_regenie_step_2_dir = scatter_dirs[argmax(mtime(d) for d in scatter_dirs)] # loco pca is done first
+    regenie_step_2_groups = Set([])
     results_expected_cols = [
             "CHROM", "GENPOS", "ID", "ALLELE0", "ALLELE1", "A1FREQ", "N", "TEST", "BETA", "SE", "CHISQ", "LOG10P", "EXTRA"
         ]
-    for group_shard in 0:4
-        subdir = only(readdir(joinpath(gwas_dir, "shard-$group_shard"), join=true))
+    for group_shard in 0:5
+        subdir = only(readdir(joinpath(top_regenie_step_2_dir, "shard-$group_shard"), join=true))
         subdir = only(readdir(subdir, join=true))
-        regenie_step_1_dir = joinpath(subdir, "call-regenie_step_1")
-        task_dirs = readdir(subdir, join=true)
-        regenie_step_2_dir = task_dirs[findfirst(x -> occursin("call-Scatter", x), task_dirs)]
-        n_phenotypes = length(readdir(regenie_step_1_dir))
-        observed_phenotypes = Set([])
-        group = ""
-        for pheno_shard in 0:n_phenotypes-1
-            # Regenie step 1
-            execution_dir = joinpath(regenie_step_1_dir, "shard-$pheno_shard", "execution")
+        regenie_step_2_dir = joinpath(subdir, "call-regenie_step_2")
+        for chr_shard in 0:2
+            execution_dir = joinpath(regenie_step_2_dir, "shard-$chr_shard", "execution")
             files = readdir(execution_dir)
-            pred_list = files[findfirst(endswith(".step1_pred.listrelative"), files)]
-            ## add group to observed gwas groups
-            group = split(pred_list, ".")[1]
-            push!(gwas_groups, group)
-            ## add phenotype to observed phenotype for that group
-            phenotype_pred_files = only(readlines(joinpath(execution_dir, pred_list)))
-            phenotype = split(phenotype_pred_files, " ")[1]
-            push!(observed_phenotypes, phenotype)
-
-            # Regenie step 2 / per chromosome
-            chrs_dir = joinpath(regenie_step_2_dir, "shard-$pheno_shard")
-            chrs_dir = joinpath(chrs_dir, only(readdir(chrs_dir)))
-            chrs_dir = joinpath(chrs_dir, only(readdir(chrs_dir)), "call-regenie_step_2")
-            n_results = 0
-            for chr_shard in 0:2
-                execution_dir = joinpath(chrs_dir, "shard-$chr_shard", "execution")
-                step_2_results = CSV.read(joinpath(execution_dir, "$group.chr$(chr_shard+1).step2_$phenotype.regenie"), DataFrame)
-                @test names(step_2_results) == results_expected_cols
-                @test nrow(step_2_results) > 0
-                n_results += nrow(step_2_results)
-            end
-
-            # Merged results
-            execution_dir = joinpath(subdir, "call-merge_regenie_chr_results", "shard-$pheno_shard", "execution")
-            results = CSV.read(joinpath(execution_dir, "regenie.results.$group.$phenotype.tsv"), DataFrame; delim="\t")
-            @test names(results) == results_expected_cols
-            @test nrow(results) > 0
-            @test n_results == nrow(results)
-
-            # Test plots
-            execution_dir = joinpath(subdir, "call-gwas_plots", "shard-$pheno_shard", "execution")
-            @test isfile(joinpath(execution_dir, "gwas.plot.$group.$phenotype.manhattan.png"))
-            @test isfile(joinpath(execution_dir, "gwas.plot.$group.$phenotype.qq.png"))
-        end
-        if group == "EAS"
-            @test observed_phenotypes == Set(["SEVERE_COVID_19", "SEVERE_PNEUMONIA"])
-        else
-            @test observed_phenotypes == Set(["SEVERE_PNEUMONIA"])
+            step_2_results_file = files[findfirst(endswith(".regenie"), files)]
+            ancestry, phenotype, chr, _ = split(step_2_results_file, ".")
+            push!(regenie_step_2_groups, ("$ancestry.$phenotype", chr))
+            step_2_results = CSV.read(joinpath(execution_dir, step_2_results_file), DataFrame)
+            @test names(step_2_results) == results_expected_cols
+            @test nrow(step_2_results) > 0
         end
     end
-    @test gwas_groups == expected_groups
+    @test regenie_step_2_groups == Set(Iterators.product(expected_groups, ["chr1", "chr2", "chr3"]))
+
+    # Test Merged results
+    merge_regenie_chr_results_dir = joinpath(results_dir, "call-merge_regenie_chr_results")
+    merged_results_groups = Set([])
+    for group_shard in 0:5
+        execution_dir = joinpath(merge_regenie_chr_results_dir, "shard-$group_shard", "execution")
+        files = readdir(execution_dir)
+        merged_results_file = files[findfirst(startswith("regenie.results"), files)]
+        _, _, ancestry, phenotype, _ = split(merged_results_file, ".")
+        push!(merged_results_groups, "$ancestry.$phenotype")
+    end
+    @test merged_results_groups == expected_groups
+
+    # Test Plots
+    plots_dir = joinpath(results_dir, "call-gwas_plots")
+    plots_groups = Set([])
+    for group_shard in 0:5
+        execution_dir = joinpath(plots_dir, "shard-$group_shard", "execution")
+        files = readdir(execution_dir)
+        plot_files = filter(endswith(".png"), files)
+        @test length(plot_files) == 2
+        _, _, ancestry, phenotype, _ = split(first(plot_files), ".")
+        push!(plots_groups, "$ancestry.$phenotype")
+    end
+    @test plots_groups == expected_groups
 
 end
 

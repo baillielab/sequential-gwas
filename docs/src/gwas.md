@@ -7,11 +7,11 @@ This WDL workflow performs a genome-wide association study across all defined su
 Depending on your phenotypes of interest, some of the input files to the workflow will be different. For a mortality study, typically only GenOMICC is used and the workflow can be run on ODAP. For a susceptibility study, typically both GenOMICC and UK Biobank participants are used and the workflow will be run on the UK Biobank RAP. As such some inputs to the workflow will either be outputs of [Combining GenOMICC Datasets](@ref) or [Merging the GenOMICC and UK Biobank Cohorts](@ref).
 
 - `docker_image` (default: olivierlabayle/genomicc:analysis_workflow): The docker image used to run the workflow.
-- `covariates_file`: TODO
-- `genotypes`: 
+- `covariates_file`: A CSV file containing the set of covariates and phenotypes. Missing values should be represented by empty fields.
+- `genotypes`: Plink bed files with potential various origins.
   - For a mortality study, these are the `genotypes.aggregated.qced.final.{bed,bim,fam}` output by [Combining GenOMICC Datasets](@ref).
   - For a susceptibility study, these are the genotypes from [Merging the GenOMICC and UK Biobank Cohorts](@ref).
-- `imputed_genotypes`:
+- `imputed_genotypes`: Plink pgen files with potential various origins but matchinf the above `genotypes`.
   - For a mortality study, these are the imputed genotypes from [Imputation Outputs](@ref).
   - For a susceptibility study, these are the imputed genotypes from [Merging the GenOMICC and UK Biobank Cohorts](@ref).
 - `groupby`: A set of variables used to stratify individuals for which a GWAS will be run independently. If empty, the full dataset is used.
@@ -22,9 +22,9 @@ Depending on your phenotypes of interest, some of the input files to the workflo
 - `ip_values` (default: "1000 50 0.05"): Values used to create independent genotypes for PCA (see [here](https://www.cog-genomics.org/plink/2.0/ld)).
 - `npcs` (default 10): Number of principal components to use to account for population structure.
 - `approx_pca` (default: true): Whether to use an approximation to the PCA algorithm (see [here](https://www.cog-genomics.org/plink/2.0/strat)).
-- `maf` (default: 0.01): Minor allele frequency used to filter variants entering the GWAS.
-- `mac` (default: 10): Minor allele count used to filter variants entering the GWAS.
-- `regenie_cv_folds` (default: 5): Number of folds for Regenie step 1.
+- `maf` (default: 0.01): Minor allele frequency threshold. This is used to filter variants for PCA and for plotting GWAS results. The association testing step is still performed across all variants.
+- `mac` (default: 10): Minor allele count used to filter variants for PCA and entering REGENIE's variants.
+- `regenie_cv_folds` (default: 5): Number of folds for Regenie step 1. Can also be `loocv`.
 - `regenie_bsize` (default 1000): Regenie block size.
 
 For Regenie's options see the [online documentation](https://rgcgithub.github.io/regenie/options/).
@@ -58,4 +58,7 @@ dx run -y \
 
 ## Outputs
 
-TODO
+Outputs will be stored in the `/gwas_outputs/` folder. There will be many files as I haven't figured out how to organise them yet. You can filter them to access, as a few examples:
+
+- plots: searching for `png`
+- group/phenotype results: searching for `regenie.results.${group_name}.${phenotype}.tsv`
