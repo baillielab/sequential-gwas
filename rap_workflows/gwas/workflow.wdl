@@ -248,6 +248,7 @@ task regenie_step_2 {
             --pfile ${input_prefix} \
             --keep ~{sample_list} \
             --max-alleles 2 \
+            --min-alleles 2 \
             --rm-dup exclude-all list \
             --make-pgen \
             --out ${input_prefix}.biallelic_frequent
