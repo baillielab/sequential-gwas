@@ -24,6 +24,8 @@ using MLJBase
 using MLJModels
 using Base.Threads
 using Dates
+using RCall
+using PGENFiles
 
 include("resources.jl")
 include("one_time_checks.jl")
