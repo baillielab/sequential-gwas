@@ -1,4 +1,4 @@
-FROM olivierlabayle/genomicc-base:scope
+FROM olivierlabayle/genomicc-base:analysis_workflow
 
 RUN apt-get clean \
     && apt-get update 
