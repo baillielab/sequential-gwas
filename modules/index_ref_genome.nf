@@ -9,6 +9,6 @@ process IndexReferenceGenome {
 
     script:
         """
-        /opt/miniforge3/bin/mamba run -n bcftools_env samtools faidx ${reference_genome}
+        /opt/miniforge3/bin/conda run -n bcftools_env samtools faidx ${reference_genome}
         """
 }

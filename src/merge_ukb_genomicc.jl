@@ -1,3 +1,20 @@
+function get_severe_infections_map()
+    severe_infections_map = Dict{Any, Any}(
+        "covid-19" => (is_severe_covid_19, "SEVERE_COVID_19"),
+    )
+    for (raw_name, clean_name) in [
+        "influenza virus" => "SEVERE_INFLUENZA",
+        "pneumonia with radiographic changes at presentation to critical care" => "SEVERE_PNEUMONIA",
+        "pancreatitis of any aetiology" => "SEVERE_PANCREATITIS",
+        "rsv (respiratory syncytial virus) infection" => "SEVERE_RSV",
+        "soft tissue infections causing systemic sepsis" => "SEVERE_SOFT_TISSUE_INFECTION",
+        "ecls" => "SEVERE_ECLS",
+        "reaction to vaccination" => "SEVERE_REACTION_TO_VACCINATION"]
+        severe_infections_map[raw_name] = (row -> is_severe_infection(row, raw_name), clean_name)
+    end
+    return severe_infections_map
+end
+
 format_chromosome!(bim) =
     bim.CHR_CODE = replace.(string.(bim.CHR_CODE), "chr" => "")
 
@@ -88,37 +105,87 @@ function align_ukb_variants_with_kgp_and_keep_unrelated(ukb_bed_prefix, kgp_bed_
     return 0
 end
 
+"""
+    is_severe_covid_19(row)
+
+A specific set of rules to process the severity of COVID-19 based on the cohort and diagnosis.
+"""
+function is_severe_covid_19(row)
+    if row.PRIM_DIAGNOSIS_ODAP == "covid-19"
+        cohort = row.COHORT
+        if cohort == "genomicc_severe"
+            return 1
+        elseif cohort == "gen_int_pakistan"
+            return 1
+        elseif cohort == "genomicc_mild"
+            return 0
+        elseif cohort == "genomicc_react"
+            return 0
+        elseif cohort == "isaric4c"
+            if row.ISARIC_MAX_SEVERITY_SCORE == "NA"
+                return missing
+            else
+                score = parse(Int, row.ISARIC_MAX_SEVERITY_SCORE)
+                return score >= 4 ? 1 : 0
+            end
+        else
+            throw(ArgumentError("Unknown cohort: $cohort"))
+        end
+    else
+        return missing
+    end
+end
+
+"""
+    is_severe_infection(row, infection_name)
+
+An individual is considered severe for an infection if it had the infection and is part of the genomicc_severe cohort. 
+If it does not have the infection it is ignored.
+If an individual has the infection but is not part of genomicc_severe, we do not know where they come from and how to process them so we throw.
+"""
+function is_severe_infection(row, infection_name)
+    if row.PRIM_DIAGNOSIS_ODAP == infection_name
+        cohort = row.COHORT
+        if cohort == "genomicc_severe" || cohort == "gen_int_pakistan"
+            return 1
+        else
+            throw(ArgumentError("Unknown cohort: $cohort, while processing infection: $infection_name"))
+        end
+    else
+        return missing
+    end
+end
+
 function merge_ukb_genomicc_covariates(
     genomicc_covariates_file,
-    genomicc_inferred_covariates_file,
     ukb_covariates_file,
-    ukb_inferred_covariates_file,
-    file_with_eids_to_exclude,;
+    ukb_inferred_covariates_file;
     output_file="ukb_genomicc.covariates.csv"
     )
+    severe_infections_map = get_severe_infections_map()
+    infection_names = last.(values(severe_infections_map))
     # Process GenOMICC covariates
     genomicc_covariates = CSV.read(genomicc_covariates_file, DataFrame)
-    genomicc_inferred_covariates = CSV.read(genomicc_inferred_covariates_file, DataFrame)
-    genomicc_all_covariates = innerjoin(
-        genomicc_covariates, 
-        genomicc_inferred_covariates, 
-        on=:genotype_file_id => :IID,
+    ## covid-19 values may be prefixed by cohort
+    genomicc_covariates.PRIM_DIAGNOSIS_ODAP = replace.(genomicc_covariates.PRIM_DIAGNOSIS_ODAP, 
+        "isaric4c covid-19" => "covid-19",
+        "react covid-19" => "covid-19",
+        "mild covid-19" => "covid-19",
     )
-    DataFrames.select!(genomicc_all_covariates,
-        :genotype_file_id => :FID,
-        :genotype_file_id => :IID,
-        :age_years => process_genomicc_age => :AGE,
-        :sex => process_genomicc_sexes => :SEX,
-        :ANCESTRY_ESTIMATE,
-        :AFR,
-        :SAS,
-        :EAS,
-        :AMR,
-        :EUR
+    ## Process infections
+    for (_, (fn, infection_name)) in severe_infections_map
+        genomicc_covariates[!, infection_name] = map(fn, eachrow(genomicc_covariates))
+    end
+    DataFrames.select!(genomicc_covariates,
+        :FID => :FID,
+        :IID => :IID,
+        :COHORT => :COHORT,
+        :AGE_YEARS_AT_RECRUITMENT => :AGE,
+        :SEX_SELF_REPORTED => process_genomicc_sexes => :SEX,
+        :SUPERPOPULATION,
+        Symbol.(infection_names)...
     )
-    genomicc_all_covariates.COHORT = fill(:GENOMICC, nrow(genomicc_all_covariates))
     # Process UKB covariates
-    table_with_eids_to_exclude = CSV.read(file_with_eids_to_exclude, DataFrame, select=[:eid])
     ukb_covariates = CSV.read(ukb_covariates_file, DataFrame)
     ukb_inferred_covariates = CSV.read(ukb_inferred_covariates_file, DataFrame)
     ukb_all_covariates = innerjoin(
@@ -126,22 +193,19 @@ function merge_ukb_genomicc_covariates(
         ukb_inferred_covariates,
         on=:eid => :IID
     )
-    filter!(:eid => ∉(table_with_eids_to_exclude.eid), ukb_all_covariates)
     DataFrames.select!(ukb_all_covariates,
         :eid => :FID,
         :eid => :IID,
         Symbol("34-0.0") => process_ukb_age => :AGE,
         Symbol("22001-0.0") => :SEX,
-        :Superpopulation => :ANCESTRY_ESTIMATE,
-        :AFR,
-        :SAS,
-        :EAS,
-        :AMR,
-        :EUR
+        :Superpopulation => :SUPERPOPULATION,
     )
-    ukb_all_covariates.COHORT = fill(:UKB, nrow(ukb_all_covariates))
+    for (_, (_, infection_name)) in severe_infections_map
+        ukb_all_covariates[!, infection_name] = zeros(Int, nrow(ukb_all_covariates))
+    end
+    ukb_all_covariates.COHORT = fill(:ukbiobank, nrow(ukb_all_covariates))
     # Concatenate both datasets
-    all_covariates = vcat(genomicc_all_covariates, ukb_all_covariates)
+    all_covariates = vcat(genomicc_covariates, ukb_all_covariates)
     # Write to output file
     CSV.write(output_file, all_covariates, delim="\t")
     return 0
@@ -163,26 +227,33 @@ function make_ukb_genomicc_merge_report(;kwargs...)
     )
 end
 
-function make_ukb_bgen_qc_and_r2_filter_files(prefix; threshold=0.9, output=string(prefix, ".extract_list.txt"))
-    variants_info = CSV.read(string(prefix, ".tsv"), DataFrame; delim='\t', header=["CHROM", "POS", "ID", "REF", "ALT", "R2"])
-    pvar = CSV.read(string(prefix, ".pvar"), DataFrame; delim='\t')
-    # Check REF, ALT, POS alleles match
-    @assert all(variants_info.REF .== pvar.REF)
-    @assert all(variants_info.ALT .== pvar.ALT)
-    @assert all(variants_info.POS .== pvar.POS)
-    # Write the variants_info with sufficient R2 to a file
-    open(output, "w") do f
-        println(filter(:R2 => >=(threshold), variants_info).ID)
-        for id in filter(:R2 => >=(threshold), variants_info).ID
-            println(f, id)
-        end
-    end
-    # Update the unknown ID column in the pvar file
-    pvar.ID = variants_info.ID
-    tmpdir = mktempdir()
-    tmpfile = joinpath(tmpdir, "temp.pvar")
-    CSV.write(tmpfile, pvar; delim='\t', writeheader=true)
-    mv(tmpfile, string(prefix, ".pvar"), force=true)
+function fill_chr_pvar_with_variant_id(pvar_file, variants_info_file)
+    # Read variants info and pvar files
+    pvar = CSV.read(pvar_file, DataFrame; delim='\t')
+    variants_info = CSV.read(variants_info_file, DataFrame; delim='\t', header=["CHROM", "POS", "ID"])
+    # Make mapping from position to variant ID
+    variants_info_dict = Dict{Int, String}(v.POS => v.ID for v in Tables.namedtupleiterator(variants_info))
+    # Update pvar with variant IDs
+    pvar.ID = map(pos -> variants_info_dict[pos], pvar.POS)
+    # Write updated pvar
+    CSV.write(pvar_file, pvar; delim='\t', writeheader=true)
 
     return 0
+end
+
+function make_ukb_individuals_list(covariates_file, critical_table_file; output="ukb_eids_to_keep.txt", max_samples=nothing)
+    # Read all IDs and critical IDs
+    all_ids = unique(CSV.read(covariates_file, DataFrame; select=[:eid]).eid)
+    critical_ids = unique(CSV.read(critical_table_file, DataFrame; select=[:eid]).eid)
+    # Filter out critical IDs from all IDs and limit to max_samples if specified
+    remaining_ids = setdiff(all_ids, critical_ids)
+    if !isnothing(max_samples)
+        remaining_ids = remaining_ids[1:max_samples]
+    end
+    # Write remaining eids
+    open(output, "w") do f
+        for id in remaining_ids
+            println(f, string(id, "\t", id))
+        end
+    end
 end

@@ -24,6 +24,8 @@ using MLJBase
 using MLJModels
 using Base.Threads
 using Dates
+using RCall
+using PGENFiles
 
 include("resources.jl")
 include("one_time_checks.jl")
@@ -36,7 +38,7 @@ include("relatedness.jl")
 include("pca_qc.jl")
 include("ancestry.jl")
 include("covariates.jl")
-include("gwas_plots.jl")
+include("gwas.jl")
 include("gvcf_genotyping.jl")
 include("imputation.jl")
 include("merge_ukb_genomicc.jl")
