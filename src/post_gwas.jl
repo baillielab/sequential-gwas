@@ -1,4 +1,4 @@
-using CSV, DataFrames, PGENFiles, RCall, Statistics
+using CSV, DataFrames, PGENFiles, RCall, Statistics, CairoMakie
 
 function tag_variant_id_missing_from_gwas!(pvar, gwas_results)
     # Map GWAS variants to their alleles
@@ -153,7 +153,7 @@ function get_ld_variants(variant_id, pgen_prefix; ld_window_kb=1000, ld_window_r
     return CSV.read(out_prefix * ".vcor", DataFrame, delim='\t')
 end
 
-update_credible_sets!(cs_vector, variant_idx::Int, cs::Symbol) = cs_vector[variant_idx] = cs
+update_credible_sets!(cs_vector, variant_idx::Int, cs::Symbol) = cs_vector[variant_idx] = parse(Int, replace(string(cs), "L" => ""))
 
 function update_credible_sets!(cs_vector, variant_idxs::AbstractVector, cs::Symbol)
     for variant_idx in variant_idxs
@@ -182,7 +182,6 @@ function build_LD_clumps(
     clump_id_field = "ID",
     clump_pval_field = "LOG10P",
     allele_1_field = "ALLELE_1",
-    finemapping_window_size=100,
     ld_window_kb=1000,
     ld_window_r2=0.1,
     n_causal = 10
@@ -225,8 +224,13 @@ function build_LD_clumps(
         y = get_phenotype(covariates_file, sample_list, phenotype)
         susie_results = susie_finemap(X, y; n_causal=n_causal)
         variants_info.PIP = susie_results[:pip]
-        variants_info.CS = Vector{Union{Missing, Symbol}}(missing, size(X, 2))
+        variants_info.CS = zeros(Int, size(X, 2))
         update_credible_sets!(variants_info.CS, susie_results)
+        variants_info = innerjoin(
+            variants_info, 
+            gwas_results[!, [:ID, :ALLELE0, :ALLELE1, :A1FREQ, :N, :TEST, :BETA, :SE, :CHISQ, :LOG10P]], 
+            on=:ID
+        )
         CSV.write("$(group).$(phenotype).$(clump.ID).variants_info.tsv", variants_info)
     end
 
@@ -248,6 +252,8 @@ clump_pval_field = "LOG10P"
 allele_1_field = "ALLELE_1"
 finemapping_window_size = 100
 n_causal = 10
+ld_window_kb=1000
+ld_window_r2=0.1
 output = "EUR.SEVERE_COVID_19.chr_1.clumps.sig.tsv"
 
 sig_clumps = build_LD_clumps(
