@@ -586,7 +586,7 @@ function cli_settings()
         "--program"
             arg_type = String
             help = "Ancestry estimation program (scope or admixture)."
-            default = "admixture"
+            default = "scope"
     end
 
     @add_arg_table! s["plot-pca"] begin

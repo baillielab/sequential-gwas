@@ -97,6 +97,7 @@ These are already set if you are using the `odap` profile.
 - `PCA_APPROX` (default: true): Whether PCA is performed via approximation [see](https://www.cog-genomics.org/plink/2.0/strat)
 - `FILTER_HIGH_LOADINGS_VARIANTS` (default: false): Whether to drop variants with high PCA loadings. If the loadings plots exhibits a high peak you may want to turn that on.
 - `ANCESTRY_THRESHOLD` (default: 0.8): For each individual, the most likely ancestry estimate should be greater than this threshold otherwise the individual is marked as admixed.
+- `ANCESTRY_PROGRAM` (default: scope): Program to use for ancestry estimation. Either `scope` or `admixture`.
 
 ### Output Directories Parameters
 

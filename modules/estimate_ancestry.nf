@@ -21,6 +21,7 @@ process EstimateAncestry {
             ${input_prefix} \
             ${pedigree} \
             --output=${output} \
-            --threshold=${params.ANCESTRY_THRESHOLD}
+            --threshold=${params.ANCESTRY_THRESHOLD} \
+            --program=${params.ANCESTRY_PROGRAM}
         """
 }
