@@ -129,9 +129,10 @@ end
 function susie_finemap(X, y; n_causal=10)
     @rput X
     @rput y
+    @rput n_causal
     R"""
     library(susieR)
-    fitted = susie(X, y, L=$n_causal)
+    fitted = susie(X, y, L=n_causal)
     """
     return @rget fitted
 end
