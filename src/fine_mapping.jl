@@ -1,5 +1,3 @@
-using CSV, DataFrames, PGENFiles, RCall, Statistics, CairoMakie
-
 function tag_variant_id_missing_from_gwas!(pvar, gwas_results)
     # Map GWAS variants to their alleles
     gwas_ids_to_alleles = Dict(row.ID => Set([row.ALLELE0, row.ALLELE1]) for row in Tables.namedtupleiterator(select(gwas_results, [:ID, :ALLELE0, :ALLELE1])))
@@ -161,19 +159,62 @@ function update_credible_sets!(cs_vector, variant_idxs::AbstractVector, cs::Symb
     end
 end
 
-
 function update_credible_sets!(cs_vector, susie_results)
     for (cs, variant_idxs) in susie_results[:sets][:cs]
         update_credible_sets!(cs_vector, variant_idxs, cs)
     end
 end
 
-function build_LD_clumps(
+"""
+    finemap_significant_regions(
+        gwas_results_file,
+        pgen_prefix,
+        covariates_file,
+        sample_file;
+        output_prefix = "clumps.sig.tsv",
+        min_sig_clump_size = 3,
+        lead_pvalue = 5e-8,
+        p2_pvalue = 5e-5,
+        r2_threshold = 0.5,
+        clump_kb = 250,
+        clump_id_field = "ID",
+        clump_pval_field = "LOG10P",
+        allele_1_field = "ALLELE_1",
+        ld_window_kb=1000,
+        ld_window_r2=0.1,
+        n_causal = 10
+        )
+
+This function performs fine-mapping of significant regions identified from GWAS results.
+
+1. Identifies variants from the PGEN fileset that have gone through GWAS (some may not due to MAF/MAC/...)
+2. Identify clumps of significant variants from the GWAS results to tag independent association regions
+3. Finemap these regions using SuSiE
+
+# Arguments
+- `gwas_results_file::String`: Path to the GWAS results file (TSV format).
+- `pgen_prefix::String`: Prefix for the PGEN fileset (without .pgen extension).
+- `covariates_file::String`: Path to the covariates file (TSV format).
+- `sample_file::String`: Path to the sample IDs file used to generate the GWAS results.
+- `output_prefix::String`: Prefix to output the significant clumps (TSV format).
+- `min_sig_clump_size::Int`: Minimum number of variants in a clump to be considered significant.
+- `lead_pvalue::Float64`: P-value threshold for lead variants in clump.
+- `p2_pvalue::Float64`: Secondary p-value threshold for variants in clump.
+- `r2_threshold::Float64`: LD r² threshold for clumping.
+- `clump_kb::Int`: Distance in kb for clumping.
+- `clump_id_field::String`: Column name in GWAS results for variant IDs.
+- `clump_pval_field::String`: Column name in GWAS results for p-values.
+- `allele_1_field::String`: Column name in GWAS results for allele 1.
+- `ld_window_kb::Int`: Window size in kb for LD calculation around lead variant to define the fine mapping region.
+- `ld_window_r2::Float64`: r² threshold for including variants in LD window to define the fine mapping region.
+- `n_causal::Int`: Number of causal variants to assume in SuSiE fine-mapping.
+"""
+function finemap_significant_regions(
     gwas_results_file,
     pgen_prefix,
     covariates_file,
     sample_file;
-    output = "clumps.sig.tsv",
+    output_prefix = "finemapping_results",
     min_sig_clump_size = 3,
     lead_pvalue = 5e-8,
     p2_pvalue = 5e-5,
@@ -205,7 +246,7 @@ function build_LD_clumps(
     @info "Finding clumps in GWAS-matched PGEN fileset"
     sig_clumps = write_significant_clumps(gwas_matched_pgen_prefix, gwas_results_file;
         min_sig_clump_size = min_sig_clump_size,
-        output = output,
+        output = string(output_prefix, ".clumps.tsv"),
         lead_pvalue = lead_pvalue,
         p2_pvalue = p2_pvalue,
         r2_threshold = r2_threshold,
@@ -217,62 +258,27 @@ function build_LD_clumps(
 
     sample_list = getindex.(split.(readlines(sample_file), "\t"), 2)
     
+    # Finemap each clump
+    finemapping_results = []
     for clump in eachrow(sig_clumps)
-        @info "Processing clump: $(clump.ID)"
+        @info "Fine Mapping clump led by : $(clump.ID)"
         ld_variants = get_ld_variants(clump.ID, gwas_matched_pgen_prefix; ld_window_kb=ld_window_kb, ld_window_r2=ld_window_r2)
         X, variants_info = genotypes_from_pgen(gwas_matched_pgen_prefix, ld_variants, sample_list)
         y = get_phenotype(covariates_file, sample_list, phenotype)
         susie_results = susie_finemap(X, y; n_causal=n_causal)
         variants_info.PIP = susie_results[:pip]
         variants_info.CS = zeros(Int, size(X, 2))
+        variants_info.CLUMP_ID = fill(clump.ID, size(X, 2))
         update_credible_sets!(variants_info.CS, susie_results)
         variants_info = innerjoin(
             variants_info, 
             gwas_results[!, [:ID, :ALLELE0, :ALLELE1, :A1FREQ, :N, :TEST, :BETA, :SE, :CHISQ, :LOG10P]], 
             on=:ID
         )
-        CSV.write("$(group).$(phenotype).$(clump.ID).variants_info.tsv", variants_info)
+        push!(finemapping_results, variants_info)
     end
+    CSV.write(string(output_prefix, ".tsv"), vcat(finemapping_results...))
 
-    return sig_clumps
+    return 0
 end
-
-
-gwas_results_file = "regenie.results.EUR.SEVERE_COVID_19.tsv"
-pgen_prefix = "genomicc_ukb.merged.imputed.chr_1"
-sample_file = "EUR.SEVERE_COVID_19.chr1.step2_SEVERE_COVID_19.regenie.ids"
-covariates_file = "EUR.SEVERE_COVID_19.merged_covariates_and_pcs.tsv"
-min_sig_clump_size = 5
-lead_pvalue = 5e-8
-p2_pvalue = 5e-5
-r2_threshold = 0.5
-clump_kb = 250
-clump_id_field = "ID"
-clump_pval_field = "LOG10P"
-allele_1_field = "ALLELE_1"
-finemapping_window_size = 100
-n_causal = 10
-ld_window_kb=1000
-ld_window_r2=0.1
-output = "EUR.SEVERE_COVID_19.chr_1.clumps.sig.tsv"
-
-sig_clumps = build_LD_clumps(
-    gwas_results_file,
-    pgen_prefix,
-    covariates_file,
-    sample_file;
-    output = output,
-    min_sig_clump_size = min_sig_clump_size,
-    lead_pvalue = 5e-8,
-    p2_pvalue = 5e-5,
-    r2_threshold = 0.5,
-    clump_kb = 250,
-    clump_id_field = "ID",
-    clump_pval_field = "LOG10P",
-    allele_1_field = "ALLELE_1"
-)
-
-window_size = 100
-position = 155164919
-gwas_matched_pvar = CSV.read(string(gwas_matched_pgen_prefix, ".pvar"), DataFrame; delim='\t', comment="##")
 

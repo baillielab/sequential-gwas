@@ -21,27 +21,34 @@ using YAML
 using GeneticsMakie
 using JSON
 using MLJBase
-using MLJModels
 using Base.Threads
 using Dates
 using RCall
 using PGENFiles
+using MLJTransforms
 
-include("resources.jl")
+# Legacy files
 include("one_time_checks.jl")
 include("mock.jl")
-include("cli.jl")
+# Common files
+include("ancestry.jl")
 include("read_write.jl")
+# Not yet categorised files
+include("resources.jl")
+include("cli.jl")
 include("report.jl")
 include("qc_from_kgp.jl")
 include("relatedness.jl")
 include("pca_qc.jl")
-include("ancestry.jl")
+include("gvcf_genotyping.jl")
+# Imputation Files
+include("imputation.jl")
+# Merging UKB and GenOMICC Files
+include("merge_ukb_genomicc.jl")
+# GWAS files
 include("covariates.jl")
 include("gwas.jl")
-include("gvcf_genotyping.jl")
-include("imputation.jl")
-include("merge_ukb_genomicc.jl")
+include("fine_mapping.jl")
 
 export julia_main
 
