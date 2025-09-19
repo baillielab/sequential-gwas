@@ -10,7 +10,6 @@ process EstimateAncestry {
         path pedigree
 
     output:
-        path("${input_prefix}.*.{P,Q}"), emit: pq_files
         path("${output}"), emit: ancestry
 
     script:

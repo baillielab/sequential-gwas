@@ -29,7 +29,7 @@ workflow merge_ukb_and_genomicc {
         String qc_hwe_k = "0.001"
         String ip_values = "1000 50 0.05"
         String maf = "0.01"
-        String ancestry_threshold = "0.8"
+        String ancestry_threshold = "0.5"
         String relatedness_degree = "3"
         String r2_threshold = "0.9"
         String julia_threads = "auto"
@@ -577,7 +577,7 @@ task estimate_ukb_ancestry_from_kgp {
         File fam_file
         String output_filename = "ukb.ancestry_estimate.csv"
         String ancestry_program = "scope"
-        String ancestry_threshold = "0.8"
+        String ancestry_threshold = "0.5"
         String julia_cmd
     }
 
