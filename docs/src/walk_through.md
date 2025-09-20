@@ -5,7 +5,7 @@ In this section we discuss how to regenerate results from an analysis from scrat
 ## Step 1: Aggregating Genetic Datasets
 
 - workflow: [Combining GenOMICC Datasets](@ref)
-- platform: [Working with ODAP](@ref)
+- platform: [ODAP](@ref)
 
 ## Step 2: Imputation of Genotypes
 
@@ -15,9 +15,9 @@ In this section we discuss how to regenerate results from an analysis from scrat
 ## Step 3: Merging GenOMICC and the UK Biobank
 
 - workflow: [Merging the GenOMICC and UK Biobank Cohorts](@ref)
-- platform: [Working with the UKB RAP](@ref)
+- platform: [UKB RAP](@ref)
 
 ## Step 4: Analysis
 
 - workflow: Todo
-- platform: [Working with the UKB RAP](@ref)
+- platform: [UKB RAP](@ref)

@@ -26,7 +26,7 @@ nextflow run main.nf -entry Imputation -profile eddie -resume -with-report -with
 !!! note "Crash"
     The `TOPMedImputation` process waits for TOPMed imputation jobs to finish, which might be longer than the maximum eddie job duration (48h) depending on the server's queue size. In that case, the workflow will crash but all the TOPMed jobs should have been submitted. Resuming the workflow will thus not work and it will try to resubmit new jobs. In order to bypass this behaviour you can pass an optional `TOPMED_JOBS_LIST` to proceed directly to the download stage. These job ids can be obtained from the TOPMed urls.
 
-## Outputs
+## Imputation Outputs
 
 All outputs are produced in `PUBLISH_DIR` (defaults to `results`), the main outputs of the workflow are:
 

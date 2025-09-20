@@ -10,7 +10,6 @@ process EstimateAncestry {
         path pedigree
 
     output:
-        path("${input_prefix}.*.{P,Q}"), emit: pq_files
         path("${output}"), emit: ancestry
 
     script:
@@ -21,6 +20,7 @@ process EstimateAncestry {
             ${input_prefix} \
             ${pedigree} \
             --output=${output} \
-            --threshold=${params.ANCESTRY_THRESHOLD}
+            --threshold=${params.ANCESTRY_THRESHOLD} \
+            --program=${params.ANCESTRY_PROGRAM}
         """
 }
