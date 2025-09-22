@@ -7,9 +7,14 @@ function cli_settings()
     )
 
     @add_arg_table! s begin
+        "finemap"
+            action = :command
+            help = "Runs fine-mapping analysis."
+
         "gwas-plots"
             action = :command
             help = "Generates GWAS plots."
+
         "pca-qc"
             action = :command
             help = "Runs PCAb-ased QC on genotypes to exclude outlier variants."
@@ -82,7 +87,7 @@ function cli_settings()
             action = :command
             help = "Downloads a file from TOPMed."
 
-        "merge-regenie-chr-results"
+        "merge-chr-results"
             action = :command
             help = "Merges REGENIE results from different chromosomes."
         
@@ -105,6 +110,65 @@ function cli_settings()
         "make-ukb-individuals-list"
             action = :command
             help = "Generates a list of UKB individuals to be used in the workflow."
+    end
+
+    @add_arg_table! s["finemap"] begin
+        "gwas-results-file"
+            arg_type = String
+            required = true
+            help = "Path to the GWAS results file."
+        "pgen-prefix"
+            arg_type = String
+            required = true
+            help = "Prefix for the PGEN fileset (without .pgen extension)."
+        "covariates-file"
+            arg_type = String
+            required = true
+            help = "Path to the covariates file (TSV format)."
+        "sample-file"
+            arg_type = String
+            required = true
+            help = "Path to the sample IDs file used to generate the GWAS results."
+        "--Xtype"
+            arg_type = String
+            help = "Type of genotype data to use for fine-mapping, either `:dosages` or `:genotypes`."
+            default = "dosages"
+        "--output-prefix"
+            arg_type = String
+            help = "Prefix to output the significant clumps (TSV format)."
+            default = "finemapping_results"
+        "--min-sig-clump-size"
+            arg_type = Int
+            help = "Minimum number of variants in a clump to be considered significant."
+            default = 3
+        "--lead-pvalue"
+            arg_type = Float64
+            help = "P-value threshold for lead variants in clump."
+            default = 5e-8
+        "--p2-pvalue"
+            arg_type = Float64
+            help = "P-value threshold for secondary variants in clump."
+            default = 1e-5
+        "--r2-threshold"
+            arg_type = Float64
+            help = "R2 threshold to consider variants in LD for clumping."
+            default = 0.5
+        "--clump-kb"
+            arg_type = Int
+            help = "Window size (in kb) to consider variants in LD for clumping."
+            default = 250
+        "--n-causal"
+            arg_type = Int
+            help = "Number of causal variants to assume in fine-mapping."
+            default = 10
+        "--ld-window-kb"
+            arg_type = Int
+            help = "Window size (in kb) to compute LD matrix for fine-mapping."
+            default = 1000
+        "--ld-window-r2"
+            arg_type = Float64
+            help = "R2 threshold to include variants in the LD matrix for fine-mapping."
+            default = 0.3
     end
 
     @add_arg_table! s["make-ukb-individuals-list"] begin
@@ -204,15 +268,19 @@ function cli_settings()
             default = 3
     end
 
-    @add_arg_table! s["merge-regenie-chr-results"] begin
-        "merge-list"
+    @add_arg_table! s["merge-chr-results"] begin
+        "gwas-merge-list"
             arg_type = String
             required = true
             help = "File with list of files to be merged."
-        "--output"
+        "finemapping-merge-list"
+            arg_type = String
+            required = true
+            help = "File with list of finemapping files to be merged."
+        "--output-prefix"
             arg_type = String
             help = "Output path"
-            default = "regenie.results.tsv"
+            default = "results.all_chr"
     end
 
     @add_arg_table! s["download-topmed-file"] begin
@@ -940,9 +1008,11 @@ function julia_main()::Cint
             md5_file=cmd_settings["md5-file"],
             refresh_rate=cmd_settings["refresh-rate"]
             )
-    elseif cmd == "merge-regenie-chr-results"
-        merge_regenie_chr_results(cmd_settings["merge-list"];
-            output=cmd_settings["output"]
+    elseif cmd == "merge-chr-results"
+        merge_chr_results(
+            cmd_settings["gwas-merge-list"],
+            cmd_settings["finemapping-merge-list"];
+            output_prefix=cmd_settings["output-prefix"]
         )
     elseif cmd == "align-ukb-variants-with-kgp-and-keep-unrelated"
         align_ukb_variants_with_kgp_and_keep_unrelated(
@@ -976,6 +1046,23 @@ function julia_main()::Cint
             cmd_settings["critical-table-file"];
             output=cmd_settings["output"],
             max_samples=cmd_settings["max-samples"]
+        )
+    elseif cmd == "finemap"
+        finemap_significant_regions(
+            cmd_settings["gwas-results-file"],
+            cmd_settings["pgen-prefix"],
+            cmd_settings["covariates-file"],
+            cmd_settings["sample-file"];
+            Xtype=cmd_settings["Xtype"],
+            output_prefix=cmd_settings["output-prefix"],
+            min_sig_clump_size=cmd_settings["min-sig-clump-size"],
+            lead_pvalue=cmd_settings["lead-pvalue"],
+            p2_pvalue=cmd_settings["p2-pvalue"],
+            r2_threshold=cmd_settings["r2-threshold"],
+            clump_kb=cmd_settings["clump-kb"],
+            n_causal=cmd_settings["n-causal"],
+            ld_window_kb=cmd_settings["ld-window-kb"],
+            ld_window_r2=cmd_settings["ld-window-r2"]
         )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))

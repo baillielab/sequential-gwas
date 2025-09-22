@@ -17,17 +17,29 @@ workflow gwas {
         Array[String] groupby = []
         Array[String] covariates = ["AGE", "SEX", "AGE_x_AGE", "AGE_x_SEX"]
         Array[String] phenotypes = ["SEVERE_COVID_19"]
-        String min_cases_controls = "10"
         String julia_use_sysimage = "true"
         String julia_threads = "auto"
         File high_ld_regions = "assets/exclude_b38.txt"
+        # QC parameters
+        String min_cases_controls = "10"
         String npcs = "10"
         String approx_pca = "true"
         String maf = "0.01"
         String mac = "10"
         String ip_values = "1000 50 0.05"
+        # Regenie parameters
         String regenie_cv_folds = "5"
         String regenie_bsize = "1000"
+        # Finemapping parameters
+        String Xtype = "dosages" # or "genotypes"
+        String min_sig_clump_size = "3"
+        String lead_pvalue = "5e-8"
+        String p2_pvalue = "1e-5"
+        String r2_threshold = "0.1"
+        String clump_kb = "1000"
+        String n_causal = "10"
+        String ld_window_kb = "1000"
+        String ld_window_r2 = "0.1"
     }
 
     # Get generic Julia command
@@ -142,15 +154,40 @@ workflow gwas {
                     bsize = regenie_bsize,
                     mac = mac
             }
+
+            # Finemap results for the chromosome
+            call finemapping {
+                input:
+                    docker_image = docker_image,
+                    julia_cmd = get_julia_cmd.julia_cmd,
+                    gwas_results = regenie_step_2.regenie_step2,
+                    pgen_file = imputed_chr_fileset.pgen,
+                    pvar_file = imputed_chr_fileset.pvar,
+                    psam_file = imputed_chr_fileset.psam,
+                    chr = imputed_chr_fileset.chr,
+                    covariates_file = merge_covariates_and_pcs.covariates_and_pcs,
+                    sample_file = regenie_step_2.regenie_step2_ids,
+                    Xtype = Xtype,
+                    group_name = group_name,
+                    min_sig_clump_size = min_sig_clump_size,
+                    lead_pvalue = lead_pvalue,
+                    p2_pvalue = p2_pvalue,
+                    r2_threshold = r2_threshold,
+                    clump_kb = clump_kb,
+                    n_causal = n_causal,
+                    ld_window_kb = ld_window_kb,
+                    ld_window_r2 = ld_window_r2
+            }
         }
 
         # Merge Regenie Step 2 results
-        call merge_regenie_chr_results {
+        call merge_chr_results {
             input:
                 docker_image = docker_image,
                 group_name = group_name,
                 julia_cmd = get_julia_cmd.julia_cmd,
-                regenie_step2_files = flatten(regenie_step_2.regenie_step2)
+                regenie_step2_files = regenie_step_2.regenie_step2,
+                finemapping_results = finemapping.finemapping_results
         }
 
         # Generate GWAS plots
@@ -158,7 +195,8 @@ workflow gwas {
             input:
                 docker_image = docker_image,
                 julia_cmd = get_julia_cmd.julia_cmd,
-                results = merge_regenie_chr_results.merged_results,
+                gwas_results = merge_chr_results.gwas_results,
+                finemapping_results = merge_chr_results.finemapping_results,
                 maf = maf
         }
     }
@@ -168,13 +206,14 @@ task gwas_plots {
     input {
         String docker_image
         String julia_cmd
-        File results
+        File gwas_results
+        File finemapping_results
         String maf = "0.01"
     }
 
     command <<<
         ~{julia_cmd} gwas-plots \
-            ~{results} \
+            ~{gwas_results} \
             --maf=~{maf} \
             --output-prefix=gwas.plot
     >>>
@@ -189,31 +228,93 @@ task gwas_plots {
     }
 }
 
-task merge_regenie_chr_results {
+task merge_chr_results {
     input {
         String docker_image
         String group_name
         String julia_cmd
         Array[File] regenie_step2_files
+        Array[File] finemapping_results
     }
 
     command <<<
         for f in ~{sep=" " regenie_step2_files}; do
             echo "${f}"
-        done > merge_list.txt
+        done > gwas_merge_list.txt
 
-        ~{julia_cmd} merge-regenie-chr-results \
-            merge_list.txt \
-            --output=regenie.results.~{group_name}.tsv
+        for f in ~{sep=" " finemapping_results}; do
+            echo "${f}"
+        done >> finemapping_merge_list.txt
+
+        ~{julia_cmd} merge-chr-results \
+            gwas_merge_list.txt \
+            finemapping_merge_list.txt \
+            --output-prefix=results.all_chr.~{group_name}
     >>>
 
     output {
-        File merged_results = "regenie.results.${group_name}.tsv"
+        File gwas_results = "results.all_chr.~{group_name}.gwas.tsv"
+        File finemapping_results = "results.all_chr.~{group_name}.finemapping.tsv"
     }
 
     runtime {
         docker: docker_image
         dx_instance_type: "mem2_ssd1_v2_x8"
+    }
+}
+
+task finemapping {
+    input {
+        String docker_image
+        String julia_cmd
+        File gwas_results
+        File pgen_file
+        File pvar_file
+        File psam_file
+        String chr
+        File covariates_file
+        File sample_file
+        String Xtype = "dosages" # or "genotypes"
+        String group_name
+        String min_sig_clump_size = "3"
+        String lead_pvalue = "5e-8"
+        String p2_pvalue = "1e-5"
+        String r2_threshold = "0.1"
+        String clump_kb = "1000"
+        String n_causal = "10"
+        String ld_window_kb = "1000"
+        String ld_window_r2 = "0.1"
+    }
+
+    command <<<
+
+        pgen_prefix=$(dirname "~{pgen_file}")/$(basename "~{pgen_file}" .pgen)
+
+        ~{julia_cmd} finemap \
+            ~{gwas_results} \
+            ${pgen_prefix} \
+            ~{covariates_file} \
+            ~{sample_file} \
+            --Xtype=~{Xtype} \
+            --output-prefix=finemapping.~{group_name}.chr~{chr} \
+            --min-sig-clump-size=~{min_sig_clump_size} \
+            --lead-pvalue=~{lead_pvalue} \
+            --p2-pvalue=~{p2_pvalue} \
+            --r2-threshold=~{r2_threshold} \
+            --clump-kb=~{clump_kb} \
+            --n-causal=~{n_causal} \
+            --ld-window-kb=~{ld_window_kb} \
+            --ld-window-r2=~{ld_window_r2}
+    >>>
+
+    output {
+        File finemapping_results = "finemapping.${group_name}.chr${chr}.tsv"
+        File clumping_results = "finemapping.${group_name}.chr${chr}.clumps.tsv"
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem2_ssd1_v2_x16"
     }
 }
 
@@ -259,6 +360,7 @@ task regenie_step_2 {
 
         # phenotype from group_name
         phenotype=$(echo ~{group_name} | cut -d'.' -f2)
+        echo $phenotype > phenotype.txt
 
         conda run -n regenie_env regenie \
             --step 2 \
@@ -274,12 +376,12 @@ task regenie_step_2 {
             --minMAC ~{mac} \
             --pred ~{regenie_list} \
             --bsize ~{bsize} \
-            --out ~{group_name}.chr~{chr}.step2
+            --out ~{group_name}.chr~{chr}
     >>>
 
     output {
-        Array[File] regenie_step2 = glob("${group_name}.chr${chr}.step2*.regenie")
-        Array[File] regenie_step2_ids = glob("${group_name}.chr${chr}.step2*.regenie.ids")
+        File regenie_step2 = "${group_name}.chr${chr}_" + read_string("phenotype.txt") + ".regenie"
+        File regenie_step2_ids = "${group_name}.chr${chr}_" + read_string("phenotype.txt") + ".regenie.ids"
     }
 
     runtime {
