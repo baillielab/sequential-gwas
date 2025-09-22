@@ -1,6 +1,9 @@
 function tag_variant_id_missing_from_gwas!(pvar, gwas_results)
     # Map GWAS variants to their alleles
-    gwas_ids_to_alleles = Dict(row.ID => Set([row.ALLELE0, row.ALLELE1]) for row in Tables.namedtupleiterator(select(gwas_results, [:ID, :ALLELE0, :ALLELE1])))
+    gwas_ids_to_alleles = Dict(
+        row.ID => Set([row.ALLELE0, row.ALLELE1]) 
+        for row in Tables.namedtupleiterator(DataFrames.select(gwas_results, [:ID, :ALLELE0, :ALLELE1]))
+    )
     # Update variants IDs in PVAR if they are not in the GWAS variants
     pvar.ID = map(Tables.namedtupleiterator(pvar)) do row
         if haskey(gwas_ids_to_alleles, row.ID)
@@ -66,8 +69,10 @@ function write_significant_clumps(pgen_prefix, gwas_results_file;
         --clump-a1-field $allele_1_field \
         --out $output_clump_prefix
     `)
-
-    clumps = CSV.read(output_clump_prefix * ".clumps", DataFrame; delim="\t")
+    clumps_file = output_clump_prefix * ".clumps"
+    clumps = isfile(clumps_file) ? 
+        CSV.read(clumps_file, DataFrame; delim="\t") : 
+        DataFrame([col => [] for col in ["#CHROM", "POS", "ID", "NEG_LOG10_P", "TOTAL", "NONSIG", "S0.05", "S0.01", "S0.001", "S0.0001", "SP2"]])
     sig_clumps = filter(
         :SP2 => x -> x !== "." && length(split(x, ",")) >= min_sig_clump_size, 
         clumps
@@ -89,7 +94,7 @@ function genotypes_from_pgen(pgen_prefix, ld_variants, sample_list)
     g = Vector{UInt8}(undef, nsamples)
     g_ld = similar(g)
     col_id = 1
-    for variant in iterator(pgen)
+    for variant in PGENFiles.iterator(pgen)
         if idx_inf <= variant.index <= idx_sup
             get_genotypes!(g, pgen, variant; ldbuf=g_ld)
             v_rt = variant.record_type & 0x07
@@ -105,19 +110,34 @@ function genotypes_from_pgen(pgen_prefix, ld_variants, sample_list)
     return X, pgen.pvar_df[idx_inf:idx_sup, :]
 end
 
-function dosages_from_pgen()
-    d = Vector{Float32}(undef, n_samples(p))
-    g = Vector{UInt8}(undef, n_samples(p))
+function dosages_from_pgen(pgen_prefix, ld_variants, sample_list)
+    pgen = Pgen(string(pgen_prefix, ".pgen"))
+
+    sample_idx = indexin(sample_list, pgen.psam_df.IID)
+    nsamples = length(sample_idx)
+
+    idx_inf = findfirst(==(ld_variants.ID_B[1]), pgen.pvar_df.ID)
+    idx_sup = findfirst(==(ld_variants.ID_B[end]), pgen.pvar_df.ID)
+
+    X = Matrix{Float64}(undef, nsamples, idx_sup - idx_inf + 1)
+    d = Vector{Float32}(undef, nsamples)
+    g = Vector{UInt8}(undef, nsamples)
     g_ld = similar(g)
-    for v in v_iter
-        alt_allele_dosage!(d, g, p, v; genoldbuf=g_ld)
-        v_rt = v.record_type & 0x07
-        if v_rt != 0x02 && v_rt != 0x03 # non-LD-compressed. See Format description.
-            g_ld .= g
+    col_id = 1
+    for variant in PGENFiles.iterator(pgen)
+        if idx_inf <= variant.index <= idx_sup
+            alt_allele_dosage!(d, g, pgen, variant; genoldbuf=g_ld)
+            v_rt = variant.record_type & 0x07
+            if v_rt != 0x02 && v_rt != 0x03 # non-LD-compressed. See Format description.
+                g_ld .= g
+            end
+            variant_dosages = d[sample_idx]
+            μ = mean(filter(!isnan, d))
+            X[:, col_id] .= replace(variant_dosages, NaN => μ)
+            col_id += 1
         end
-        
-        # do someting with dosage values in `d`...
     end
+    return X, pgen.pvar_df[idx_inf:idx_sup, :]
 end
 
 function get_phenotype(covariates_file, sample_list, phenotype)
@@ -164,6 +184,31 @@ function update_credible_sets!(cs_vector, susie_results)
     for (cs, variant_idxs) in susie_results[:sets][:cs]
         update_credible_sets!(cs_vector, variant_idxs, cs)
     end
+end
+
+function get_credible_sets(susie_results, p)
+    cs_vector = Vector{Union{Missing, Int}}(undef, p)
+    susie_results[:sets][:cs] isa Nothing && return cs_vector
+    update_credible_sets!(cs_vector, susie_results)
+    return cs_vector
+end
+
+function finemap_clump(clump_id, pgen_prefix, y, sample_list;
+    n_causal=10,
+    ld_window_kb=1000,
+    ld_window_r2=0.1,
+    )
+    ld_variants = get_ld_variants(clump_id, pgen_prefix; 
+        ld_window_kb=ld_window_kb, 
+        ld_window_r2=ld_window_r2
+    )
+    X, variants_info = dosages_from_pgen(pgen_prefix, ld_variants, sample_list)
+    susie_results = susie_finemap(X, y; n_causal=n_causal)
+    variants_info.PIP = susie_results[:pip]
+    p = size(X, 2)
+    variants_info.CLUMP_ID = fill(clump_id, p)
+    variants_info.CS = get_credible_sets(susie_results, p)
+    return variants_info
 end
 
 """
@@ -257,28 +302,22 @@ function finemap_significant_regions(
         allele_1_field = allele_1_field
     )
 
-    sample_list = getindex.(split.(readlines(sample_file), "\t"), 2)
-    
     # Finemap each clump
+    sample_list = getindex.(split.(readlines(sample_file), "\t"), 2)
+    y = get_phenotype(covariates_file, sample_list, phenotype)
     finemapping_results = []
     for clump in eachrow(sig_clumps)
         @info "Fine Mapping clump led by : $(clump.ID)"
-        ld_variants = get_ld_variants(clump.ID, gwas_matched_pgen_prefix; ld_window_kb=ld_window_kb, ld_window_r2=ld_window_r2)
-        X, variants_info = genotypes_from_pgen(gwas_matched_pgen_prefix, ld_variants, sample_list)
-        y = get_phenotype(covariates_file, sample_list, phenotype)
-        susie_results = susie_finemap(X, y; n_causal=n_causal)
-        variants_info.PIP = susie_results[:pip]
-        variants_info.CS = zeros(Int, size(X, 2))
-        variants_info.CLUMP_ID = fill(clump.ID, size(X, 2))
-        update_credible_sets!(variants_info.CS, susie_results)
-        variants_info = innerjoin(
-            variants_info, 
-            gwas_results[!, [:ID, :ALLELE0, :ALLELE1, :A1FREQ, :N, :TEST, :BETA, :SE, :CHISQ, :LOG10P]], 
-            on=:ID
+        clump_finemapping_results = finemap_clump(clump.ID, gwas_matched_pgen_prefix, y, sample_list;
+            n_causal=n_causal,
+            ld_window_kb=ld_window_kb,
+            ld_window_r2=ld_window_r2,
         )
-        push!(finemapping_results, variants_info)
+        push!(finemapping_results, clump_finemapping_results)
     end
-    CSV.write(string(output_prefix, ".tsv"), vcat(finemapping_results...))
+    output_file = string(output_prefix, ".tsv")
+    output_df = length(finemapping_results) > 0 ? vcat(finemapping_results...) : DataFrame([col => [] for col in ["#CHROM", "POS", "ID", "REF", "ALT", "PIP", "CLUMP_ID", "CS"]])
+    CSV.write(output_file, output_df)
 
     return 0
 end
