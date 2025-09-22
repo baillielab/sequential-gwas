@@ -51,7 +51,7 @@ TESTDIR = joinpath(PKGDIR, "test")
         "#CHROM", "POS", "ID", "NEG_LOG10_P", "TOTAL", "NONSIG", 
         "S0.05", "S0.01", "S0.001", "S0.0001", "SP2"
     ]
-    @test CSV.read(string(output_prefix, ".clumps.tsv"), DataFrame; delim=",") == sig_clumps
+    @test CSV.read(string(output_prefix, ".clumps.tsv"), DataFrame; delim="\t") == sig_clumps
     # Write significant clumps: here we set very permissive parameters to get a clump
     sig_clumps = GenomiccWorkflows.write_significant_clumps(gwas_matched_pgen_prefix, gwas_results_file;
         min_sig_clump_size = 1,
@@ -66,7 +66,7 @@ TESTDIR = joinpath(PKGDIR, "test")
     )
     @test nrow(sig_clumps) == 1
     @test length(split(first(sig_clumps.SP2), ",")) == 2
-    @test CSV.read(string(output_prefix, ".clumps.tsv"), DataFrame; delim=",") == sig_clumps
+    @test CSV.read(string(output_prefix, ".clumps.tsv"), DataFrame; delim="\t") == sig_clumps
     # Get variants in LD with clump lead
     sample_list = getindex.(split.(readlines(sample_file), "\t"), 2)
     y = GenomiccWorkflows.get_phenotype(covariates_file, sample_list, "SEVERE_COVID_19")

@@ -51,12 +51,16 @@ function gwas_plots(results_path; maf=0.01, output_prefix = "gwas.plot")
     return 0
 end
 
-function merge_regenie_chr_results(merge_list_file; output = "regenie.results.tsv")
-    merge_list = readlines(merge_list_file)
-    # Concatenating the files
-    results = mapreduce(f -> CSV.read(f, DataFrame), vcat, merge_list)
-    # Writing the output
-    CSV.write(output, results; delim="\t", header=true)
+function merge_chr_results(gwas_merge_list_file, finemapping_merge_list_file; output_prefix = "results.all_chr")
+    # Concatenate GWAS files
+    gwas_merge_list = readlines(gwas_merge_list_file)
+    results = mapreduce(f -> CSV.read(f, DataFrame), vcat, gwas_merge_list)
+    CSV.write(string(output_prefix, ".gwas.tsv"), results; delim="\t", header=true)
+    # Concatenate finemapping files
+    finemapping_merge_list = readlines(finemapping_merge_list_file)
+    finemapping_results = mapreduce(f -> CSV.read(f, DataFrame), vcat, finemapping_merge_list)
+    CSV.write(string(output_prefix, ".finemapping.tsv"), finemapping_results; delim="\t", header=true)
+
     return 0
 end
 

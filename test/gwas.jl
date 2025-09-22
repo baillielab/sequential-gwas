@@ -211,14 +211,15 @@ end
     @test sum(merged_covariates_pcs.COVID_19 .== "NA") == 2
 end
 
-@testset "Test merge_regenie_chr_results" begin
+@testset "Test merge_chr_results" begin
     tmpdir = mktempdir()
     group = "AFR.SEVERE_COVID_19"
     chrs = 1:2
-    merge_list = []
+    gwas_merge_list = []
+    fmp_merge_list = []
     for chr in chrs
-        # Create dummy Regenie Step 1 results files
-        results = DataFrame(
+        # Create dummy Regenie Step 2 results files
+        gwas_results = DataFrame(
             CHROM = [chr],
             GENPOS = [1000],
             ID = ["chr$(chr):4132:G:A"],
@@ -233,32 +234,61 @@ end
             LOG10P = [1.0],
             EXTRA = [""]
         )
-        output_file = joinpath(tmpdir, "$group.chr$(chr).step2_SEVERE_COVID_19.regenie")
-        CSV.write(output_file, results)
-        push!(merge_list, output_file)
+        gwas_output_file = joinpath(tmpdir, "$group.chr$(chr).step2_SEVERE_COVID_19.regenie")
+        CSV.write(gwas_output_file, gwas_results)
+        push!(gwas_merge_list, gwas_output_file)
+        # Create dummy finemapping results files
+        finemapping_results = DataFrame(
+            CHROM = [chr],
+            POS = [1000],
+            ID = ["chr$(chr):4132:G:A"],
+            REF = ["A"],
+            ALT = ["T"],
+            PIP = [.5],
+            CLUMP_ID = ["chr$(chr):4132:G:A"],
+            CS = [0],
+        )
+        finemapping_output_file = joinpath(tmpdir, "finrmapping.$group.chr$(chr).tsv")
+        CSV.write(finemapping_output_file, finemapping_results; delim="\t")
+        push!(fmp_merge_list, finemapping_output_file)
     end
-    merge_list_file = joinpath(tmpdir, "merge_list.txt")
-    open(merge_list_file, "w") do io
-        for file in merge_list
+    gwas_merge_list_file = joinpath(tmpdir, "gwas_merge_list.txt")
+    open(gwas_merge_list_file, "w") do io
+        for file in gwas_merge_list
             println(io, file)
         end
     end
-    output = joinpath(tmpdir, "regenie.results.tsv")
+    finemapping_merge_list_file = joinpath(tmpdir, "finemapping_merge_list.txt")
+    open(finemapping_merge_list_file, "w") do io
+        for file in fmp_merge_list
+            println(io, file)
+        end
+    end
+    output_prefix = joinpath(tmpdir, "results.all_chr")
     copy!(ARGS, [
-        "merge-regenie-chr-results",
-        merge_list_file,
-        "--output", output
+        "merge-chr-results",
+        gwas_merge_list_file,
+        finemapping_merge_list_file,
+        "--output-prefix", output_prefix
     ])
     julia_main()
-    results = CSV.read(output, DataFrame; delim="\t")
+    gwas_results = CSV.read(output_prefix * ".gwas.tsv", DataFrame; delim="\t")
     expected_cols = [
         "CHROM", "GENPOS", "ID", "ALLELE0", "ALLELE1", 
         "A1FREQ", "N", "TEST", "BETA", "SE", 
         "CHISQ", "LOG10P", "EXTRA"
     ]
-    @test nrow(results) == 2
-    @test Set(results.CHROM) == Set([1, 2])
-    @test names(results) == expected_cols
+    @test nrow(gwas_results) == 2
+    @test Set(gwas_results.CHROM) == Set([1, 2])
+    @test names(gwas_results) == expected_cols
+    finemapping_results = CSV.read(output_prefix * ".finemapping.tsv", DataFrame; delim="\t")
+    expected_fmp_cols = [
+        "CHROM", "POS", "ID", "REF", "ALT", 
+        "PIP", "CLUMP_ID", "CS"
+    ]
+    @test nrow(finemapping_results) == 2
+    @test Set(finemapping_results.CHROM) == Set([1, 2])
+    @test names(finemapping_results) == expected_fmp_cols
 end
 
 # End to End Workflow run
@@ -416,10 +446,10 @@ if dorun
     @test regenie_step_2_groups == Set(Iterators.product(expected_groups, ["chr1", "chr2", "chr3"]))
 
     # Test Merged results
-    merge_regenie_chr_results_dir = joinpath(results_dir, "call-merge_regenie_chr_results")
+    merge_chr_results_dir = joinpath(results_dir, "call-merge_chr_results")
     merged_results_groups = Set([])
     for group_shard in 0:5
-        execution_dir = joinpath(merge_regenie_chr_results_dir, "shard-$group_shard", "execution")
+        execution_dir = joinpath(merge_chr_results_dir, "shard-$group_shard", "execution")
         files = readdir(execution_dir)
         merged_results_file = files[findfirst(startswith("regenie.results"), files)]
         _, _, ancestry, phenotype, _ = split(merged_results_file, ".")

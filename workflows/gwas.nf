@@ -131,7 +131,7 @@ process MergeRegenieResults {
     script:
         output = "${group}.csv"
         """
-        ${get_julia_cmd(task.cpus)} merge-regenie-chr-results \
+        ${get_julia_cmd(task.cpus)} merge-chr-results \
             chr --output=${output}
         """
 }
