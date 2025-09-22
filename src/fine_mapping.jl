@@ -194,6 +194,7 @@ function get_credible_sets(susie_results, p)
 end
 
 function finemap_clump(clump_id, pgen_prefix, y, sample_list;
+    Xtype=:dosages,
     n_causal=10,
     ld_window_kb=1000,
     ld_window_r2=0.1,
@@ -202,7 +203,9 @@ function finemap_clump(clump_id, pgen_prefix, y, sample_list;
         ld_window_kb=ld_window_kb, 
         ld_window_r2=ld_window_r2
     )
-    X, variants_info = dosages_from_pgen(pgen_prefix, ld_variants, sample_list)
+    X, variants_info = Xtype === :dosages ? 
+        dosages_from_pgen(pgen_prefix, ld_variants, sample_list) :
+        genotypes_from_pgen(pgen_prefix, ld_variants, sample_list)
     susie_results = susie_finemap(X, y; n_causal=n_causal)
     variants_info.PIP = susie_results[:pip]
     p = size(X, 2)
@@ -242,6 +245,7 @@ This function performs fine-mapping of significant regions identified from GWAS 
 - `pgen_prefix::String`: Prefix for the PGEN fileset (without .pgen extension).
 - `covariates_file::String`: Path to the covariates file (TSV format).
 - `sample_file::String`: Path to the sample IDs file used to generate the GWAS results.
+- `Xtype::Symbol`: Type of genotype data to use for fine-mapping, either `:dosages` or `:genotypes`.
 - `output_prefix::String`: Prefix to output the significant clumps (TSV format).
 - `min_sig_clump_size::Int`: Minimum number of variants in a clump to be considered significant.
 - `lead_pvalue::Float64`: P-value threshold for lead variants in clump.
@@ -260,6 +264,7 @@ function finemap_significant_regions(
     pgen_prefix,
     covariates_file,
     sample_file;
+    Xtype=:dosages,
     output_prefix = "finemapping_results",
     min_sig_clump_size = 3,
     lead_pvalue = 5e-8,
@@ -309,6 +314,7 @@ function finemap_significant_regions(
     for clump in eachrow(sig_clumps)
         @info "Fine Mapping clump led by : $(clump.ID)"
         clump_finemapping_results = finemap_clump(clump.ID, gwas_matched_pgen_prefix, y, sample_list;
+            Xtype=Xtype,
             n_causal=n_causal,
             ld_window_kb=ld_window_kb,
             ld_window_r2=ld_window_r2,
