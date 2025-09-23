@@ -11,15 +11,6 @@ function merge_chr_results(gwas_merge_list_file, finemapping_merge_list_file; ou
     return 0
 end
 
-function merge_regenie_chr_results(merge_list_file; output = "regenie.results.tsv")
-    merge_list = readlines(merge_list_file)
-    # Concatenating the files
-    results = mapreduce(f -> CSV.read(f, DataFrame), vcat, merge_list)
-    # Writing the output
-    CSV.write(output, results; delim="\t", header=true)
-    return 0
-end
-
 get_chr_out_string(pc_filename) = splitext(splitext(pc_filename)[1])[2][2:end]
 
 function read_loco_pcs(pc_file)
