@@ -75,6 +75,7 @@ function region_plot(region_data)
     genomic_features = get_genomic_features(region; features=["gene"])
     credible_sets = sort(unique(skipmissing(region_data.CS)))
     markersize = 14
+    threshold = 5e-8
     # Plot
     fig = Figure(size = (1000, 800))
     # GWAS P-values
@@ -85,21 +86,22 @@ function region_plot(region_data)
         ygridvisible=false
     )
     hidespines!(ax1, :t, :r, :b)
+    log10ps = -log10.(region_data.P)
     scatter!(ax1, 
         collect(region_data.BP),
-        collect(region_data.LOG10P),
+        log10ps,
         markersize=markersize,
         color=(:grey, 0.5)
     )
-    sig_gwas_variants = findall(region_data.LOG10P .>= 8)
+    sig_gwas_variants = findall(region_data.P .<= threshold)
     scatter!(ax1, 
         region_data.BP[sig_gwas_variants], 
-        region_data.LOG10P[sig_gwas_variants], 
+        log10ps[sig_gwas_variants], 
         color=:green,
         marker=:star5,
         markersize=markersize
     )
-    hlines!(ax1, 8, color=:green)
+    hlines!(ax1, -log10(threshold), color=:green)
 
     # Fine Mapping PIPs
     credible_sets_colors = distinguishable_colors(
@@ -178,7 +180,7 @@ function gwas_plots(gwas_file, finemapping_file; maf=0.01, output_prefix = "gwas
     _, _, group, phenotype, _ = split(basename(gwas_file), ".")
     gwas_results = harmonize_gwas_results(CSV.read(gwas_file, DataFrame, delim="\t"))
     maf_filtered_gwas_results = filter(
-        x -> !isnan(x.P) && x.A1FREQ > maf, 
+        x -> x.A1FREQ > maf, 
         gwas_results
     )
     # Plot Manhattan
