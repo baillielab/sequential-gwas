@@ -3,6 +3,9 @@ using Test
 using GenomiccWorkflows
 using DataFrames
 
+PKGDIR = pkgdir(GenomiccWorkflows)
+TESTDIR = joinpath(PKGDIR, "test")
+
 @testset "Test harmonize_gwas_results" begin
     # If the LOG10P contains NA it will be read as a string column
     ## The NaNs are filtered for plotting
@@ -40,8 +43,8 @@ end
     output_prefix = joinpath(tmpdir, "plot")
     copy!(ARGS,[
         "gwas-plots", 
-        "test/assets/gwas/results/results.all_chr.EUR.SEVERE_COVID_19.gwas.tsv", 
-        "test/assets/gwas/results/results.all_chr.EUR.SEVERE_COVID_19.finemapping.tsv", 
+        joinpath(TESTDIR, "assets", "gwas", "results", "results.all_chr.EUR.SEVERE_COVID_19.gwas.tsv"), 
+        joinpath(TESTDIR, "assets", "gwas", "results", "results.all_chr.EUR.SEVERE_COVID_19.finemapping.tsv"), 
         "--maf=0.01",
         "--output-prefix=$output_prefix"
         ]
