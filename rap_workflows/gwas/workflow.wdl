@@ -213,7 +213,7 @@ task gwas_plots {
 
     command <<<
         ~{julia_cmd} gwas-plots \
-            ~{gwas_results} \
+            ~{gwas_gwas_results} \
             ~{finemapping_results} \
             --maf=~{maf} \
             --output-prefix=gwas.plot
