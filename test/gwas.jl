@@ -465,7 +465,7 @@ if dorun
         execution_dir = joinpath(plots_dir, "shard-$group_shard", "execution")
         files = readdir(execution_dir)
         plot_files = filter(endswith(".png"), files)
-        @test length(plot_files) == 2
+        @test length(plot_files) >= 2
         _, _, ancestry, phenotype, _ = split(first(plot_files), ".")
         push!(plots_groups, "$ancestry.$phenotype")
     end

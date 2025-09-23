@@ -1,5 +1,7 @@
 module GenomiccWorkflows
 
+const ENSEMBL_SERVER = "https://rest.ensembl.org"
+
 using CSV
 using DataFrames
 using DelimitedFiles
@@ -13,6 +15,7 @@ using Downloads
 using PackageCompiler
 using Tables
 using CairoMakie
+using Colors
 using Statistics
 using Base.Threads
 using Literate
@@ -49,6 +52,7 @@ include("merge_ukb_genomicc.jl")
 include("covariates.jl")
 include("gwas.jl")
 include("fine_mapping.jl")
+include("gwas_plots.jl")
 
 export julia_main
 

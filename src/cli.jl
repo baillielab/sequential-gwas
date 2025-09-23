@@ -387,10 +387,15 @@ function cli_settings()
     end
 
     @add_arg_table! s["gwas-plots"] begin
-        "results"
+        "gwas-results"
             arg_type = String
             required = true
             help = "Path to GWAS results file."
+
+        "finemapping-results"
+            arg_type = String
+            required = true
+            help = "Path to finemapping results file."
 
         "--maf"
             arg_type = Float64
@@ -974,7 +979,8 @@ function julia_main()::Cint
         )
     elseif cmd == "gwas-plots"
         gwas_plots(
-            cmd_settings["results"];
+            cmd_settings["gwas-results"],
+            cmd_settings["finemapping-results"];
             maf=cmd_settings["maf"],
             output_prefix=cmd_settings["output-prefix"]
         )

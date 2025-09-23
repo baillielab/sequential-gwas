@@ -16,6 +16,7 @@ TESTDIR = joinpath(PKGDIR, "test")
     @test include(joinpath(TESTDIR, "relatedness.jl"))
     @test include(joinpath(TESTDIR, "ancestry.jl"))
     @test include(joinpath(TESTDIR, "fine_mapping.jl"))
+    @test include(joinpath(TESTDIR, "gwas_plots.jl"))
 
     # Test Dataset Aggregation Workflow
     @test include(joinpath(TESTDIR, "combine_datasets_wgs.jl"))
