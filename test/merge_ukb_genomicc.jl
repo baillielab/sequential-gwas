@@ -66,9 +66,52 @@ TESTDIR = joinpath(PKGDIR, "test")
         COHORT=["unknown cohort"],
     )
     @test_throws ArgumentError("Unknown cohort: unknown cohort, while processing infection: flu") map(x -> GenomiccWorkflows.is_severe_infection(x, "flu"), eachrow(unknown_cohort_covariates))
+
+    # Test is_alive_at_assessment
+    df = DataFrame(
+        ALIVE_AT_60_DAYS = ["Yes", "no", "yes", "No", "NA", "NA", "NA", "NA", "NA"],
+        ALIVE_AT_28_DAYS = ["NA", "NA", "NA", "NA", "yes", "Yes", "No", "no", "NA"]
+    )
+    GenomiccWorkflows.add_alive_at_assessment_col!(df)
+    @test all(df.ALIVE_AT_ASSESSMENT .=== [1, 0, 1, 0, 1, 1, 0, 0, missing])
 end
 
-@testset "Test merge_ukb_genomicc_covariates" begin
+@testset "Test process_genomicc_covariates: without UKB" begin
+    tmpdir = mktempdir()
+    output_file = joinpath(tmpdir, "covariates.processed.csv")
+    genomicc_covariates_file = joinpath("test", "assets", "genomicc", "mock.covariates.csv")
+    copy!(ARGS, [
+        "process-genomicc-covariates",
+        genomicc_covariates_file,
+        "--output-file", output_file
+    ])
+    julia_main()
+    processed_covariates = CSV.read(joinpath(tmpdir, "covariates.processed.csv"), DataFrame)
+    names(processed_covariates) == [
+        "FID",
+        "IID",
+        "COHORT",
+        "AGE",
+        "SEX",
+        "SUPERPOPULATION",
+        "AFR",
+        "AMR",
+        "EAS",
+        "EUR",
+        "SAS",
+        "ALIVE_AT_ASSESSMENT",
+        "SEVERE_PNEUMONIA",
+        "SEVERE_COVID_19",
+        "SEVERE_PANCREATITIS",
+        "SEVERE_INFLUENZA",
+        "SEVERE_SOFT_TISSUE_INFECTION",
+        "SEVERE_RSV",
+        "SEVERE_ECLS",
+        "SEVERE_REACTION_TO_VACCINATION"]
+    @test countlines(output_file) == countlines(genomicc_covariates_file) # No samples are dropped
+end
+
+@testset "Test process_genomicc_covariates: with UKB" begin
     tmpdir = mktempdir()
     output_file = joinpath(tmpdir, "ukb_genomicc.covariates.csv")
     genomicc_covariates_file = joinpath("test", "assets", "genomicc", "mock.covariates.csv")
@@ -92,10 +135,10 @@ end
     CSV.write(ukb_inferred_covariates_file, ukb_inferred_covariates)
     # Merge covariates
     copy!(ARGS, [
-        "merge-ukb-genomicc-covariates",
+        "process-genomicc-covariates",
         genomicc_covariates_file,
-        ukb_covariates_file,
-        ukb_inferred_covariates_file,
+        string("--ukb-covariates=", ukb_covariates_file),
+        string("--ukb-inferred-covariates=", ukb_inferred_covariates_file),
         "--output-file", output_file
     ])
     julia_main()
@@ -109,6 +152,12 @@ end
         "AGE",
         "SEX",
         "SUPERPOPULATION",
+        "AFR",
+        "AMR",
+        "EAS",
+        "EUR",
+        "SAS",
+        "ALIVE_AT_ASSESSMENT",
         "SEVERE_PNEUMONIA",
         "SEVERE_COVID_19",
         "SEVERE_PANCREATITIS",
@@ -123,6 +172,7 @@ end
     @test Set(merged_covariates.SEX) == Set([0, 1, missing]) # Individuals with missing Sex will be dropped in analyses
     @test Set(merged_covariates.SUPERPOPULATION) == Set(["AFR", "SAS", "EAS", "AMR", "EUR", "ADMIXED"])
     @test merged_covariates.FID == merged_covariates.IID
+    @test Set(merged_covariates.ALIVE_AT_ASSESSMENT) == Set([0, 1, missing])
 end
 
 @testset "Test fill_chr_pvar_with_variant_id" begin
@@ -322,7 +372,8 @@ if dorun
         ukb_genomicc_covariates_file = joinpath(results_dir, "call-merge_genomicc_ukb_covariates", "execution", "ukb_genomicc.covariates.csv")
         ukb_genomicc_covariates = CSV.read(ukb_genomicc_covariates_file, DataFrame)
         @test names(ukb_genomicc_covariates) == [
-            "FID", "IID", "COHORT", "AGE", "SEX", "SUPERPOPULATION", 
+            "FID", "IID", "COHORT", "AGE", "SEX", "SUPERPOPULATION",
+            "AFR", "AMR", "EAS", "EUR", "SAS", "ALIVE_AT_ASSESSMENT",
             "SEVERE_PNEUMONIA", "SEVERE_COVID_19", "SEVERE_PANCREATITIS", 
             "SEVERE_INFLUENZA", "SEVERE_SOFT_TISSUE_INFECTION", "SEVERE_RSV", 
             "SEVERE_ECLS", "SEVERE_REACTION_TO_VACCINATION"]

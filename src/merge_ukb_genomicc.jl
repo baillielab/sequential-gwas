@@ -156,11 +156,85 @@ function is_severe_infection(row, infection_name)
     end
 end
 
-function merge_ukb_genomicc_covariates(
-    genomicc_covariates_file,
-    ukb_covariates_file,
-    ukb_inferred_covariates_file;
-    output_file="ukb_genomicc.covariates.csv"
+"""
+    alive_at_assessment(alive_60_genomicc, alive_28_isaric)
+
+The provided column names are not ideal:
+    - ALIVE_AT_28_DAYS: only concerns individuals with COHORT = ISARIC4C
+    - ALIVE_AT_60_DAYS: only concerns individuals with COHORT = GenOMICC
+
+The retention time is not the same for the two cohorts. 
+The created column ALIVE_AT_ASSESSMENT informs wether an individual had died at the end of their respective assessment time (28 or 60 days).
+"""
+function alive_at_assessment(alive_60_genomicc, alive_28_isaric)
+    alive_60_genomicc = lowercase(alive_60_genomicc)
+    alive_28_isaric = lowercase(alive_28_isaric)
+
+    if alive_60_genomicc == "yes"
+        return 1
+    elseif alive_60_genomicc == "no"
+        return 0
+    elseif alive_60_genomicc == "na"
+        if alive_28_isaric == "yes"
+            return 1
+        elseif alive_28_isaric == "no"
+            return 0
+        elseif alive_28_isaric == "na"
+            return missing
+        else
+            throw(ArgumentError("Unknown value for ALIVE_AT_28_DAYS: $alive_28_isaric"))
+        end
+    else
+        throw(ArgumentError("Unknown value for ALIVE_AT_60_DAYS: $alive_60_genomicc"))
+    end
+end
+
+function add_alive_at_assessment_col!(df)
+    return transform!(df, 
+        [:ALIVE_AT_60_DAYS, :ALIVE_AT_28_DAYS] => ByRow(alive_at_assessment) => :ALIVE_AT_ASSESSMENT
+    )
+end
+
+function concat_ukb_covariates(ukb_covariates_file, ukb_inferred_covariates_file, genomicc_covariates, infection_names)
+    ukb_covariates = CSV.read(ukb_covariates_file, DataFrame)
+    ukb_inferred_covariates = CSV.read(ukb_inferred_covariates_file, DataFrame)
+    ukb_all_covariates = innerjoin(
+        ukb_covariates,
+        ukb_inferred_covariates,
+        on=:eid => :IID
+    )
+    # Select aand process AGE, SEX and inferred ancestry
+    DataFrames.select!(ukb_all_covariates,
+        :eid => :FID,
+        :eid => :IID,
+        Symbol("34-0.0") => process_ukb_age => :AGE,
+        Symbol("22001-0.0") => :SEX,
+        :Superpopulation => :SUPERPOPULATION,
+        :AFR,
+        :AMR,
+        :EAS,
+        :EUR,
+        :SAS,
+    )
+    # Severe infections are all 0 for UKB
+    for infection_name in infection_names
+        ukb_all_covariates[!, infection_name] = zeros(Int, nrow(ukb_all_covariates))
+    end
+    # Fill cohort
+    ukb_all_covariates.COHORT = fill(:ukbiobank, nrow(ukb_all_covariates))
+    # Add ALIVE_AT_ASSESSMENT: we fill with missings
+    if hasproperty(genomicc_covariates, :ALIVE_AT_ASSESSMENT)
+        ukb_all_covariates.ALIVE_AT_ASSESSMENT = fill(missing, nrow(ukb_all_covariates))
+    end
+
+    return vcat(genomicc_covariates, ukb_all_covariates)
+end
+
+function process_genomicc_covariates(
+    genomicc_covariates_file;
+    ukb_covariates_file=nothing,
+    ukb_inferred_covariates_file=nothing,
+    output_file="covariates.processed.csv"
     )
     severe_infections_map = get_severe_infections_map()
     infection_names = last.(values(severe_infections_map))
@@ -176,6 +250,9 @@ function merge_ukb_genomicc_covariates(
     for (_, (fn, infection_name)) in severe_infections_map
         genomicc_covariates[!, infection_name] = map(fn, eachrow(genomicc_covariates))
     end
+    ## Process mortality
+    add_alive_at_assessment_col!(genomicc_covariates)
+    ## Select cleaned columns
     DataFrames.select!(genomicc_covariates,
         :FID => :FID,
         :IID => :IID,
@@ -183,29 +260,20 @@ function merge_ukb_genomicc_covariates(
         :AGE_YEARS_AT_RECRUITMENT => :AGE,
         :SEX_SELF_REPORTED => process_genomicc_sexes => :SEX,
         :SUPERPOPULATION,
+        :AFR,
+        :AMR,
+        :EAS,
+        :EUR,
+        :SAS,
+        :ALIVE_AT_ASSESSMENT,
         Symbol.(infection_names)...
     )
-    # Process UKB covariates
-    ukb_covariates = CSV.read(ukb_covariates_file, DataFrame)
-    ukb_inferred_covariates = CSV.read(ukb_inferred_covariates_file, DataFrame)
-    ukb_all_covariates = innerjoin(
-        ukb_covariates,
-        ukb_inferred_covariates,
-        on=:eid => :IID
-    )
-    DataFrames.select!(ukb_all_covariates,
-        :eid => :FID,
-        :eid => :IID,
-        Symbol("34-0.0") => process_ukb_age => :AGE,
-        Symbol("22001-0.0") => :SEX,
-        :Superpopulation => :SUPERPOPULATION,
-    )
-    for (_, (_, infection_name)) in severe_infections_map
-        ukb_all_covariates[!, infection_name] = zeros(Int, nrow(ukb_all_covariates))
-    end
-    ukb_all_covariates.COHORT = fill(:ukbiobank, nrow(ukb_all_covariates))
-    # Concatenate both datasets
-    all_covariates = vcat(genomicc_covariates, ukb_all_covariates)
+
+    # concat UKB covariates if provided
+    all_covariates = ukb_covariates_file === nothing || ukb_inferred_covariates_file === nothing ?
+        genomicc_covariates :
+        concat_ukb_covariates(ukb_covariates_file, ukb_inferred_covariates_file, genomicc_covariates, infection_names)
+
     # Write to output file
     CSV.write(output_file, all_covariates, delim="\t")
     return 0

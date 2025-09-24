@@ -95,7 +95,7 @@ function cli_settings()
             action = :command
             help = "Format variant Ids as CHR:POS:REF:ALT and keep only unrelated individuals from UKB data."
 
-        "merge-ukb-genomicc-covariates"
+        "process-genomicc-covariates"
             action = :command
             help = "Merges UKB and GenOMICC covariates files."
 
@@ -224,26 +224,24 @@ function cli_settings()
             help = "Path to the merged UKB and GenOMICC covariates file."
     end
 
-    @add_arg_table! s["merge-ukb-genomicc-covariates"] begin
+    @add_arg_table! s["process-genomicc-covariates"] begin
         "genomicc-covariates"
             arg_type = String
             required = true
             help = "Path to GenOMICC covariates file."
 
-        "ukb-covariates"
+        "--ukb-covariates"
             arg_type = String
-            required = true
-            help = "Path to UKB covariates file."
+            help = "Optional path to UKB covariates file to be concatenated to GenOMICC."
 
-        "ukb-inferred-covariates"
+        "--ukb-inferred-covariates"
             arg_type = String
-            required = true
-            help = "Path to UKB inferred covariates file."
+            help = "Optional path to UKB inferred covariates file to be concatenated to GenOMICC."
 
         "--output-file"
             arg_type = String
             help = "Output file name."
-            default = "ukb_genomicc.covariates.csv"
+            default = "covariates.processed.csv"
     end
 
     @add_arg_table! s["align-ukb-variants-with-kgp-and-keep-unrelated"] begin
@@ -1027,11 +1025,11 @@ function julia_main()::Cint
             out_prefix=cmd_settings["out-prefix"],
             relatedness_degree=cmd_settings["relatedness-degree"]
         )
-    elseif cmd == "merge-ukb-genomicc-covariates"
-        merge_ukb_genomicc_covariates(
-            cmd_settings["genomicc-covariates"],
-            cmd_settings["ukb-covariates"],
-            cmd_settings["ukb-inferred-covariates"];
+    elseif cmd == "process-genomicc-covariates"
+        process_genomicc_covariates(
+            cmd_settings["genomicc-covariates"];
+            ukb_covariates_file=cmd_settings["ukb-covariates"],
+            ukb_inferred_covariates_file=cmd_settings["ukb-inferred-covariates"],
             output_file=cmd_settings["output-file"]
         )
     elseif cmd == "make-ukb-genomicc-merge-report"

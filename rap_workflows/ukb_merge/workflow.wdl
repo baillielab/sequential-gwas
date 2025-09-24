@@ -753,10 +753,10 @@ task merge_genomicc_ukb_covariates {
 
     command <<<
         ~{julia_cmd} \
-            merge-ukb-genomicc-covariates \
+            process-genomicc-covariates \
             ~{genomicc_covariates} \
-            ~{ukb_covariates} \
-            ~{ukb_inferred_covariates} \
+            --ukb-covariates=~{ukb_covariates} \
+            --ukb-inferred-covariates=~{ukb_inferred_covariates} \
             --output-file ~{output_file}
     >>>
 
