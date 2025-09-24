@@ -65,6 +65,9 @@ jobs:
     name: Test
     needs: build_and_publish
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./PostGWAS
     permissions: # needed to allow julia-actions/cache to proactively delete old caches that it has created
       actions: write
       contents: read
