@@ -36,9 +36,11 @@ The inputs need to be filled within the `rap_workflows/gwas/inputs.json` file.
 First you need to compile the WDL workflow and upload it to the RAP, this can be done with the following:
 
 ```bash
-export DX_COMPILER_PATH=/Users/olabayle/dxCompiler/dxCompiler-2.13.0.jar
-export PROJECT_ID=project-J0pkqyQJpYQ133JG1p2J1qzv
-java -jar $DX_COMPILER_PATH compile rap_workflows/gwas/workflow.wdl -f -project $PROJECT_ID -folder /workflows/gwas -inputs rap_workflows/gwas/inputs.json
+java -jar $DX_COMPILER_PATH compile rap_workflows/gwas/workflow.wdl \
+-f -project $PROJECT_ID \
+-reorg \
+-folder /workflows/gwas \
+-inputs rap_workflows/gwas/inputs.json
 ```
 
 where the `DX_COMPILER_PATH` and `PROJECT_ID` have to be set appropriately. The compiler might output some warnings like `missing input for non-optional parameter` but you can ignore these.
