@@ -1,4 +1,4 @@
-name: CI
+name: PostGWAS CI
 on:
   push:
     branches:
