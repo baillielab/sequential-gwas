@@ -1515,12 +1515,6 @@
       "project": "project-J0pkqyQJpYQ133JG1p2J1qzv"
     }
   }],
-  "stage-common.genomicc_covariates": {
-    "$dnanexus_link": {
-      "id": "file-J2910x0JpYQ1J7BXPP0P75g5",
-      "project": "project-J0pkqyQJpYQ133JG1p2J1qzv"
-    }
-  },
   "stage-common.ukb_bgen_filesets___dxfiles": [{
     "$dnanexus_link": {
       "id": "file-GBPx5zQJykJV38XjBKFpyY89",
@@ -2118,6 +2112,13 @@
     }
   },
   "stage-common.max_ukb_samples": "100000",
+  "stage-common.genomicc_covariates": {
+    "$dnanexus_link": {
+      "id": "file-J39yyQjJpYQFvZFGpjJ3KX67",
+      "project": "project-J0pkqyQJpYQ133JG1p2J1qzv"
+    }
+  },
+  "stage-common.ancestry_program": "scope",
   "stage-common.genomicc_genotypes___dxfiles": [{
     "$dnanexus_link": {
       "id": "file-J2910y0JpYQPXF4YQ1G14YPP",

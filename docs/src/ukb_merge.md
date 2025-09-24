@@ -95,8 +95,11 @@ First you need to compile the WDL workflow and upload it to the RAP. However, a 
 Then compiling the workflow can be done with the following:
 
 ```bash
-export DX_COMPILER_PATH=/Users/olabayle/dxCompiler/dxCompiler-2.13.0.jar
-java -jar $DX_COMPILER_PATH compile rap_workflows/ukb_merge/workflow.wdl -f -project $PROJECT_ID -folder /workflows/ukb_merge -inputs rap_workflows/ukb_merge/inputs.json
+java -jar $DX_COMPILER_PATH compile rap_workflows/ukb_merge/workflow.wdl \
+-f -project $PROJECT_ID \
+-reorg \
+-folder /workflows/ukb_merge \
+-inputs rap_workflows/ukb_merge/inputs.json
 ```
 
 where the `DX_COMPILER_PATH` and `PROJECT_ID` have to be set appropriately. The compiler might output some warnings like `missing input for non-optional parameter` but you can ignore these.
