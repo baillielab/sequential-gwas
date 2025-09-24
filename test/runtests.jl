@@ -19,13 +19,17 @@ TESTDIR = joinpath(PKGDIR, "test")
     @test include(joinpath(TESTDIR, "gwas_plots.jl"))
 
     # Test Dataset Aggregation Workflow
-    @test include(joinpath(TESTDIR, "combine_datasets_wgs.jl"))
-    @test include(joinpath(TESTDIR, "combine_datasets_no_wgs.jl"))
-
+    if "genomicc_aggregation_tests" in ARGS
+        @test include(joinpath(TESTDIR, "combine_datasets_wgs.jl"))
+        @test include(joinpath(TESTDIR, "combine_datasets_no_wgs.jl"))
+    end
     # Test Merging UKB and GenOMICC
-    @test include(joinpath(TESTDIR, "merge_ukb_genomicc.jl"))
-
+    if "ukbmerge_tests" in ARGS
+        @test include(joinpath(TESTDIR, "merge_ukb_genomicc.jl"))
+    end
     # Test GWAS Workflow
-    @test include(joinpath(TESTDIR, "gwas.jl"))
+    if "gwas_tests" in ARGS
+        @test include(joinpath(TESTDIR, "gwas.jl"))
+    end
 end
 
