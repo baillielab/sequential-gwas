@@ -37,7 +37,7 @@ function get_harmonized_finemapping_results!(finemapping_file)
     return finemapping_results
 end
 
-function map_variants_to_egenes(variants_df, parquet_files)
+function map_variants_to_GTEx_genes(variants_df, parquet_files)
     variant_target_pairs = []
     # parquet_file = "../assets/GTEx_Analysis_v10_eQTL_updated/Artery_Tibial.v10.eQTLs.signif_pairs.parquet"
     for parquet_file in parquet_files
@@ -59,6 +59,24 @@ function map_variants_to_egenes(variants_df, parquet_files)
     return vcat(variant_target_pairs...)
 end
 
+function download_GTex_QTLs(;file="GTEx_Analysis_v10_eQTL.tar", output_dir="assets/")
+    tar_file = joinpath(output_dir, file)
+    output_file = joinpath(output_dir, replace(file, ".tar" => "_updated"))
+    if !isfile(output_file)
+        Downloads.download("https://storage.googleapis.com/adult-gtex/bulk-qtl/v10/single-tissue-cis-qtl/$file", tar_file)
+        run(`tar -xf $(tar_file) -C $(output_dir)`)
+        rm(tar_file)
+    end
+end
+
+function download_all_GTEx_QTLs_v10(;output_dir="assets/")
+    if !isdir(output_dir)
+        mkpath(output_dir)
+    end
+    download_GTex_QTLs(file="GTEx_Analysis_v10_eQTL.tar", output_dir=output_dir)
+    download_GTex_QTLs(file="GTEx_Analysis_v10_sQTL.tar", output_dir=output_dir)
+end
+
 function julia_main(gwas_file, finemapping_file, gtex_dir; output_prefix="post_gwas")
     tmpdir = mktempdir()
     output_prefix = joinpath(tmpdir, "post_gwas")
@@ -76,7 +94,7 @@ function julia_main(gwas_file, finemapping_file, gtex_dir; output_prefix="post_g
     filter!(x -> x.CS !== missing, finemapping_results)
 
     # Map finemapped variants to the genes they are eQTLs for
-    variant_target_pairs = map_variants_to_egenes(finemapping_results, parquet_files)
+    variant_target_pairs = map_variants_to_GTEx_genes(finemapping_results, parquet_files)
     CSV.write(string(output_prefix, ".finemapped_variant_egene_pairs.tsv"), variant_target_pairs; delim="\t", header=true)
 
     # Get interaction candidates
