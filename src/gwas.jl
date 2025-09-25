@@ -43,6 +43,7 @@ function make_gwas_groups(
     groupby_string=nothing,
     covariates_string="AGE",
     phenotypes_string="SEVERE_COVID_19",
+    filters_string=nothing,
     output_prefix="gwas", 
     min_cases_controls=100
     )
@@ -71,7 +72,8 @@ function make_gwas_groups(
                 group_id=group_id,
                 phenotypes=phenotypes,
                 output_prefix=output_prefix,
-                min_cases_controls=min_cases_controls
+                min_cases_controls=min_cases_controls,
+                filters_string=filters_string
             )
             n_groups_passed += n_phenotypes_passed
         end
@@ -80,7 +82,8 @@ function make_gwas_groups(
                 group_id="all",
                 phenotypes=phenotypes, 
                 output_prefix=output_prefix, 
-                min_cases_controls=min_cases_controls
+                min_cases_controls=min_cases_controls,
+                filters_string=filters_string
         )
     end
 

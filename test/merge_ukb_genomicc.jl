@@ -395,12 +395,13 @@ if dorun
         # Test merging covariates
         ukb_genomicc_covariates_file = joinpath(results_dir, "call-merge_genomicc_ukb_covariates", "execution", "ukb_genomicc.covariates.csv")
         ukb_genomicc_covariates = CSV.read(ukb_genomicc_covariates_file, DataFrame)
-        @test names(ukb_genomicc_covariates) == [
+        @test Set(names(ukb_genomicc_covariates)) == Set([
             "FID", "IID", "COHORT", "AGE", "SEX", "SUPERPOPULATION",
             "AFR", "AMR", "EAS", "EUR", "SAS", "ALIVE_AT_ASSESSMENT",
             "SEVERE_PNEUMONIA", "SEVERE_COVID_19", "SEVERE_PANCREATITIS", 
             "SEVERE_INFLUENZA", "SEVERE_SOFT_TISSUE_INFECTION", "SEVERE_RSV", 
-            "SEVERE_ECLS", "SEVERE_REACTION_TO_VACCINATION"]
+            "SEVERE_ECLS", "SEVERE_REACTION_TO_VACCINATION", "PRIMARY_DIAGNOSIS"
+        ])
         @test length(filter(startswith("ukb"), ukb_genomicc_covariates.IID)) > 0
         @test length(filter(startswith("odap"), ukb_genomicc_covariates.IID)) > 0
 

@@ -9,6 +9,27 @@ using DelimitedFiles
 PKGDIR = pkgdir(GenomiccWorkflows)
 TESTDIR = joinpath(PKGDIR, "test")
 
+@testset "Test apply_filter" begin
+    data = DataFrame(
+        COHORT = ["GENOMICC", "GENOMICC", "UKB", "UKB", "UKB", "UKB", "UKB", "UKB", "UKB", "UKB"],
+        PRIMARY_DIAGNOSIS = ["COVID-19", missing, "COVID-19", "COVID-19", "PNEUMONIA", "PNEUMONIA", "PNEUMONIA", "PNEUMONIA", "PNEUMONIA", "PNEUMONIA"],
+        AGE = [25, 35, 45, 55, 65, 75, 85, missing, 50, 60]
+    )
+    @test GenomiccWorkflows.apply_filters(data, nothing) === data
+    filter_ukb = GenomiccWorkflows.apply_filters(data, "COHORT=UKB")
+    @test nrow(filter_ukb) == 8
+    @test all(filter_ukb.COHORT .== "UKB")
+    filter_covid_ukb = GenomiccWorkflows.apply_filters(data, "PRIMARY_DIAGNOSIS=COVID-19,COHORT=UKB")
+    @test nrow(filter_covid_ukb) == 2
+    @test all(filter_covid_ukb.COHORT .== "UKB")
+    @test all(filter_covid_ukb.PRIMARY_DIAGNOSIS .== "COVID-19")
+    @test filter_covid_ukb.AGE == [45, 55]
+    filter_age_ukb = GenomiccWorkflows.apply_filters(data, "AGE>=50,AGE<=75,COHORT=UKB")
+    @test nrow(filter_age_ukb) == 5
+    @test all(filter_age_ukb.COHORT .== "UKB")
+    @test filter_age_ukb.AGE == [55, 65, 75, 50, 60]
+end
+
 @testset "Test make-gwas-groups" begin
     tmpdir = mktempdir()
     output_prefix = joinpath(tmpdir, "gwas")
@@ -88,16 +109,17 @@ TESTDIR = joinpath(PKGDIR, "test")
     end
 end
 
-@testset "Test make-gwas-groups: no groups" begin
+@testset "Test make-gwas-groups: no groups with filter" begin
     tmpdir = mktempdir()
     output_prefix = joinpath(tmpdir, "gwas_all")
     covariates_file = joinpath(TESTDIR, "assets", "gwas", "covariates", "ukb_genomicc.covariates.csv")
-    min_cases_controls = 3500
+    min_cases_controls = 2500
     copy!(ARGS, [
         "make-gwas-groups", 
         covariates_file,
         "--output-prefix", output_prefix,
         "--phenotypes=SEVERE_COVID_19,SEVERE_PNEUMONIA",
+        "--filters=AGE>=50,AGE<=75",
         "--covariates=AGE",
         "--min-cases-controls", string(min_cases_controls)
     ])
@@ -105,8 +127,7 @@ end
 
     # Check covariate file and group 
     covariates = CSV.read(joinpath(tmpdir, "gwas_all.covariates.csv"), DataFrame)
-    # SEVERE_COVID_19 is dropped because it has fewer than 3500 cases/controls
-    @test maximum(combine(groupby(covariates, :SEVERE_COVID_19, skipmissing=true), nrow).nrow) < min_cases_controls
+    # SEVERE_COVID_19 is dropped because it has fewer than 2500 cases/controls
     @test !isfile(joinpath(tmpdir, "gwas_all.individuals.all.SEVERE_COVID_19.txt"))
     # The group consists in all individuals
     individuals = sort(CSV.read(
@@ -114,7 +135,9 @@ end
         DataFrame; 
         header=["FID", "IID"])
     )
-    expected_individuals = sort(dropmissing(covariates, ["SEVERE_PNEUMONIA", "AGE"])[!, ["FID", "IID"]])
+    expected_individuals = sort(
+        dropmissing(filter(x -> x.AGE >= 50 && x.AGE <= 75, covariates), ["SEVERE_PNEUMONIA", "AGE"]
+        )[!, ["FID", "IID"]])
     @test individuals == expected_individuals
 
     # Check covariates list

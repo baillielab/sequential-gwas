@@ -15,6 +15,7 @@ workflow gwas {
         PLINKFileset genotypes
         Array[PGENFileset]+ imputed_genotypes
         Array[String] groupby = []
+        Array[String] filterby = []
         Array[String] covariates = ["AGE", "SEX", "AGE_x_AGE", "AGE_x_SEX"]
         Array[String] phenotypes = ["SEVERE_COVID_19"]
         String julia_use_sysimage = "true"
@@ -55,6 +56,7 @@ workflow gwas {
             docker_image=docker_image,
             covariates_file=covariates_file,
             groupby=groupby,
+            filters=filterby,
             covariates=covariates,
             phenotypes_list=phenotypes,
             min_cases_controls=min_cases_controls,
@@ -542,6 +544,7 @@ task make_covariates_and_groups {
         String docker_image
         File covariates_file
         Array[String] groupby = []
+        Array[String] filters = []
         Array[String] covariates = ["SEX", "AGE"]
         Array[String] phenotypes_list = ["SEVERE_COVID_19"]
         String min_cases_controls = "10"
@@ -555,6 +558,12 @@ task make_covariates_and_groups {
             groupby_string_opt="--groupby=${groupby_string}"
         fi
 
+        filters_string='~{sep="," filters}'
+        filters_string_opt=""
+        if [[ -n "${filters_string}" ]]; then
+            filters_string_opt="--filters=${filters_string}"
+        fi
+
         covariates_string='~{sep="," covariates}'
 
         ~{julia_cmd} \
@@ -563,7 +572,7 @@ task make_covariates_and_groups {
             --covariates=${covariates_string} \
             --phenotypes=~{sep="," phenotypes_list} \
             --output-prefix=gwas \
-            --min-cases-controls=~{min_cases_controls} ${groupby_string_opt}
+            --min-cases-controls=~{min_cases_controls} ${groupby_string_opt} ${filters_string_opt}
     >>>
 
     output {

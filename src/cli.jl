@@ -433,7 +433,12 @@ function cli_settings()
             arg_type = String
             help = "Comma separated list of variables to use to stratify the GWAS."
             default = nothing
-        
+
+        "--filters"
+            arg_type = String
+            help = "Filters to apply to the data."
+            default = nothing
+
         "--covariates"
             arg_type = String
             help = "Comma separated list of covariates to include in the output file."
@@ -967,7 +972,8 @@ function julia_main()::Cint
             covariates_string=cmd_settings["covariates"],
             phenotypes_string=cmd_settings["phenotypes"],
             output_prefix=cmd_settings["output-prefix"],
-            min_cases_controls=cmd_settings["min-cases-controls"]
+            min_cases_controls=cmd_settings["min-cases-controls"],
+            filters_string=cmd_settings["filters"]
         )
     elseif cmd == "merge-covariates-pcs"
         merge_covariates_and_pcs(

@@ -119,7 +119,45 @@ function add_user_defined_covariates!(covariates, covariates_string)
     return updated_required_covariate_variables
 end
 
-function write_covariates_and_phenotypes_group(data, covariates_list; group_id="all", phenotypes=["SEVERE_COVID_19"], output_prefix="gwas", min_cases_controls=100)
+apply_filters(data, ::Nothing) = data
+
+function apply_filters(data, filters_string::AbstractString)
+    filters_strings = split(filters_string, ",")
+    for filter_string in filters_strings
+        operator = match(r"(<=|>=|<|>|=)", filter_string).match
+        col, value = split(filter_string, operator)
+        value = if eltype(data[!, col]) <: Union{Missing,Number}
+                parse(Float64, value)
+            else
+                @assert value in data[!, col] "Filtering value $value not found in column $col."
+                value
+        end
+        # There is likely a better way to do this with metaprogramming but can't findout quickly..
+        if operator == "="
+            data = data[(data[!, col] .!== missing) .& (data[!, col] .== value), :]
+        elseif operator == "<"
+            data = data[(data[!, col] .!== missing) .& (data[!, col] .< value), :]
+        elseif operator == ">"
+            data = data[(data[!, col] .!== missing) .& (data[!, col] .> value), :]
+        elseif operator == "<="
+            data = data[(data[!, col] .!== missing) .& (data[!, col] .<= value), :]
+        elseif operator == ">="
+            data = data[(data[!, col] .!== missing) .& (data[!, col] .>= value), :]
+        else
+            throw(ArgumentError("Operator $operator not supported."))
+        end
+    end
+    return data
+end
+
+function write_covariates_and_phenotypes_group(data, covariates_list; 
+    group_id="all", 
+    phenotypes=["SEVERE_COVID_19"], 
+    output_prefix="gwas", 
+    min_cases_controls=100,
+    filters_string=nothing
+    )
+    data = apply_filters(data, filters_string)
     n_phenotypes_passed = 0
     for phenotype in phenotypes
         data_no_missing = dropmissing(data, [phenotype, covariates_list...])
