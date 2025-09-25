@@ -1,15 +1,15 @@
 function get_severe_infections_map()
     severe_infections_map = Dict{Any, Any}(
-        "covid-19" => (is_severe_covid_19, "SEVERE_COVID_19"),
+        "COVID_19" => (is_severe_covid_19, "SEVERE_COVID_19"),
     )
     for (raw_name, clean_name) in [
-        "influenza virus" => "SEVERE_INFLUENZA",
-        "pneumonia with radiographic changes at presentation to critical care" => "SEVERE_PNEUMONIA",
-        "pancreatitis of any aetiology" => "SEVERE_PANCREATITIS",
-        "rsv (respiratory syncytial virus) infection" => "SEVERE_RSV",
-        "soft tissue infections causing systemic sepsis" => "SEVERE_SOFT_TISSUE_INFECTION",
-        "ecls" => "SEVERE_ECLS",
-        "reaction to vaccination" => "SEVERE_REACTION_TO_VACCINATION"]
+        "INFLUENZA" => "SEVERE_INFLUENZA",
+        "PNEUMONIA" => "SEVERE_PNEUMONIA",
+        "PANCREATITIS" => "SEVERE_PANCREATITIS",
+        "RSV" => "SEVERE_RSV",
+        "SOFT_TISSUE_INFECTION" => "SEVERE_SOFT_TISSUE_INFECTION",
+        "ECLS" => "SEVERE_ECLS",
+        "REACTION_TO_VACCINATION" => "SEVERE_REACTION_TO_VACCINATION"]
         severe_infections_map[raw_name] = (row -> is_severe_infection(row, raw_name), clean_name)
     end
     return severe_infections_map
@@ -111,7 +111,7 @@ end
 A specific set of rules to process the severity of COVID-19 based on the cohort and diagnosis.
 """
 function is_severe_covid_19(row)
-    if row.PRIM_DIAGNOSIS_ODAP == "covid-19"
+    if row.PRIMARY_DIAGNOSIS == "COVID_19"
         cohort = row.COHORT
         if cohort == "genomicc_severe"
             return 1
@@ -144,7 +144,7 @@ If it does not have the infection it is ignored.
 If an individual has the infection but is not part of genomicc_severe, we do not know where they come from and how to process them so we throw.
 """
 function is_severe_infection(row, infection_name)
-    if row.PRIM_DIAGNOSIS_ODAP == infection_name
+    if row.PRIMARY_DIAGNOSIS == infection_name
         cohort = row.COHORT
         if cohort == "genomicc_severe" || cohort == "gen_int_pakistan"
             return 1
@@ -203,6 +203,7 @@ function concat_ukb_covariates(ukb_covariates_file, ukb_inferred_covariates_file
         ukb_inferred_covariates,
         on=:eid => :IID
     )
+    n_ukb_samples = nrow(ukb_all_covariates)
     # Select aand process AGE, SEX and inferred ancestry
     DataFrames.select!(ukb_all_covariates,
         :eid => :FID,
@@ -218,16 +219,36 @@ function concat_ukb_covariates(ukb_covariates_file, ukb_inferred_covariates_file
     )
     # Severe infections are all 0 for UKB
     for infection_name in infection_names
-        ukb_all_covariates[!, infection_name] = zeros(Int, nrow(ukb_all_covariates))
+        ukb_all_covariates[!, infection_name] = zeros(Int, n_ukb_samples)
     end
     # Fill cohort
-    ukb_all_covariates.COHORT = fill(:ukbiobank, nrow(ukb_all_covariates))
+    ukb_all_covariates.COHORT = fill("ukbiobank", n_ukb_samples)
     # Add ALIVE_AT_ASSESSMENT: we fill with missings
     if hasproperty(genomicc_covariates, :ALIVE_AT_ASSESSMENT)
-        ukb_all_covariates.ALIVE_AT_ASSESSMENT = fill(missing, nrow(ukb_all_covariates))
+        ukb_all_covariates.ALIVE_AT_ASSESSMENT = fill(missing, n_ukb_samples)
     end
+    # Add PRIMARY_DIAGNOSIS
+    ukb_all_covariates.PRIMARY_DIAGNOSIS = fill(missing, n_ukb_samples)
 
     return vcat(genomicc_covariates, ukb_all_covariates)
+end
+
+function add_primary_diagnosis!(df)
+    prim_diag_map = Dict(
+        "covid-19" => "COVID_19",
+        "isaric4c covid-19" => "COVID_19",
+        "mild covid-19" => "COVID_19",
+        "react covid-19" => "COVID_19",
+        "influenza virus" => "INFLUENZA",
+        "pneumonia with radiographic changes at presentation to critical care" => "PNEUMONIA",
+        "pancreatitis of any aetiology" => "PANCREATITIS",
+        "rsv (respiratory syncytial virus) infection" => "RSV",
+        "soft tissue infections causing systemic sepsis" => "SOFT_TISSUE_INFECTION",
+        "ecls" => "ECLS",
+        "reaction to vaccination" => "REACTION_TO_VACCINATION"
+    )
+    df.PRIMARY_DIAGNOSIS = map(d -> prim_diag_map[d], df.PRIM_DIAGNOSIS_ODAP)
+    return df
 end
 
 function process_genomicc_covariates(
@@ -241,11 +262,7 @@ function process_genomicc_covariates(
     # Process GenOMICC covariates
     genomicc_covariates = CSV.read(genomicc_covariates_file, DataFrame)
     ## covid-19 values may be prefixed by cohort
-    genomicc_covariates.PRIM_DIAGNOSIS_ODAP = replace.(genomicc_covariates.PRIM_DIAGNOSIS_ODAP, 
-        "isaric4c covid-19" => "covid-19",
-        "react covid-19" => "covid-19",
-        "mild covid-19" => "covid-19",
-    )
+    add_primary_diagnosis!(genomicc_covariates)
     ## Process infections
     for (_, (fn, infection_name)) in severe_infections_map
         genomicc_covariates[!, infection_name] = map(fn, eachrow(genomicc_covariates))
@@ -257,6 +274,7 @@ function process_genomicc_covariates(
         :FID => :FID,
         :IID => :IID,
         :COHORT => :COHORT,
+        :PRIMARY_DIAGNOSIS,
         :AGE_YEARS_AT_RECRUITMENT => :AGE,
         :SEX_SELF_REPORTED => process_genomicc_sexes => :SEX,
         :SUPERPOPULATION,

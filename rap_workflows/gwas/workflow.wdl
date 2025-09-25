@@ -195,8 +195,8 @@ workflow gwas {
             input:
                 docker_image = docker_image,
                 julia_cmd = get_julia_cmd.julia_cmd,
-                gwas_results = merge_chr_results.gwas_results,
-                finemapping_results = merge_chr_results.finemapping_results,
+                gwas_results = merge_chr_results.merged_gwas_results,
+                finemapping_results = merge_chr_results.merged_finemapping_results,
                 maf = maf
         }
     }
@@ -254,8 +254,8 @@ task merge_chr_results {
     >>>
 
     output {
-        File gwas_results = "results.all_chr.~{group_name}.gwas.tsv"
-        File finemapping_results = "results.all_chr.~{group_name}.finemapping.tsv"
+        File merged_gwas_results = "results.all_chr.~{group_name}.gwas.tsv"
+        File merged_finemapping_results = "results.all_chr.~{group_name}.finemapping.tsv"
     }
 
     runtime {

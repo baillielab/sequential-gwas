@@ -38,9 +38,26 @@ TESTDIR = joinpath(PKGDIR, "test")
     @test all(bim.VARIANT_ID .== ["rs1_kgp", "rsY1", "rsM1"])
     @test unmapped_ids == Set(["rsM1", "rsY1"])
 
+    # Test add_primary_diagnosis!
+    odap_covariates = DataFrame(PRIM_DIAGNOSIS_ODAP=[
+        "covid-19", "isaric4c covid-19", "mild covid-19", "react covid-19",
+        "influenza virus", "pneumonia with radiographic changes at presentation to critical care",
+        "pancreatitis of any aetiology", "rsv (respiratory syncytial virus) infection",
+        "soft tissue infections causing systemic sepsis", "ecls", "reaction to vaccination"
+    ])
+    GenomiccWorkflows.add_primary_diagnosis!(odap_covariates)
+    @test odap_covariates.PRIMARY_DIAGNOSIS == [
+        "COVID_19", "COVID_19", "COVID_19", "COVID_19",
+        "INFLUENZA", "PNEUMONIA",
+        "PANCREATITIS", "RSV",
+        "SOFT_TISSUE_INFECTION", "ECLS", "REACTION_TO_VACCINATION"
+    ]
+    odap_covariates = DataFrame(PRIM_DIAGNOSIS_ODAP=["unknown diagnosis"])
+    @test_throws KeyError GenomiccWorkflows.add_primary_diagnosis!(odap_covariates)
+
     # Test is_severe_covid_19
     covariates = DataFrame(
-        PRIM_DIAGNOSIS_ODAP=["covid-19", "flu", "covid-19", "covid-19", "covid-19", "covid-19", "covid-19", "covid-19"],
+        PRIMARY_DIAGNOSIS=["COVID_19", "flu", "COVID_19", "COVID_19", "COVID_19", "COVID_19", "COVID_19", "COVID_19"],
         COHORT=["genomicc_severe", "genomicc_severe", "gen_int_pakistan", "genomicc_mild", "genomicc_react", "isaric4c", "isaric4c", "isaric4c"],
         ISARIC_MAX_SEVERITY_SCORE=[missing, missing, missing, missing, missing, "NA", "3", "4"],
         EXPECTED_SEVERE_COVID_19=[1, missing, 1, 0, 0, missing, 0, 1]
@@ -48,24 +65,24 @@ TESTDIR = joinpath(PKGDIR, "test")
     covariates.SEVERE_COVID_19 = map(GenomiccWorkflows.is_severe_covid_19, eachrow(covariates))
     @test all(covariates.SEVERE_COVID_19 .=== covariates.EXPECTED_SEVERE_COVID_19)
     unknown_cohort_covariates = DataFrame(
-        PRIM_DIAGNOSIS_ODAP=["covid-19"],
+        PRIMARY_DIAGNOSIS=["COVID_19"],
         COHORT=["unknown cohort"],
     )
     @test_throws ArgumentError("Unknown cohort: unknown cohort") map(GenomiccWorkflows.is_severe_covid_19, eachrow(unknown_cohort_covariates))
     
     # Test is_severe_infection
     covariates = DataFrame(
-        PRIM_DIAGNOSIS_ODAP=["covid-19", "flu", "flu"],
+        PRIMARY_DIAGNOSIS=["COVID_19", "INFLUENZA", "INFLUENZA"],
         COHORT=["genomicc_severe", "genomicc_severe", "gen_int_pakistan"],
         EXPECTED_SEVERE_INFLUENZA=[missing, 1, 1]
     )
-    covariates.SEVERE_INFLUENZA = map(x -> GenomiccWorkflows.is_severe_infection(x, "flu"), eachrow(covariates))
+    covariates.SEVERE_INFLUENZA = map(x -> GenomiccWorkflows.is_severe_infection(x, "INFLUENZA"), eachrow(covariates))
     @test all(covariates.SEVERE_INFLUENZA .=== covariates.EXPECTED_SEVERE_INFLUENZA)
     unknown_cohort_covariates = DataFrame(
-        PRIM_DIAGNOSIS_ODAP=["flu"],
+        PRIMARY_DIAGNOSIS=["INFLUENZA"],
         COHORT=["unknown cohort"],
     )
-    @test_throws ArgumentError("Unknown cohort: unknown cohort, while processing infection: flu") map(x -> GenomiccWorkflows.is_severe_infection(x, "flu"), eachrow(unknown_cohort_covariates))
+    @test_throws ArgumentError("Unknown cohort: unknown cohort, while processing infection: INFLUENZA") map(x -> GenomiccWorkflows.is_severe_infection(x, "INFLUENZA"), eachrow(unknown_cohort_covariates))
 
     # Test is_alive_at_assessment
     df = DataFrame(
@@ -87,10 +104,11 @@ end
     ])
     julia_main()
     processed_covariates = CSV.read(joinpath(tmpdir, "covariates.processed.csv"), DataFrame)
-    names(processed_covariates) == [
+    @test Set(names(processed_covariates)) == Set([
         "FID",
         "IID",
         "COHORT",
+        "PRIMARY_DIAGNOSIS",
         "AGE",
         "SEX",
         "SUPERPOPULATION",
@@ -100,14 +118,14 @@ end
         "EUR",
         "SAS",
         "ALIVE_AT_ASSESSMENT",
-        "SEVERE_PNEUMONIA",
         "SEVERE_COVID_19",
+        "SEVERE_PNEUMONIA",
         "SEVERE_PANCREATITIS",
         "SEVERE_INFLUENZA",
         "SEVERE_SOFT_TISSUE_INFECTION",
         "SEVERE_RSV",
         "SEVERE_ECLS",
-        "SEVERE_REACTION_TO_VACCINATION"]
+        "SEVERE_REACTION_TO_VACCINATION"])
     @test countlines(output_file) == countlines(genomicc_covariates_file) # No samples are dropped
 end
 
@@ -145,10 +163,11 @@ end
     merged_covariates = CSV.read(output_file, DataFrame)
     ukb_individuals = merged_covariates.IID[merged_covariates.IID .|> x -> startswith(x, "ukb")]
     @test nrow(merged_covariates) == 15 + 12911 # ukb19 is dropped because in critical_table.csv
-    @test names(merged_covariates) == [
+    @test Set(names(merged_covariates)) == Set([
         "FID",
         "IID",
         "COHORT",
+        "PRIMARY_DIAGNOSIS",
         "AGE",
         "SEX",
         "SUPERPOPULATION",
@@ -166,13 +185,18 @@ end
         "SEVERE_RSV",
         "SEVERE_ECLS",
         "SEVERE_REACTION_TO_VACCINATION"
-    ]
+    ])
     @test Set(merged_covariates.COHORT) == Set(["isaric4c", "gen_int_pakistan", "genomicc_mild", "genomicc_severe", "genomicc_react", "ukbiobank"])
     @test eltype(merged_covariates.AGE) == Int # No missing value in AGE
     @test Set(merged_covariates.SEX) == Set([0, 1, missing]) # Individuals with missing Sex will be dropped in analyses
     @test Set(merged_covariates.SUPERPOPULATION) == Set(["AFR", "SAS", "EAS", "AMR", "EUR", "ADMIXED"])
     @test merged_covariates.FID == merged_covariates.IID
     @test Set(merged_covariates.ALIVE_AT_ASSESSMENT) == Set([0, 1, missing])
+    @test Set(merged_covariates.PRIMARY_DIAGNOSIS) == Set([
+        "COVID_19", "INFLUENZA", "PANCREATITIS", "PNEUMONIA",
+        "RSV", "SOFT_TISSUE_INFECTION", "ECLS", "REACTION_TO_VACCINATION",
+        missing
+    ])
 end
 
 @testset "Test fill_chr_pvar_with_variant_id" begin
