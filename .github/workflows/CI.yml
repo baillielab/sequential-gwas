@@ -84,6 +84,14 @@ jobs:
         with:
           singularity-version: '4.2.2'
       - uses: nf-core/setup-nextflow@v1.2.0
+      - name: Install plink2
+        run: |
+          wget https://s3.amazonaws.com/plink2-assets/alpha6/plink2_linux_x86_64_20250129.zip
+          unzip plink2_linux_x86_64_20250129.zip
+          sudo mv plink2 /usr/local/bin/
+          sudo chmod +x /usr/local/bin/plink2
+          rm plink2_linux_x86_64_20250129.zip
+          plink2 --version
       - uses: r-lib/actions/setup-r@v2
       - name: Export R_HOME
         run: echo "R_HOME=$(R RHOME)" >> $GITHUB_ENV
