@@ -1,15 +1,15 @@
 function get_severe_infections_map()
-    severe_infections_map = Dict{Any, Any}(
-        "COVID_19" => (is_severe_covid_19, "SEVERE_COVID_19"),
-    )
+    severe_infections_map = Dict()
     for (raw_name, clean_name) in [
+        "COVID_19" => "SEVERE_COVID_19",
         "INFLUENZA" => "SEVERE_INFLUENZA",
         "PNEUMONIA" => "SEVERE_PNEUMONIA",
         "PANCREATITIS" => "SEVERE_PANCREATITIS",
         "RSV" => "SEVERE_RSV",
         "SOFT_TISSUE_INFECTION" => "SEVERE_SOFT_TISSUE_INFECTION",
         "ECLS" => "SEVERE_ECLS",
-        "REACTION_TO_VACCINATION" => "SEVERE_REACTION_TO_VACCINATION"]
+        "REACTION_TO_VACCINATION" => "SEVERE_REACTION_TO_VACCINATION"
+        ]
         severe_infections_map[raw_name] = (row -> is_severe_infection(row, raw_name), clean_name)
     end
     return severe_infections_map
@@ -105,55 +105,43 @@ function align_ukb_variants_with_kgp_and_keep_unrelated(ukb_bed_prefix, kgp_bed_
     return 0
 end
 
-"""
-    is_severe_covid_19(row)
 
-A specific set of rules to process the severity of COVID-19 based on the cohort and diagnosis.
 """
-function is_severe_covid_19(row)
-    if row.PRIMARY_DIAGNOSIS == "COVID_19"
-        cohort = row.COHORT
-        if cohort == "genomicc_severe"
-            return 1
-        elseif cohort == "gen_int_pakistan"
-            return 1
-        elseif cohort == "genomicc_mild"
-            return 0
-        elseif cohort == "genomicc_react"
-            return 0
-        elseif cohort == "isaric4c"
-            if row.ISARIC_MAX_SEVERITY_SCORE == "NA"
-                return missing
-            else
-                score = parse(Int, row.ISARIC_MAX_SEVERITY_SCORE)
-                return score >= 4 ? 1 : 0
-            end
-        else
-            throw(ArgumentError("Unknown cohort: $cohort"))
-        end
+    is_severe_infection(row, infection_name)
+
+An individual is considered severe for an infection if it had the infection and is severely ill. 
+If an individual does not have the infection, it is filled missing not to contaminate downstream analyses. 
+They could be severe for another infection for example and are not appropriate controls.
+"""
+function is_severe_infection(row, infection_name)
+    if row.PRIMARY_DIAGNOSIS == infection_name
+        return row.IS_SEVERELY_ILL
     else
         return missing
     end
 end
 
-"""
-    is_severe_infection(row, infection_name)
-
-An individual is considered severe for an infection if it had the infection and is part of the genomicc_severe cohort. 
-If it does not have the infection it is ignored.
-If an individual has the infection but is not part of genomicc_severe, we do not know where they come from and how to process them so we throw.
-"""
-function is_severe_infection(row, infection_name)
-    if row.PRIMARY_DIAGNOSIS == infection_name
-        cohort = row.COHORT
-        if cohort == "genomicc_severe" || cohort == "gen_int_pakistan"
-            return 1
+function is_severely_ill(cohort, severity_score)
+    if cohort in ("GENOMICC_SEVERE", "GEN_INT_PAKISTAN")
+        return 1
+    elseif cohort == "ISARIC4C"
+        if severity_score == "NA"
+            return missing
         else
-            throw(ArgumentError("Unknown cohort: $cohort, while processing infection: $infection_name"))
+            score = parse(Int, severity_score)
+            return score >= 4 ? 1 : 0
         end
+    elseif cohort in ("GENOMICC_MILD", "GENOMICC_REACT")
+        return 0
     else
-        return missing
+        throw(ArgumentError("Unknown cohort: $cohort"))
     end
+end
+
+function add_is_severely_ill_col!(df)
+    return transform!(df, 
+        [:COHORT, :ISARIC_MAX_SEVERITY_SCORE] => ByRow(is_severely_ill) => :IS_SEVERELY_ILL
+    )
 end
 
 """
@@ -222,13 +210,15 @@ function concat_ukb_covariates(ukb_covariates_file, ukb_inferred_covariates_file
         ukb_all_covariates[!, infection_name] = zeros(Int, n_ukb_samples)
     end
     # Fill cohort
-    ukb_all_covariates.COHORT = fill("ukbiobank", n_ukb_samples)
+    ukb_all_covariates.COHORT = fill("UKBIOBANK", n_ukb_samples)
     # Add ALIVE_AT_ASSESSMENT: we fill with missings
     if hasproperty(genomicc_covariates, :ALIVE_AT_ASSESSMENT)
         ukb_all_covariates.ALIVE_AT_ASSESSMENT = fill(missing, n_ukb_samples)
     end
     # Add PRIMARY_DIAGNOSIS
     ukb_all_covariates.PRIMARY_DIAGNOSIS = fill(missing, n_ukb_samples)
+    # ADD IS_SEVERELY_ILL
+    ukb_all_covariates.IS_SEVERELY_ILL = fill(0, n_ukb_samples)
 
     return vcat(genomicc_covariates, ukb_all_covariates)
 end
@@ -251,6 +241,11 @@ function add_primary_diagnosis!(df)
     return df
 end
 
+function clean_cohort!(df)
+    df.COHORT = uppercase.(df.COHORT)
+    return df
+end
+
 function process_genomicc_covariates(
     genomicc_covariates_file;
     ukb_covariates_file=nothing,
@@ -261,7 +256,8 @@ function process_genomicc_covariates(
     infection_names = last.(values(severe_infections_map))
     # Process GenOMICC covariates
     genomicc_covariates = CSV.read(genomicc_covariates_file, DataFrame)
-    ## covid-19 values may be prefixed by cohort
+    clean_cohort!(genomicc_covariates)
+    add_is_severely_ill_col!(genomicc_covariates)
     add_primary_diagnosis!(genomicc_covariates)
     ## Process infections
     for (_, (fn, infection_name)) in severe_infections_map
@@ -275,6 +271,7 @@ function process_genomicc_covariates(
         :IID => :IID,
         :COHORT => :COHORT,
         :PRIMARY_DIAGNOSIS,
+        :IS_SEVERELY_ILL,
         :AGE_YEARS_AT_RECRUITMENT => :AGE,
         :SEX_SELF_REPORTED => process_genomicc_sexes => :SEX,
         :SUPERPOPULATION,

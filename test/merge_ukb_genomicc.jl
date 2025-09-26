@@ -58,32 +58,34 @@ TESTDIR = joinpath(PKGDIR, "test")
     # Test is_severe_covid_19
     covariates = DataFrame(
         PRIMARY_DIAGNOSIS=["COVID_19", "flu", "COVID_19", "COVID_19", "COVID_19", "COVID_19", "COVID_19", "COVID_19"],
-        COHORT=["genomicc_severe", "genomicc_severe", "gen_int_pakistan", "genomicc_mild", "genomicc_react", "isaric4c", "isaric4c", "isaric4c"],
+        COHORT=["GENOMICC_SEVERE", "GENOMICC_SEVERE", "GEN_INT_PAKISTAN", "GENOMICC_MILD", "GENOMICC_REACT", "ISARIC4C", "ISARIC4C", "ISARIC4C"],
         ISARIC_MAX_SEVERITY_SCORE=[missing, missing, missing, missing, missing, "NA", "3", "4"],
+        EXPECTED_SEVERELY_ILL = [1, 1, 1, 0, 0, missing, 0, 1],
         EXPECTED_SEVERE_COVID_19=[1, missing, 1, 0, 0, missing, 0, 1]
     )
-    covariates.SEVERE_COVID_19 = map(GenomiccWorkflows.is_severe_covid_19, eachrow(covariates))
+    GenomiccWorkflows.add_is_severely_ill_col!(covariates)
+    @test all(covariates.IS_SEVERELY_ILL .=== covariates.EXPECTED_SEVERELY_ILL)
+    covariates.SEVERE_COVID_19 = map(x -> GenomiccWorkflows.is_severe_infection(x, "COVID_19"), eachrow(covariates))
     @test all(covariates.SEVERE_COVID_19 .=== covariates.EXPECTED_SEVERE_COVID_19)
     unknown_cohort_covariates = DataFrame(
         PRIMARY_DIAGNOSIS=["COVID_19"],
         COHORT=["unknown cohort"],
+        ISARIC_MAX_SEVERITY_SCORE=[missing]
     )
-    @test_throws ArgumentError("Unknown cohort: unknown cohort") map(GenomiccWorkflows.is_severe_covid_19, eachrow(unknown_cohort_covariates))
+    @test_throws ArgumentError("Unknown cohort: unknown cohort") GenomiccWorkflows.add_is_severely_ill_col!(unknown_cohort_covariates)
     
-    # Test is_severe_infection
+    # Test is_severe_infection_influenza
     covariates = DataFrame(
         PRIMARY_DIAGNOSIS=["COVID_19", "INFLUENZA", "INFLUENZA"],
-        COHORT=["genomicc_severe", "genomicc_severe", "gen_int_pakistan"],
+        ISARIC_MAX_SEVERITY_SCORE=["5", missing, missing],
+        COHORT=["GENOMICC_SEVERE", "GENOMICC_SEVERE", "GEN_INT_PAKISTAN"],
+        EXPECTED_IS_SEVERELY_ILL=[1, 1, 1],
         EXPECTED_SEVERE_INFLUENZA=[missing, 1, 1]
     )
+    GenomiccWorkflows.add_is_severely_ill_col!(covariates)
+    @test all(covariates.IS_SEVERELY_ILL .=== covariates.EXPECTED_IS_SEVERELY_ILL)
     covariates.SEVERE_INFLUENZA = map(x -> GenomiccWorkflows.is_severe_infection(x, "INFLUENZA"), eachrow(covariates))
     @test all(covariates.SEVERE_INFLUENZA .=== covariates.EXPECTED_SEVERE_INFLUENZA)
-    unknown_cohort_covariates = DataFrame(
-        PRIMARY_DIAGNOSIS=["INFLUENZA"],
-        COHORT=["unknown cohort"],
-    )
-    @test_throws ArgumentError("Unknown cohort: unknown cohort, while processing infection: INFLUENZA") map(x -> GenomiccWorkflows.is_severe_infection(x, "INFLUENZA"), eachrow(unknown_cohort_covariates))
-
     # Test is_alive_at_assessment
     df = DataFrame(
         ALIVE_AT_60_DAYS = ["Yes", "no", "yes", "No", "NA", "NA", "NA", "NA", "NA"],
@@ -117,6 +119,7 @@ end
         "EAS",
         "EUR",
         "SAS",
+        "IS_SEVERELY_ILL",
         "ALIVE_AT_ASSESSMENT",
         "SEVERE_COVID_19",
         "SEVERE_PNEUMONIA",
@@ -176,6 +179,7 @@ end
         "EAS",
         "EUR",
         "SAS",
+        "IS_SEVERELY_ILL",
         "ALIVE_AT_ASSESSMENT",
         "SEVERE_PNEUMONIA",
         "SEVERE_COVID_19",
@@ -186,7 +190,7 @@ end
         "SEVERE_ECLS",
         "SEVERE_REACTION_TO_VACCINATION"
     ])
-    @test Set(merged_covariates.COHORT) == Set(["isaric4c", "gen_int_pakistan", "genomicc_mild", "genomicc_severe", "genomicc_react", "ukbiobank"])
+    @test Set(merged_covariates.COHORT) == Set(["ISARIC4C", "GEN_INT_PAKISTAN", "GENOMICC_MILD", "GENOMICC_SEVERE", "GENOMICC_REACT", "UKBIOBANK"])
     @test eltype(merged_covariates.AGE) == Int # No missing value in AGE
     @test Set(merged_covariates.SEX) == Set([0, 1, missing]) # Individuals with missing Sex will be dropped in analyses
     @test Set(merged_covariates.SUPERPOPULATION) == Set(["AFR", "SAS", "EAS", "AMR", "EUR", "ADMIXED"])
@@ -197,6 +201,7 @@ end
         "RSV", "SOFT_TISSUE_INFECTION", "ECLS", "REACTION_TO_VACCINATION",
         missing
     ])
+    @test all(merged_covariates[merged_covariates.COHORT .== "UKBIOBANK", :IS_SEVERELY_ILL] .== 0)
 end
 
 @testset "Test fill_chr_pvar_with_variant_id" begin
@@ -400,7 +405,8 @@ if dorun
             "AFR", "AMR", "EAS", "EUR", "SAS", "ALIVE_AT_ASSESSMENT",
             "SEVERE_PNEUMONIA", "SEVERE_COVID_19", "SEVERE_PANCREATITIS", 
             "SEVERE_INFLUENZA", "SEVERE_SOFT_TISSUE_INFECTION", "SEVERE_RSV", 
-            "SEVERE_ECLS", "SEVERE_REACTION_TO_VACCINATION", "PRIMARY_DIAGNOSIS"
+            "SEVERE_ECLS", "SEVERE_REACTION_TO_VACCINATION", "PRIMARY_DIAGNOSIS",
+            "IS_SEVERELY_ILL"
         ])
         @test length(filter(startswith("ukb"), ukb_genomicc_covariates.IID)) > 0
         @test length(filter(startswith("odap"), ukb_genomicc_covariates.IID)) > 0
