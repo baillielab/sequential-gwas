@@ -7,9 +7,14 @@ function cli_settings()
     )
 
     @add_arg_table! s begin
+        "finemap"
+            action = :command
+            help = "Runs fine-mapping analysis."
+
         "gwas-plots"
             action = :command
             help = "Generates GWAS plots."
+
         "pca-qc"
             action = :command
             help = "Runs PCAb-ased QC on genotypes to exclude outlier variants."
@@ -82,7 +87,7 @@ function cli_settings()
             action = :command
             help = "Downloads a file from TOPMed."
 
-        "merge-regenie-chr-results"
+        "merge-chr-results"
             action = :command
             help = "Merges REGENIE results from different chromosomes."
         
@@ -90,7 +95,7 @@ function cli_settings()
             action = :command
             help = "Format variant Ids as CHR:POS:REF:ALT and keep only unrelated individuals from UKB data."
 
-        "merge-ukb-genomicc-covariates"
+        "process-genomicc-covariates"
             action = :command
             help = "Merges UKB and GenOMICC covariates files."
 
@@ -98,26 +103,102 @@ function cli_settings()
             action = :command
             help = "Generates a report after merging UKB and GenOMICC data."
 
-        "make-ukb-bgen-qc-and-r2-filter-files"
+        "fill-chr-pvar-with-variant-id"
             action = :command
             help = "Generates UKB BGEN QC and R2 filter files."
+
+        "make-ukb-individuals-list"
+            action = :command
+            help = "Generates a list of UKB individuals to be used in the workflow."
     end
 
-    @add_arg_table! s["make-ukb-bgen-qc-and-r2-filter-files"] begin
-        "prefix"
+    @add_arg_table! s["finemap"] begin
+        "gwas-results-file"
             arg_type = String
             required = true
-            help = "Prefix to the UKB file."
-
-        "--threshold"
+            help = "Path to the GWAS results file."
+        "pgen-prefix"
+            arg_type = String
+            required = true
+            help = "Prefix for the PGEN fileset (without .pgen extension)."
+        "covariates-file"
+            arg_type = String
+            required = true
+            help = "Path to the covariates file (TSV format)."
+        "sample-file"
+            arg_type = String
+            required = true
+            help = "Path to the sample IDs file used to generate the GWAS results."
+        "--Xtype"
+            arg_type = String
+            help = "Type of genotype data to use for fine-mapping, either `:dosages` or `:genotypes`."
+            default = "dosages"
+        "--output-prefix"
+            arg_type = String
+            help = "Prefix to output the significant clumps (TSV format)."
+            default = "finemapping_results"
+        "--min-sig-clump-size"
+            arg_type = Int
+            help = "Minimum number of variants in a clump to be considered significant."
+            default = 3
+        "--lead-pvalue"
             arg_type = Float64
-            help = "R2 threshold for filtering variants."
-            default = 0.9
+            help = "P-value threshold for lead variants in clump."
+            default = 5e-8
+        "--p2-pvalue"
+            arg_type = Float64
+            help = "P-value threshold for secondary variants in clump."
+            default = 1e-5
+        "--r2-threshold"
+            arg_type = Float64
+            help = "R2 threshold to consider variants in LD for clumping."
+            default = 0.5
+        "--clump-kb"
+            arg_type = Int
+            help = "Window size (in kb) to consider variants in LD for clumping."
+            default = 250
+        "--n-causal"
+            arg_type = Int
+            help = "Number of causal variants to assume in fine-mapping."
+            default = 10
+        "--finemap-window-kb"
+            arg_type = Int
+            help = "Window size (in kb) to compute LD matrix for fine-mapping."
+            default = 1000
+    end
 
+    @add_arg_table! s["make-ukb-individuals-list"] begin
+        "covariates-file"
+            arg_type = String
+            required = true
+            help = "Covariates file."
+
+        "critical-table-file"
+            arg_type = String
+            required = true
+            help = "File containing critical IDs."
+        
         "--output"
             arg_type = String
-            help = "Output file containing variants to extract."
-            default = "extract_list.txt"
+            help = "Output file."
+            default = "ukb_eids_to_keep.txt"
+
+        "--max-samples"
+            arg_type = Int
+            help = "Maximum number of samples to keep."
+            default = nothing
+    end
+
+    @add_arg_table! s["fill-chr-pvar-with-variant-id"] begin
+        "pvar-file"
+            arg_type = String
+            required = true
+            help = "pvar file."
+
+        "variants-info-file"
+            arg_type = String
+            required = true
+            help = "File containing variants info (CHROM, POS, ID)."
     end
 
     @add_arg_table! s["make-ukb-genomicc-merge-report"] begin
@@ -139,36 +220,24 @@ function cli_settings()
             help = "Path to the merged UKB and GenOMICC covariates file."
     end
 
-    @add_arg_table! s["merge-ukb-genomicc-covariates"] begin
+    @add_arg_table! s["process-genomicc-covariates"] begin
         "genomicc-covariates"
             arg_type = String
             required = true
             help = "Path to GenOMICC covariates file."
 
-        "genomicc-inferred-covariates"
+        "--ukb-covariates"
             arg_type = String
-            required = true
-            help = "Path to GenOMICC inferred covariates file."
+            help = "Optional path to UKB covariates file to be concatenated to GenOMICC."
 
-        "ukb-covariates"
+        "--ukb-inferred-covariates"
             arg_type = String
-            required = true
-            help = "Path to UKB covariates file."
-
-        "ukb-inferred-covariates"
-            arg_type = String
-            required = true
-            help = "Path to UKB inferred covariates file."
-
-        "file-with-eids-to-exclude"
-            arg_type = String
-            required = true
-            help = "Path to file with EIDs to exclude from the merged covariates."
+            help = "Optional path to UKB inferred covariates file to be concatenated to GenOMICC."
 
         "--output-file"
             arg_type = String
             help = "Output file name."
-            default = "ukb_genomicc.covariates.csv"
+            default = "covariates.processed.csv"
     end
 
     @add_arg_table! s["align-ukb-variants-with-kgp-and-keep-unrelated"] begin
@@ -193,16 +262,19 @@ function cli_settings()
             default = 3
     end
 
-    @add_arg_table! s["merge-regenie-chr-results"] begin
-        "input-prefix"
+    @add_arg_table! s["merge-chr-results"] begin
+        "gwas-merge-list"
             arg_type = String
             required = true
-            help = "Prefix to input files."
-
-        "--output"
+            help = "File with list of files to be merged."
+        "finemapping-merge-list"
             arg_type = String
-            help = "Output file name."
-            default = "results.csv"
+            required = true
+            help = "File with list of finemapping files to be merged."
+        "--output-prefix"
+            arg_type = String
+            help = "Output path"
+            default = "results.all_chr"
     end
 
     @add_arg_table! s["download-topmed-file"] begin
@@ -309,20 +381,25 @@ function cli_settings()
     end
 
     @add_arg_table! s["gwas-plots"] begin
-        "results"
+        "gwas-results"
             arg_type = String
             required = true
             help = "Path to GWAS results file."
-        
-        "group"
+
+        "finemapping-results"
             arg_type = String
             required = true
-            help = "Group name."
+            help = "Path to finemapping results file."
+
+        "--maf"
+            arg_type = Float64
+            help = "Minor allele frequency threshold to filter results."
+            default = 0.01
         
         "--output-prefix"
             arg_type = String
             help = "Prefix to output files."
-            default = "gwas"
+            default = "gwas.plot"
     end
 
     @add_arg_table! s["merge-covariates-pcs"] begin
@@ -343,27 +420,37 @@ function cli_settings()
     end
 
     @add_arg_table! s["make-gwas-groups"] begin
-        "covariates"
+        "covariates-file"
             arg_type = String
             required = true
             help = "Path to covariates file."
 
-        "variables-file"
+        "--groupby"
             arg_type = String
-            required = true
-            help = "Path to variables file."
-
-        "--inferred-covariates"
-            arg_type = String
+            help = "Comma separated list of variables to use to stratify the GWAS."
             default = nothing
-            help = "Path to covariates inferred from genotypes."
+
+        "--filters"
+            arg_type = String
+            help = "Filters to apply to the data."
+            default = nothing
+
+        "--covariates"
+            arg_type = String
+            help = "Comma separated list of covariates to include in the output file."
+            default = "AGE"
+
+        "--phenotypes"
+            arg_type = String
+            help = "Comma separated list of phenotypes to include in the output file."
+            default = "SEVERE_COVID_19"
 
         "--output-prefix"
             arg_type = String
             help = "Prefix to output files."
             default = "group"
         
-        "--min-group-size"
+        "--min-cases-controls"
             arg_type = Int
             help = "Minimum group size."
             default = 100
@@ -567,6 +654,11 @@ function cli_settings()
             arg_type = Float64
             help = "Threshold for ancestry assignment."
             default = 0.8
+
+        "--program"
+            arg_type = String
+            help = "Ancestry estimation program (scope or admixture)."
+            default = "scope"
     end
 
     @add_arg_table! s["plot-pca"] begin
@@ -806,7 +898,8 @@ function julia_main()::Cint
             cmd_settings["genotypes-prefix"],
             cmd_settings["pedigree-file"];
             output=cmd_settings["output"],
-            threshold=cmd_settings["threshold"]
+            threshold=cmd_settings["threshold"],
+            mode=cmd_settings["program"]
         )
     elseif cmd == "mock"
         mock_data(
@@ -870,11 +963,13 @@ function julia_main()::Cint
         )
     elseif cmd == "make-gwas-groups"
         make_gwas_groups(
-            cmd_settings["covariates"],
-            cmd_settings["variables-file"];
-            inferred_covariates_file=cmd_settings["inferred-covariates"],
+            cmd_settings["covariates-file"];
+            groupby_string=cmd_settings["groupby"],
+            covariates_string=cmd_settings["covariates"],
+            phenotypes_string=cmd_settings["phenotypes"],
             output_prefix=cmd_settings["output-prefix"],
-            min_group_size=cmd_settings["min-group-size"]
+            min_cases_controls=cmd_settings["min-cases-controls"],
+            filters_string=cmd_settings["filters"]
         )
     elseif cmd == "merge-covariates-pcs"
         merge_covariates_and_pcs(
@@ -884,8 +979,9 @@ function julia_main()::Cint
         )
     elseif cmd == "gwas-plots"
         gwas_plots(
-            cmd_settings["results"],
-            cmd_settings["group"];
+            cmd_settings["gwas-results"],
+            cmd_settings["finemapping-results"];
+            maf=cmd_settings["maf"],
             output_prefix=cmd_settings["output-prefix"]
         )
     elseif cmd == "write-imputation-split-lists"
@@ -918,10 +1014,11 @@ function julia_main()::Cint
             md5_file=cmd_settings["md5-file"],
             refresh_rate=cmd_settings["refresh-rate"]
             )
-    elseif cmd == "merge-regenie-chr-results"
-        merge_regenie_chr_results(
-            cmd_settings["input-prefix"];
-            output=cmd_settings["output"]
+    elseif cmd == "merge-chr-results"
+        merge_chr_results(
+            cmd_settings["gwas-merge-list"],
+            cmd_settings["finemapping-merge-list"];
+            output_prefix=cmd_settings["output-prefix"]
         )
     elseif cmd == "align-ukb-variants-with-kgp-and-keep-unrelated"
         align_ukb_variants_with_kgp_and_keep_unrelated(
@@ -930,13 +1027,11 @@ function julia_main()::Cint
             out_prefix=cmd_settings["out-prefix"],
             relatedness_degree=cmd_settings["relatedness-degree"]
         )
-    elseif cmd == "merge-ukb-genomicc-covariates"
-        merge_ukb_genomicc_covariates(
-            cmd_settings["genomicc-covariates"],
-            cmd_settings["genomicc-inferred-covariates"],
-            cmd_settings["ukb-covariates"],
-            cmd_settings["ukb-inferred-covariates"],
-            cmd_settings["file-with-eids-to-exclude"];
+    elseif cmd == "process-genomicc-covariates"
+        process_genomicc_covariates(
+            cmd_settings["genomicc-covariates"];
+            ukb_covariates_file=cmd_settings["ukb-covariates"],
+            ukb_inferred_covariates_file=cmd_settings["ukb-inferred-covariates"],
             output_file=cmd_settings["output-file"]
         )
     elseif cmd == "make-ukb-genomicc-merge-report"
@@ -946,11 +1041,33 @@ function julia_main()::Cint
             ukb_genomicc_imputed_files_list=cmd_settings["ukb-genomicc-imputed-files-list"],
             ukb_genomicc_covariates_file=cmd_settings["ukb-genomicc-covariates-file"]
         )
-    elseif cmd == "make-ukb-bgen-qc-and-r2-filter-files"
-        make_ukb_bgen_qc_and_r2_filter_files(
-            cmd_settings["prefix"];
-            threshold=cmd_settings["threshold"],
-            output=cmd_settings["output"]
+    elseif cmd == "fill-chr-pvar-with-variant-id"
+        fill_chr_pvar_with_variant_id(
+            cmd_settings["pvar-file"],
+            cmd_settings["variants-info-file"]
+        )
+    elseif cmd == "make-ukb-individuals-list"
+        make_ukb_individuals_list(
+            cmd_settings["covariates-file"],
+            cmd_settings["critical-table-file"];
+            output=cmd_settings["output"],
+            max_samples=cmd_settings["max-samples"]
+        )
+    elseif cmd == "finemap"
+        finemap_significant_regions(
+            cmd_settings["gwas-results-file"],
+            cmd_settings["pgen-prefix"],
+            cmd_settings["covariates-file"],
+            cmd_settings["sample-file"];
+            Xtype=cmd_settings["Xtype"],
+            output_prefix=cmd_settings["output-prefix"],
+            min_sig_clump_size=cmd_settings["min-sig-clump-size"],
+            lead_pvalue=cmd_settings["lead-pvalue"],
+            p2_pvalue=cmd_settings["p2-pvalue"],
+            r2_threshold=cmd_settings["r2-threshold"],
+            clump_kb=cmd_settings["clump-kb"],
+            n_causal=cmd_settings["n-causal"],
+            finemap_window_kb=cmd_settings["finemap-window-kb"],
         )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))

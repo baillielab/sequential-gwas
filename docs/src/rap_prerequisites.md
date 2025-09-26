@@ -1,4 +1,4 @@
-# Working with the UKB RAP
+# UKB RAP
 
 Most of the interactions with the UK Biobank RAP is made directly from your local machine using the dx-toolkit.
 
@@ -9,10 +9,6 @@ Most of the interactions with the UK Biobank RAP is made directly from your loca
 First, install the dx-toolkit on your local computer by following the instructions on [this page](https://documentation.dnanexus.com/downloads). You will also need to download the compiler.
 
 For reference, a quickstart guide to the toolkit can also be found [here](https://documentation.dnanexus.com/getting-started/cli-quickstart).
-
-### Installing miniwdl (Optional)
-
-If you want to check the workflow syntax and run the `make check` operations, you can also download [miniwdl](https://miniwdl.readthedocs.io/en/latest/getting_started.html#install-miniwdl).
 
 ### Cromwell (If you want to develop)
 
