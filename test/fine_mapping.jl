@@ -67,20 +67,67 @@ TESTDIR = joinpath(PKGDIR, "test")
     @test nrow(sig_clumps) == 1
     @test length(split(first(sig_clumps.SP2), ",")) == 2
     @test CSV.read(string(output_prefix, ".clumps.tsv"), DataFrame; delim="\t") == sig_clumps
+    # To get two clumps
+    sig_clumps = GenomiccWorkflows.write_significant_clumps(gwas_matched_pgen_prefix, gwas_results_file;
+        min_sig_clump_size = 1,
+        output = string(output_prefix, ".clumps.tsv"),
+        lead_pvalue = 0.3,
+        p2_pvalue = 0.3,
+        r2_threshold = 0.,
+        clump_kb = 70_000,
+        clump_id_field = "ID",
+        clump_pval_field = "LOG10P",
+        allele_1_field = "ALLELE1"
+    )
+    # Test get_loci_to_finemap: no merging of clumps
+    @test GenomiccWorkflows.get_loci_to_finemap(sig_clumps; window_kb=50) == [
+        ["chr1:40310265:G:A", 0.88379, 40310265-50_000, 40310265+50_000],
+        ["chr1:111622622:C:A", 0.935709, 111622622-50_000, 111622622+50_000]
+    ]
+    # Test get_loci_to_finemap: merging of clumps
+    dist_between_clumps_kb = (111622622-40310265) / 1000
+    @test GenomiccWorkflows.get_loci_to_finemap(sig_clumps; window_kb=dist_between_clumps_kb) == [
+        ["chr1:111622622:C:A", 0.935709, 0.0, 1.82934979e8]
+    ]
+    # Get finemapping regions from clumps
+    ld_variants = GenomiccWorkflows.get_locus_variants_r2("chr1:22542609:T:C", gwas_matched_pgen_prefix; ld_window_kb=5000)
+    @test nrow(ld_variants) == 1
     # Get variants in LD with clump lead
     sample_list = getindex.(split.(readlines(sample_file), "\t"), 2)
     y = GenomiccWorkflows.get_phenotype(covariates_file, sample_list, "SEVERE_COVID_19")
     clump = first(sig_clumps)
 
-    clump_finemapping_results = GenomiccWorkflows.finemap_clump(clump.ID, gwas_matched_pgen_prefix, y, sample_list;
+    locus_finemapping_results = GenomiccWorkflows.finemap_locus(clump.ID, gwas_matched_pgen_prefix, y, sample_list;
         n_causal=1,
-        ld_window_kb=300_000,
-        ld_window_r2=0,
+        finemap_window_kb=300_000,
     )
-    @test names(clump_finemapping_results) == [
-        "#CHROM", "POS", "ID", "REF", "ALT", "PIP", "CLUMP_ID", "CS"
+    @test names(locus_finemapping_results) == [
+        "#CHROM", "POS", "ID", "REF", "ALT", "PIP", "LOCUS_ID", "CS", "PHASED_R2"
     ]
-    @test nrow(clump_finemapping_results) == 5
+    @test nrow(locus_finemapping_results) == 5
+end
+
+@testset "Test region_plot" begin
+    finemapping_results = GenomiccWorkflows.harmonize_finemapping_results(
+            CSV.read(
+        joinpath(TESTDIR, "assets", "gwas", "results", "results.all_chr.EUR.SEVERE_COVID_19.finemapping.tsv"), 
+        DataFrame; 
+        delim="\t"
+    ))
+    finemapping_results = finemapping_results[finemapping_results.LOCUS_ID .== "rs7515509", :]
+    gwas_results = GenomiccWorkflows.harmonize_gwas_results(
+            CSV.read(
+        joinpath(TESTDIR, "assets", "gwas", "results", "results.all_chr.EUR.SEVERE_COVID_19.gwas.tsv"), 
+        DataFrame; 
+        delim="\t"
+    ))
+    region_data = innerjoin(
+        gwas_results,
+        DataFrames.select(finemapping_results, [:ID, :REF, :ALT, :PIP, :CS, :LOCUS_ID, :PHASED_R2]), 
+        on=[:ID]
+    )
+    fig = GenomiccWorkflows.region_plot(region_data)
+    @test fig !== nothing
 end
 
 

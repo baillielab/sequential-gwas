@@ -33,7 +33,7 @@ RUN wget https://www.kingrelatedness.com/KINGcode.tar.gz \
     && chmod +x /usr/local/bin/king
 
 # Install SuSiE
-RUN Rscript -e 'install.packages("susieR", repos = "https://cloud.r-project.org/")'
+RUN Rscript -e 'install.packages(c("susieR", "Rfast"), repos = "https://cloud.r-project.org/")'
 
 # Install SCOPE
 RUN git clone https://github.com/sriramlab/SCOPE.git \

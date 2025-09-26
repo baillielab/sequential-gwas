@@ -234,7 +234,7 @@ end
             REF = ["A"],
             ALT = ["T"],
             PIP = [.5],
-            CLUMP_ID = ["chr$(chr):4132:G:A"],
+            LOCUS_ID = ["chr$(chr):4132:G:A"],
             CS = [0],
         )
         finemapping_output_file = joinpath(tmpdir, "finrmapping.$group.chr$(chr).tsv")
@@ -273,7 +273,7 @@ end
     finemapping_results = CSV.read(output_prefix * ".finemapping.tsv", DataFrame; delim="\t")
     expected_fmp_cols = [
         "CHROM", "POS", "ID", "REF", "ALT", 
-        "PIP", "CLUMP_ID", "CS"
+        "PIP", "LOCUS_ID", "CS"
     ]
     @test nrow(finemapping_results) == 2
     @test Set(finemapping_results.CHROM) == Set([1, 2])
@@ -459,7 +459,6 @@ if dorun
         push!(plots_groups, "$ancestry.$phenotype")
     end
     @test plots_groups == expected_groups
-
 end
 
 end

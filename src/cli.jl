@@ -161,14 +161,10 @@ function cli_settings()
             arg_type = Int
             help = "Number of causal variants to assume in fine-mapping."
             default = 10
-        "--ld-window-kb"
+        "--finemap-window-kb"
             arg_type = Int
             help = "Window size (in kb) to compute LD matrix for fine-mapping."
             default = 1000
-        "--ld-window-r2"
-            arg_type = Float64
-            help = "R2 threshold to include variants in the LD matrix for fine-mapping."
-            default = 0.3
     end
 
     @add_arg_table! s["make-ukb-individuals-list"] begin
@@ -1071,8 +1067,7 @@ function julia_main()::Cint
             r2_threshold=cmd_settings["r2-threshold"],
             clump_kb=cmd_settings["clump-kb"],
             n_causal=cmd_settings["n-causal"],
-            ld_window_kb=cmd_settings["ld-window-kb"],
-            ld_window_r2=cmd_settings["ld-window-r2"]
+            finemap_window_kb=cmd_settings["finemap-window-kb"],
         )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))

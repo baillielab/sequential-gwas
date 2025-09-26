@@ -39,8 +39,7 @@ workflow gwas {
         String r2_threshold = "0.1"
         String clump_kb = "1000"
         String n_causal = "10"
-        String ld_window_kb = "1000"
-        String ld_window_r2 = "0.1"
+        String finemap_window_kb = "1000"
     }
 
     # Get generic Julia command
@@ -177,8 +176,7 @@ workflow gwas {
                     r2_threshold = r2_threshold,
                     clump_kb = clump_kb,
                     n_causal = n_causal,
-                    ld_window_kb = ld_window_kb,
-                    ld_window_r2 = ld_window_r2
+                    finemap_window_kb = finemap_window_kb
             }
         }
 
@@ -285,8 +283,7 @@ task finemapping {
         String r2_threshold = "0.1"
         String clump_kb = "1000"
         String n_causal = "10"
-        String ld_window_kb = "1000"
-        String ld_window_r2 = "0.1"
+        String finemap_window_kb = "1000"
     }
 
     command <<<
@@ -306,8 +303,7 @@ task finemapping {
             --r2-threshold=~{r2_threshold} \
             --clump-kb=~{clump_kb} \
             --n-causal=~{n_causal} \
-            --ld-window-kb=~{ld_window_kb} \
-            --ld-window-r2=~{ld_window_r2}
+            --finemap-window-kb=~{finemap_window_kb}
     >>>
 
     output {

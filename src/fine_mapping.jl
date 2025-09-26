@@ -157,7 +157,7 @@ function susie_finemap(X, y; n_causal=10)
     return @rget fitted
 end
 
-function get_ld_variants(variant_id, pgen_prefix; ld_window_kb=1000, ld_window_r2=0.1)
+function get_locus_variants_r2(variant_id, pgen_prefix; ld_window_kb=1000)
     tmpdir = mktempdir()
     out_prefix = joinpath(tmpdir, "$variant_id.LD")
     run(`plink2 \
@@ -165,8 +165,7 @@ function get_ld_variants(variant_id, pgen_prefix; ld_window_kb=1000, ld_window_r
         --r2-phased \
         --ld-snp $variant_id \
         --ld-window-kb $ld_window_kb \
-        --ld-window 99999 \
-        --ld-window-r2 $ld_window_r2 \
+        --ld-window-r2 0 \
         --out $out_prefix
     `)
     return CSV.read(out_prefix * ".vcor", DataFrame, delim='\t')
@@ -193,24 +192,43 @@ function get_credible_sets(susie_results, p)
     return cs_vector
 end
 
-function finemap_clump(clump_id, pgen_prefix, y, sample_list;
+function get_loci_to_finemap(sig_clumps; window_kb=500)
+    sig_clumps = sort(sig_clumps, :POS)
+    loci = []
+    for row in eachrow(sig_clumps)
+        locus_start = max(0, row.POS - window_kb * 1000)
+        locus_end = row.POS + window_kb * 1000
+        if length(loci) > 0
+            prev_locus = loci[end]
+            if locus_start <= prev_locus[end] # overlap with previous locus
+                prev_locus[end] = locus_end # extend previous locus end
+                if row.NEG_LOG10_P > prev_locus[2]
+                    prev_locus[1] = row.ID # update lead SNP
+                    prev_locus[2] = row.NEG_LOG10_P # update lead SNP pvalue
+                end
+                continue
+            end
+        end
+        push!(loci, [row.ID, row.NEG_LOG10_P, locus_start, locus_end])
+    end
+    return loci
+end
+
+function finemap_locus(clump_id, pgen_prefix, y, sample_list;
     Xtype="dosages",
     n_causal=10,
-    ld_window_kb=1000,
-    ld_window_r2=0.1,
+    finemap_window_kb=1000,
     )
-    ld_variants = get_ld_variants(clump_id, pgen_prefix; 
-        ld_window_kb=ld_window_kb, 
-        ld_window_r2=ld_window_r2
-    )
+    ld_variants = get_locus_variants_r2(clump_id, pgen_prefix; ld_window_kb=finemap_window_kb)
     X, variants_info = Xtype == "dosages" ? 
         dosages_from_pgen(pgen_prefix, ld_variants, sample_list) :
         genotypes_from_pgen(pgen_prefix, ld_variants, sample_list)
     susie_results = susie_finemap(X, y; n_causal=n_causal)
     variants_info.PIP = susie_results[:pip]
     p = size(X, 2)
-    variants_info.CLUMP_ID = fill(clump_id, p)
+    variants_info.LOCUS_ID = fill(clump_id, p)
     variants_info.CS = get_credible_sets(susie_results, p)
+    leftjoin!(variants_info, ld_variants[!, [:ID_B, :PHASED_R2]], on=:ID => :ID_B)
     return variants_info
 end
 
@@ -229,8 +247,7 @@ end
         clump_id_field = "ID",
         clump_pval_field = "LOG10P",
         allele_1_field = "ALLELE_1",
-        ld_window_kb=1000,
-        ld_window_r2=0.1,
+        finemap_window_kb=1000,
         n_causal = 10
         )
 
@@ -255,8 +272,7 @@ This function performs fine-mapping of significant regions identified from GWAS 
 - `clump_id_field::String`: Column name in GWAS results for variant IDs.
 - `clump_pval_field::String`: Column name in GWAS results for p-values.
 - `allele_1_field::String`: Column name in GWAS results for allele 1.
-- `ld_window_kb::Int`: Window size in kb for LD calculation around lead variant to define the fine mapping region.
-- `ld_window_r2::Float64`: r² threshold for including variants in LD window to define the fine mapping region.
+- `finemap_window_kb::Int`: Window size in kb for LD calculation around lead variant to define the fine mapping region.
 - `n_causal::Int`: Number of causal variants to assume in SuSiE fine-mapping.
 """
 function finemap_significant_regions(
@@ -274,8 +290,7 @@ function finemap_significant_regions(
     clump_id_field = "ID",
     clump_pval_field = "LOG10P",
     allele_1_field = "ALLELE_1",
-    ld_window_kb=1000,
-    ld_window_r2=0.1,
+    finemap_window_kb=1000,
     n_causal = 10
     )
     group, phenotype, _ = split(gwas_results_file, ".")
@@ -306,23 +321,25 @@ function finemap_significant_regions(
         clump_pval_field = clump_pval_field,
         allele_1_field = allele_1_field
     )
+    # Get finemapping regions from clumps
+    loci = get_loci_to_finemap(sig_clumps; window_kb=finemap_window_kb)
 
     # Finemap each clump
     sample_list = getindex.(split.(readlines(sample_file), "\t"), 2)
     y = get_phenotype(covariates_file, sample_list, phenotype)
     finemapping_results = []
-    for clump in eachrow(sig_clumps)
-        @info "Fine Mapping clump led by : $(clump.ID)"
-        clump_finemapping_results = finemap_clump(clump.ID, gwas_matched_pgen_prefix, y, sample_list;
+    for locus in eachrow(loci)
+        locus_id = locus[1]
+        @info "Fine Mapping locus led by : $(locus_id)"
+        clump_finemapping_results = finemap_locus(locus_id, gwas_matched_pgen_prefix, y, sample_list;
             Xtype=Xtype,
             n_causal=n_causal,
-            ld_window_kb=ld_window_kb,
-            ld_window_r2=ld_window_r2,
+            finemap_window_kb=finemap_window_kb,
         )
         push!(finemapping_results, clump_finemapping_results)
     end
     output_file = string(output_prefix, ".tsv")
-    output_df = length(finemapping_results) > 0 ? vcat(finemapping_results...) : DataFrame([col => [] for col in ["#CHROM", "POS", "ID", "REF", "ALT", "PIP", "CLUMP_ID", "CS"]])
+    output_df = length(finemapping_results) > 0 ? vcat(finemapping_results...) : DataFrame([col => [] for col in ["#CHROM", "POS", "ID", "REF", "ALT", "PIP", "LOCUS_ID", "CS"]])
     CSV.write(output_file, output_df, delim="\t")
 
     return 0

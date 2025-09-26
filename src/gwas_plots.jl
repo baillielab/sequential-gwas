@@ -71,12 +71,14 @@ function get_genomic_features(region; features=["gene", "transcript", "cds", "ex
 end
 
 function region_plot(region_data)
-    region = string(first(region_data[!, "CHROM"]), ":", minimum(region_data.BP), "-", maximum(region_data.BP))
+    chr = only(unique((region_data[!, "CHR"])))
+    region = string(chr, ":", minimum(region_data.BP), "-", maximum(region_data.BP))
     genomic_features = get_genomic_features(region; features=["gene"])
     credible_sets = sort(unique(skipmissing(region_data.CS)))
-    markersize = 14
+    lead_snps = split(only(unique(region_data.LOCUS_ID)), "_&_")
+    markersize = 10
+    sig_markersize = 14
     threshold = 5e-8
-    # Plot
     fig = Figure(size = (1000, 800))
     # GWAS P-values
     ax1 = Axis(fig[1, 1]; ylabel="-log10(P)", 
@@ -85,24 +87,22 @@ function region_plot(region_data)
         xgridvisible=false,
         ygridvisible=false
     )
-    hidespines!(ax1, :t, :r, :b)
+    hidespines!(ax1, :t, :r)
+    ## Plot region data points
     log10ps = -log10.(region_data.P)
     scatter!(ax1, 
         collect(region_data.BP),
         log10ps,
         markersize=markersize,
-        color=(:grey, 0.5)
+        color=region_data.PHASED_R2,
+        colormap = :heat
     )
-    sig_gwas_variants = findall(region_data.P .<= threshold)
-    scatter!(ax1, 
-        region_data.BP[sig_gwas_variants], 
-        log10ps[sig_gwas_variants], 
-        color=:green,
-        marker=:star5,
-        markersize=markersize
-    )
+    ## Add significance threshold
     hlines!(ax1, -log10(threshold), color=:green)
-
+    ## Add Lead SNPs
+    lead_snps_info = region_data[region_data.ID .== lead_snps, :]
+    vlines!(ax1, lead_snps_info.BP, color=:red, linestyle=:dash)
+    text!(ax1, lead_snps_info.BP, -log10.(lead_snps_info.P), text=lead_snps, color=:black, align = (:left, :bottom), fontsize=12)
     # Fine Mapping PIPs
     credible_sets_colors = distinguishable_colors(
         length(credible_sets), 
@@ -116,7 +116,7 @@ function region_plot(region_data)
         xgridvisible=false,
         ygridvisible=false
     )
-    hidespines!(ax2, :t, :r, :b)
+    hidespines!(ax2, :t, :r)
     scatter!(ax2,
         collect(region_data.BP), 
         collect(region_data.PIP); 
@@ -132,29 +132,16 @@ function region_plot(region_data)
             bps, 
             pips; 
             color=cs_color, 
-            markersize=markersize,
+            markersize=sig_markersize,
             marker=:star5,
             colormap=:tab10
-        )
-        lead_cs_idx = argmax(pips)
-        lead_bp = bps[lead_cs_idx]
-        lead_pip = pips[lead_cs_idx]
-        lead_id = region_data.ID[cs_variants][lead_cs_idx]
-        text!(ax2, 
-            lead_bp, 
-            lead_pip, 
-            text=lead_id,
-            font=:bold,
-            align = (:left, :bottom), 
-            color=:black, 
-            fontsize=14
         )
     end
     pips_legend_elements = [(string("CS ", cs), PolyElement(color=cs_color, colorrange=1:10, colormap=:tab10)) for (cs, cs_color) in enumerate(credible_sets_colors)]
     Legend(fig[2, 2], getindex.(pips_legend_elements, 2), getindex.(pips_legend_elements, 1), "Fine Mapping CSs", framevisible = false)
     # Genomic annotations
     ax3 = Axis(fig[3, 1]; 
-        xlabel="Position",
+        xlabel=string("Chr", chr),
         ylabel="Genes",
         yticksvisible=false,
         yticklabelsvisible=false,
@@ -192,14 +179,14 @@ function gwas_plots(gwas_file, finemapping_file; maf=0.01, output_prefix = "gwas
     save(string(output_prefix, ".$group.$phenotype.qq.png"), fig)
     # Plot locuszoom for top hits
     finemapping_results = harmonize_finemapping_results(CSV.read(finemapping_file, DataFrame, delim="\t"))
-    for (clump_key, clump_group) in pairs(groupby(finemapping_results, :CLUMP_ID))
+    for (locus_key, locus_group) in pairs(groupby(finemapping_results, :LOCUS_ID))
         region_data = innerjoin(
             gwas_results,
-            DataFrames.select(clump_group, [:ID, :REF, :ALT, :PIP, :CS, :CLUMP_ID]), 
+            DataFrames.select(locus_group, [:ID, :REF, :ALT, :PIP, :CS, :LOCUS_ID, :PHASED_R2]), 
             on=[:ID]
         )
         fig = region_plot(region_data)
-        save(string(output_prefix, ".$group.$phenotype.", clump_key.CLUMP_ID, ".locuszoom.png"), fig)
+        save(string(output_prefix, ".$group.$phenotype.", locus_key.LOCUS_ID, ".locuszoom.png"), fig)
     end
     return 0
 end
