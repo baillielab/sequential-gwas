@@ -23,6 +23,19 @@ RUN rm /var/lib/dpkg/info/libc-bin.* \
         r-base \
         r-base-dev
 
+# METAL
+
+RUN wget https://github.com/statgen/METAL/archive/refs/tags/2020-05-05.zip \
+    && unzip 2020-05-05.zip \
+    && cd METAL-2020-05-05 \
+    && mkdir build && cd build \
+    && cmake -DCMAKE_BUILD_TYPE=Release .. \
+    && make \
+    && make test \
+    && make install \
+    && cp bin/metal /usr/local/bin/ \
+    && chmod +x /usr/local/bin/metal
+
 # KING 2.3.2
 RUN wget https://www.kingrelatedness.com/KINGcode.tar.gz \
     && mkdir /opt/king \
