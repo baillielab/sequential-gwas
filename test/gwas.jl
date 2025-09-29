@@ -459,6 +459,23 @@ if dorun
         push!(plots_groups, "$ancestry.$phenotype")
     end
     @test plots_groups == expected_groups
+
+    # Test Meta-analysis
+    meta_analysis_dir = joinpath(results_dir, "call-meta_analyse", "execution")
+    meta_analysis_files = filter(endswith(".tsv"), readdir(meta_analysis_dir))
+    meta_analysed_phenotypes = Set(String[])
+    for file in meta_analysis_files
+        meta_results = CSV.read(joinpath(meta_analysis_dir, file), DataFrame; delim="\t")
+        @test names(meta_results) == [
+            "CHROM", "GENPOS", "ID", "ALLELE0", "ALLELE1", 
+            "BETA", "SE", "LOG10P", "DIRECTION", 
+            "HET_ISQ", "HET_CHISQ", "HET_DF", "LOG10P_HET"
+        ]
+        @test length(unique(meta_results.ID)) == length(meta_results.ID)
+        @test nrow(meta_results) > 0
+        push!(meta_analysed_phenotypes, split(file, ".")[3])
+    end
+    @test meta_analysed_phenotypes == Set(["SEVERE_PNEUMONIA", "SEVERE_COVID_19"])
 end
 
 end

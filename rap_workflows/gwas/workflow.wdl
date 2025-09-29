@@ -40,6 +40,10 @@ workflow gwas {
         String clump_kb = "1000"
         String n_causal = "10"
         String finemap_window_kb = "1000"
+        # Meta analysis
+        Boolean meta_analysis = length(groupby) > 0
+        Array[String] meta_exclude = ["ADMIXED"]
+        String meta_method = "STDERR"
     }
 
     # Get generic Julia command
@@ -200,6 +204,18 @@ workflow gwas {
                 maf = maf
         }
     }
+
+    # Meta Analyse
+    if (meta_analysis) {
+        call meta_analyse {
+            input:
+                docker_image = docker_image,
+                julia_cmd = get_julia_cmd.julia_cmd,
+                gwas_results = merge_chr_results.merged_gwas_results,
+                exclude = meta_exclude,
+                method = meta_method
+        }
+    }
 }
 
 task gwas_plots {
@@ -221,6 +237,37 @@ task gwas_plots {
 
     output {
         Array[File] plots = glob("gwas.plot*")
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem2_ssd1_v2_x8"
+    }
+}
+
+task meta_analyse {
+    input {
+        String docker_image
+        String julia_cmd
+        Array[File] gwas_results
+        Array[String] exclude
+        String method = "STDERR"
+    }
+
+    command <<<
+        for f in ~{sep=" " gwas_results}; do
+            echo "${f}"
+        done > gwas_meta_list.txt
+
+        ~{julia_cmd} meta-analyse \
+            gwas_meta_list.txt \
+            --exclude=~{sep="," exclude} \
+            --method=~{method} \
+            --output-prefix=gwas.meta_analysis
+    >>>
+
+    output {
+        Array[File] meta_gwas_results = glob("gwas.meta_analysis*.tsv")
     }
 
     runtime {

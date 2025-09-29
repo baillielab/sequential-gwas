@@ -7,6 +7,10 @@ function cli_settings()
     )
 
     @add_arg_table! s begin
+        "meta-analyse"
+            action = :command
+            help = "Runs meta-analysis across GWAS results."
+
         "finemap"
             action = :command
             help = "Runs fine-mapping analysis."
@@ -110,6 +114,27 @@ function cli_settings()
         "make-ukb-individuals-list"
             action = :command
             help = "Generates a list of UKB individuals to be used in the workflow."
+    end
+
+    @add_arg_table! s["meta-analyse"] begin
+        "gwas-results-list"
+            arg_type = String
+            required = true
+            help = "List of REGENIE results files to be meta-analysed."
+    
+        "--exclude"
+            arg_type = String
+            help = "List of groups to exclude from the meta-analysis, comma separated."
+
+        "--method"
+            arg_type = String
+            help = "Meta-analysis method to use (fixed or random)."
+            default = "STDERR"
+
+        "--output-prefix"
+            arg_type = String
+            help = "Prefix to output files."
+            default = "gwas.meta_analysis"
     end
 
     @add_arg_table! s["finemap"] begin
@@ -1068,6 +1093,13 @@ function julia_main()::Cint
             clump_kb=cmd_settings["clump-kb"],
             n_causal=cmd_settings["n-causal"],
             finemap_window_kb=cmd_settings["finemap-window-kb"],
+        )
+    elseif cmd == "meta-analyse"
+        meta_analyse(
+            cmd_settings["gwas-results-list"];
+            output_prefix=cmd_settings["output-prefix"],
+            exclude_string=cmd_settings["exclude"],
+            method=cmd_settings["method"],
         )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))

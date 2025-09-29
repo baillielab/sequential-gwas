@@ -91,3 +91,88 @@ function make_gwas_groups(
 
     return 0
 end
+
+function group_and_phenotype_from_regenie_filename(filename)
+    return split(replace(filename, 
+        "results.all_chr." => "", 
+        ".gwas.tsv" => ""
+    ), ".")
+end
+
+group_needs_exclusion(group, exclude) =
+    any(occursin(p, group) for p in exclude)
+
+function run_metal_across_phenotypes!(regenie_files; output_prefix="gwas.meta_analysis", method="STDERR")
+    tmp_dir = mktempdir()
+    metal_script = """
+    # === DESCRIBE THE COLUMNS IN THE INPUT FILES ===
+    MARKER ID 
+    WEIGHT N 
+    ALLELE ALLELE1 ALLELE0 
+    FREQ A1FREQ 
+    EFFECT BETA 
+    STDERR SE 
+    PVAL P_VAL
+    SCHEME $method
+    LOGPVALUE ON
+    # === FOR EACH PHENOTYPE PROCESS /ANALYZE / ANALYZE HETEROGENEITY ===
+    """
+    for (phenotype_key, group) in pairs(groupby(regenie_files, :PHENOTYPE))
+        for (group_file, group_basename) in zip(group.FILE, group.BASENAME)
+            # ADd P_VAL column expected by METAL
+            group_gwas_results = CSV.read(group_file, DataFrame; delim="\t")
+            transform!(group_gwas_results, :LOG10P => (x -> parse_pvalue.(x))  => :P_VAL)
+            CSV.write(joinpath(tmp_dir, group_basename), group_gwas_results; delim="\t", header=true)
+            # Add PROCESS command
+            metal_script *= "PROCESS " * joinpath(tmp_dir, group_basename) * "\n"
+        end
+        metal_script *= "OUTFILE " * string(output_prefix, ".", phenotype_key.PHENOTYPE, ". .tbl") * "\n"
+        metal_script *= "ANALYZE HETEROGENEITY\n"
+        group.METAL_FILE .= string(output_prefix, ".", phenotype_key.PHENOTYPE, ".1.tbl")
+    end
+    metal_script *= "QUIT"
+
+    meta_script_file = joinpath(tmp_dir, "metal_script.txt")
+    open(meta_script_file, "w") do io
+        write(io, metal_script)
+    end
+    run(`metal $meta_script_file`)
+end
+
+function post_process_metal_output(regenie_files; output_prefix="gwas.meta_analysis")
+    for (phenotype_key, group) in pairs(groupby(regenie_files, :PHENOTYPE))
+        metal_results = CSV.read(first(group.METAL_FILE), DataFrame; delim="\t")
+        select!(metal_results, 
+            "MarkerName" => "ID",
+            "Effect" => "BETA",
+            "StdErr" => "SE",
+            "log(P)" => "LOG10P",
+            "Direction" => "DIRECTION",
+            "HetISq" => "HET_ISQ",
+            "HetChiSq" => "HET_CHISQ",
+            "HetDf" => "HET_DF",
+            "logHetP" => "LOG10P_HET"
+        )
+        gwas_results = CSV.read(first(group.FILE), DataFrame; delim="\t")
+        select!(gwas_results, "CHROM", "GENPOS", "ID", "ALLELE0", "ALLELE1")
+        processed_metal_results = innerjoin(gwas_results, metal_results, on="ID")
+        CSV.write(string(output_prefix, ".", phenotype_key.PHENOTYPE, ".tsv"), processed_metal_results; delim="\t", header=true)
+    end
+end
+
+function meta_analyse(regenie_files_list; exclude_string="ADMIXED", method="STDERR", output_prefix="gwas.meta_analysis")
+    exclude = split(exclude_string, ",")
+    regenie_files = DataFrame(FILE = readlines(regenie_files_list))
+    regenie_files.BASENAME = basename.(regenie_files.FILE)
+    transform!(regenie_files, 
+        :BASENAME => ByRow(group_and_phenotype_from_regenie_filename) 
+        => [:GROUP, :PHENOTYPE]
+    )
+    filter!(:GROUP => (group -> !group_needs_exclusion(group, exclude)), regenie_files)
+    
+    run_metal_across_phenotypes!(regenie_files; output_prefix=output_prefix, method=method)
+
+    post_process_metal_output(regenie_files, output_prefix=output_prefix)
+
+    return 0
+end
