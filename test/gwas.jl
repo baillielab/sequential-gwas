@@ -474,6 +474,7 @@ if dorun
         @test length(unique(meta_results.ID)) == length(meta_results.ID)
         @test nrow(meta_results) > 0
         push!(meta_analysed_phenotypes, split(file, ".")[3])
+        @test all(meta_results.LOG10P .>= 0.0)
     end
     @test meta_analysed_phenotypes == Set(["SEVERE_PNEUMONIA", "SEVERE_COVID_19"])
 end

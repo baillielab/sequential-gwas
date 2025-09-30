@@ -190,6 +190,17 @@ function cli_settings()
             arg_type = Int
             help = "Window size (in kb) to compute LD matrix for fine-mapping."
             default = 1000
+        "--phenotype"
+            arg_type = String
+            help = "Name of the phenotype column in the covariates file."
+            default = "Y"
+        "--rss"
+            help = "Whether to run fine-mapping using summary statistics (RSS)"
+            action = :store_true
+        "--exclude"
+            arg_type = String
+            help = "List of groups to exclude from the sample file, comma separated."
+            default = ""
     end
 
     @add_arg_table! s["make-ukb-individuals-list"] begin
@@ -1093,6 +1104,9 @@ function julia_main()::Cint
             clump_kb=cmd_settings["clump-kb"],
             n_causal=cmd_settings["n-causal"],
             finemap_window_kb=cmd_settings["finemap-window-kb"],
+            phenotype=cmd_settings["phenotype"],
+            rss=cmd_settings["rss"],
+            exclude_string=cmd_settings["exclude"]
         )
     elseif cmd == "meta-analyse"
         meta_analyse(

@@ -146,7 +146,7 @@ function post_process_metal_output(regenie_files; output_prefix="gwas.meta_analy
             "MarkerName" => "ID",
             "Effect" => "BETA",
             "StdErr" => "SE",
-            "log(P)" => "LOG10P",
+            "log(P)" => (x -> .-x) => "LOG10P", # -log10(P) is reported by Regenie, we make it compliant
             "Direction" => "DIRECTION",
             "HetISq" => "HET_ISQ",
             "HetChiSq" => "HET_CHISQ",

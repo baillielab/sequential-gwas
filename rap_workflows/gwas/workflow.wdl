@@ -215,6 +215,32 @@ workflow gwas {
                 exclude = meta_exclude,
                 method = meta_method
         }
+
+        # Finemap meta-analysed results
+        scatter (meta_gwas_result in meta_analyse.meta_gwas_results) {
+            scatter (imputed_chr_fileset in imputed_genotypes) {
+                call finemapping_summary_stats {
+                    input:
+                        docker_image = docker_image,
+                        julia_cmd = get_julia_cmd.julia_cmd,
+                        gwas_results = meta_gwas_result,
+                        covariates_file = make_covariates_and_groups.updated_covariates,
+                        sample_files = flatten(regenie_step_2.regenie_step2_ids),
+                        pgen_file = imputed_chr_fileset.pgen,
+                        pvar_file = imputed_chr_fileset.pvar,
+                        psam_file = imputed_chr_fileset.psam,
+                        chr = imputed_chr_fileset.chr,
+                        min_sig_clump_size = min_sig_clump_size,
+                        lead_pvalue = lead_pvalue,
+                        p2_pvalue = p2_pvalue,
+                        r2_threshold = r2_threshold,
+                        clump_kb = clump_kb,
+                        n_causal = n_causal,
+                        finemap_window_kb = finemap_window_kb,
+                        exclude = meta_exclude
+                }
+            }
+        }
     }
 }
 
@@ -311,6 +337,68 @@ task merge_chr_results {
     }
 }
 
+task finemapping_summary_stats {
+    input {
+        String docker_image
+        String julia_cmd
+        File gwas_results
+        File pgen_file
+        File pvar_file
+        File psam_file
+        String chr
+        File covariates_file
+        Array[File] sample_files
+        String min_sig_clump_size = "3"
+        String lead_pvalue = "5e-8"
+        String p2_pvalue = "1e-5"
+        String r2_threshold = "0.1"
+        String clump_kb = "1000"
+        String n_causal = "10"
+        String finemap_window_kb = "1000"
+        Array[String] exclude = []
+    }
+
+    command <<<
+        # Get phenotype from group_name
+        phenotype=$(echo ~{gwas_results} | cut -d'.' -f3)
+        echo $phenotype > phenotype.txt
+        # Make samples files list
+        for f in ~{sep=" " sample_files}; do
+            echo "${f}"
+        done > samples_file.txt
+        # Get PGEN prefix
+        pgen_prefix=$(dirname "~{pgen_file}")/$(basename "~{pgen_file}" .pgen)
+        # Run finemapping
+        ~{julia_cmd} finemap \
+            ~{gwas_results} \
+            ${pgen_prefix} \
+            ~{covariates_file} \
+            samples_file.txt \
+            --output-prefix=finemapping.meta_analysis.${phenotype}.chr~{chr} \
+            --min-sig-clump-size=~{min_sig_clump_size} \
+            --lead-pvalue=~{lead_pvalue} \
+            --p2-pvalue=~{p2_pvalue} \
+            --r2-threshold=~{r2_threshold} \
+            --clump-kb=~{clump_kb} \
+            --n-causal=~{n_causal} \
+            --finemap-window-kb=~{finemap_window_kb} \
+            --phenotype=${phenotype} \
+            --rss \
+            --exclude=~{sep="," exclude}
+    >>>
+
+    output {
+        File finemapping_results = "finemapping.meta_analysis." + read_string("phenotype.txt") + ".chr${chr}.tsv"
+        File clumping_results = "finemapping.meta_analysis." + read_string("phenotype.txt") + ".chr${chr}.clumps.tsv"
+    }
+
+    runtime {
+        docker: docker_image
+        dx_instance_type: "mem2_ssd1_v2_x16"
+    }
+}
+
+
 task finemapping {
     input {
         String docker_image
@@ -334,7 +422,7 @@ task finemapping {
     }
 
     command <<<
-
+        phenotype=$(echo ~{group_name} | cut -d'.' -f2)
         pgen_prefix=$(dirname "~{pgen_file}")/$(basename "~{pgen_file}" .pgen)
 
         ~{julia_cmd} finemap \
@@ -350,7 +438,8 @@ task finemapping {
             --r2-threshold=~{r2_threshold} \
             --clump-kb=~{clump_kb} \
             --n-causal=~{n_causal} \
-            --finemap-window-kb=~{finemap_window_kb}
+            --finemap-window-kb=~{finemap_window_kb} \
+            --phenotype=${phenotype}
     >>>
 
     output {
