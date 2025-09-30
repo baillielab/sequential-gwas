@@ -24,7 +24,7 @@ end
 
 function harmonize_finemapping_results(finemapping_results)
     return DataFrames.transform(finemapping_results, 
-        "#CHROM" => (x -> string.(x)) => :CHR,
+        :CHROM => (x -> string.(x)) => :CHR,
         :POS => :BP,
         :ID => :SNP
     )    

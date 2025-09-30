@@ -1,3 +1,7 @@
+const FINEMAPPING_RESULT_COLS = [
+    "CHROM", "POS", "ID", "REF", "ALT", "LOCUS_ID", "PIP", "CS", "PHASED_R2"
+]
+
 function tag_variant_id_missing_from_gwas!(pvar, gwas_results)
     # Map GWAS variants to their alleles
     gwas_ids_to_alleles = Dict(
@@ -460,7 +464,7 @@ function finemap_significant_regions(
         push!(finemapping_results, clump_finemapping_results)
     end
     output_file = string(output_prefix, ".tsv")
-    output_df = length(finemapping_results) > 0 ? vcat(finemapping_results...) : DataFrame([col => [] for col in ["#CHROM", "POS", "ID", "REF", "ALT", "PIP", "LOCUS_ID", "CS"]])
+    output_df = length(finemapping_results) > 0 ? vcat(finemapping_results...) : DataFrame([col => [] for col in FINEMAPPING_RESULT_COLS])
     CSV.write(output_file, output_df, delim="\t")
 
     return 0

@@ -8,10 +8,6 @@ using DataFrames
 PKGDIR = pkgdir(GenomiccWorkflows)
 TESTDIR = joinpath(PKGDIR, "test")
 
-EXPECTED_FP_COLS = [
-    "CHROM", "POS", "ID", "REF", "ALT", "LOCUS_ID", "PIP", "CS", "PHASED_R2"
-]
-
 @testset "Test make_clean_sample_file" begin
     tmpdir = mktempdir()
     # The file contains actual sample ids
@@ -188,7 +184,7 @@ end
     @test length(finemapping_results[:pip]) == 4
     # Post processing
     GenomiccWorkflows.postprocess_finemapping_results!(variants_info, finemapping_results, ld_variants)
-    @test names(variants_info) == EXPECTED_FP_COLS
+    @test names(variants_info) == GenomiccWorkflows.FINEMAPPING_RESULT_COLS
     @test nrow(variants_info) == p+1
     @test any(ismissing.(variants_info.PHASED_R2)) == false
     # Test full function
@@ -197,7 +193,7 @@ end
         n_causal=2,
         finemap_window_kb=finemap_window_kb,
     )
-    @test names(finemapping_results) == EXPECTED_FP_COLS
+    @test names(finemapping_results) == GenomiccWorkflows.FINEMAPPING_RESULT_COLS
     @test nrow(finemapping_results) == p+1
     # Test genotypes_from_pgen
     X_df, variants_info = GenomiccWorkflows.genotypes_from_pgen(pgen_prefix, ld_variants)
@@ -242,14 +238,14 @@ end
     @test length(finemapping_results[:pip]) == 4
     # Post processing
     GenomiccWorkflows.postprocess_finemapping_results!(variants_info, finemapping_results, ld_variants)
-    @test names(variants_info) == EXPECTED_FP_COLS
+    @test names(variants_info) == GenomiccWorkflows.FINEMAPPING_RESULT_COLS
     @test any(ismissing.(variants_info.PHASED_R2)) == false
     # Full function
     finemapping_results = GenomiccWorkflows.finemap_locus_rss(locus, gwas_results, pgen_prefix, y;
         n_causal=1,
         finemap_window_kb=finemap_window_kb,
     )
-    @test names(finemapping_results) == EXPECTED_FP_COLS
+    @test names(finemapping_results) == GenomiccWorkflows.FINEMAPPING_RESULT_COLS
     @test nrow(finemapping_results) == p+1
 end
 

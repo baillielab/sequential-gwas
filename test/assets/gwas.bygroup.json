@@ -9,6 +9,9 @@
     "gwas.covariates": ["AGE", "SEX", "AGE_x_AGE"],
     "gwas.phenotypes": ["SEVERE_PNEUMONIA", "SEVERE_COVID_19"],
     "gwas.min_cases_controls": "600",
+    "gwas.r2_threshold": "0",
+    "gwas.clump_kb": "30000",
+    "gwas.finemap_window_kb": "30000",
     "gwas.approx_pca": "false",
     "gwas.genotypes": {
         "chr": "all",
