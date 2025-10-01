@@ -15,8 +15,6 @@ TESTDIR = joinpath(PKGDIR, "test")
     @test include(joinpath(TESTDIR, "qc_from_kgp.jl"))
     @test include(joinpath(TESTDIR, "relatedness.jl"))
     @test include(joinpath(TESTDIR, "ancestry.jl"))
-    @test include(joinpath(TESTDIR, "fine_mapping.jl"))
-    @test include(joinpath(TESTDIR, "gwas_plots.jl"))
 
     # Test Dataset Aggregation Workflow
     if "genomicc_aggregation_tests" in ARGS
@@ -29,6 +27,9 @@ TESTDIR = joinpath(PKGDIR, "test")
     end
     # Test GWAS Workflow
     if "gwas_tests" in ARGS
+        @test include(joinpath(TESTDIR, "fine_mapping.jl"))
+        @test include(joinpath(TESTDIR, "meta_analysis.jl"))
+        @test include(joinpath(TESTDIR, "gwas_plots.jl"))
         @test include(joinpath(TESTDIR, "gwas.jl"))
     end
 end

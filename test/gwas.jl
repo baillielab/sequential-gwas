@@ -9,6 +9,20 @@ using DelimitedFiles
 PKGDIR = pkgdir(GenomiccWorkflows)
 TESTDIR = joinpath(PKGDIR, "test")
 
+function dir_contains_subdir(dir_name, subdir_name)
+    subdirs = readdir(dir_name)
+    if subdir_name in subdirs
+        return true
+    else
+        first_dir = joinpath(dir_name, first(subdirs))
+        if isdir(first_dir)
+            return dir_contains_subdir(first_dir, subdir_name)
+        else 
+            return false
+        end
+    end
+end
+
 @testset "Test apply_filter" begin
     data = DataFrame(
         COHORT = ["GENOMICC", "GENOMICC", "UKB", "UKB", "UKB", "UKB", "UKB", "UKB", "UKB", "UKB"],
@@ -205,7 +219,6 @@ end
     group = "AFR.SEVERE_COVID_19"
     chrs = 1:2
     gwas_merge_list = []
-    fmp_merge_list = []
     for chr in chrs
         # Create dummy Regenie Step 2 results files
         gwas_results = DataFrame(
@@ -226,20 +239,6 @@ end
         gwas_output_file = joinpath(tmpdir, "$group.chr$(chr).step2_SEVERE_COVID_19.regenie")
         CSV.write(gwas_output_file, gwas_results)
         push!(gwas_merge_list, gwas_output_file)
-        # Create dummy finemapping results files
-        finemapping_results = DataFrame(
-            CHROM = [chr],
-            POS = [1000],
-            ID = ["chr$(chr):4132:G:A"],
-            REF = ["A"],
-            ALT = ["T"],
-            PIP = [.5],
-            LOCUS_ID = ["chr$(chr):4132:G:A"],
-            CS = [0],
-        )
-        finemapping_output_file = joinpath(tmpdir, "finrmapping.$group.chr$(chr).tsv")
-        CSV.write(finemapping_output_file, finemapping_results; delim="\t")
-        push!(fmp_merge_list, finemapping_output_file)
     end
     gwas_merge_list_file = joinpath(tmpdir, "gwas_merge_list.txt")
     open(gwas_merge_list_file, "w") do io
@@ -247,21 +246,14 @@ end
             println(io, file)
         end
     end
-    finemapping_merge_list_file = joinpath(tmpdir, "finemapping_merge_list.txt")
-    open(finemapping_merge_list_file, "w") do io
-        for file in fmp_merge_list
-            println(io, file)
-        end
-    end
     output_prefix = joinpath(tmpdir, "results.all_chr")
     copy!(ARGS, [
         "merge-chr-results",
         gwas_merge_list_file,
-        finemapping_merge_list_file,
         "--output-prefix", output_prefix
     ])
     julia_main()
-    gwas_results = CSV.read(output_prefix * ".gwas.tsv", DataFrame; delim="\t")
+    gwas_results = CSV.read(output_prefix * ".tsv", DataFrame; delim="\t")
     expected_cols = [
         "CHROM", "GENPOS", "ID", "ALLELE0", "ALLELE1", 
         "A1FREQ", "N", "TEST", "BETA", "SE", 
@@ -270,14 +262,6 @@ end
     @test nrow(gwas_results) == 2
     @test Set(gwas_results.CHROM) == Set([1, 2])
     @test names(gwas_results) == expected_cols
-    finemapping_results = CSV.read(output_prefix * ".finemapping.tsv", DataFrame; delim="\t")
-    expected_fmp_cols = [
-        "CHROM", "POS", "ID", "REF", "ALT", 
-        "PIP", "LOCUS_ID", "CS"
-    ]
-    @test nrow(finemapping_results) == 2
-    @test Set(finemapping_results.CHROM) == Set([1, 2])
-    @test names(finemapping_results) == expected_fmp_cols
 end
 
 # End to End Workflow run
@@ -410,8 +394,12 @@ if dorun
     end
     @test regenie_groups == expected_groups
 
-    # Test REGENIE Step 2
-    top_regenie_step_2_dir = scatter_dirs[argmax(mtime(d) for d in scatter_dirs)] # loco pca is done first
+    # Test REGENIE Step 2 / finemapping
+    top_regenie_step_2_dir = findfirst(
+        dir_name ->  dir_contains_subdir(dir_name, "call-regenie_step_2"),
+        scatter_dirs
+    )
+    top_regenie_step_2_dir = scatter_dirs[top_regenie_step_2_dir]
     regenie_step_2_groups = Set([])
     results_expected_cols = [
             "CHROM", "GENPOS", "ID", "ALLELE0", "ALLELE1", "A1FREQ", "N", "TEST", "BETA", "SE", "CHISQ", "LOG10P", "EXTRA"
@@ -430,6 +418,12 @@ if dorun
             step_2_results = CSV.read(joinpath(execution_dir, step_2_results_file), DataFrame)
             @test names(step_2_results) == results_expected_cols
             @test nrow(step_2_results) > 0
+        end
+        finemapping_dir = joinpath(subdir, "call-finemapping")
+        for chr_shard in 0:2
+            execution_dir = joinpath(finemapping_dir, "shard-$chr_shard", "execution")
+            fp_files = filter(endswith(".tsv"), readdir(execution_dir))
+            @test length(fp_files) == 2
         end
     end
     @test regenie_step_2_groups == Set(Iterators.product(expected_groups, ["chr1", "chr2", "chr3"]))

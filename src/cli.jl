@@ -299,14 +299,10 @@ function cli_settings()
     end
 
     @add_arg_table! s["merge-chr-results"] begin
-        "gwas-merge-list"
+        "merge-list"
             arg_type = String
             required = true
-            help = "File with list of files to be merged."
-        "finemapping-merge-list"
-            arg_type = String
-            required = true
-            help = "File with list of finemapping files to be merged."
+            help = "File containing list of files to be merged."
         "--output-prefix"
             arg_type = String
             help = "Output path"
@@ -1052,8 +1048,7 @@ function julia_main()::Cint
             )
     elseif cmd == "merge-chr-results"
         merge_chr_results(
-            cmd_settings["gwas-merge-list"],
-            cmd_settings["finemapping-merge-list"];
+            cmd_settings["merge-list"];
             output_prefix=cmd_settings["output-prefix"]
         )
     elseif cmd == "align-ukb-variants-with-kgp-and-keep-unrelated"

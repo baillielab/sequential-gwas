@@ -164,7 +164,7 @@ function region_plot(region_data)
 end
 
 function gwas_plots(gwas_file, finemapping_file; maf=0.01, output_prefix = "gwas.plot")
-    _, _, group, phenotype, _ = split(basename(gwas_file), ".")
+    group, phenotype, _ = split(basename(gwas_file), ".")
     gwas_results = harmonize_gwas_results(CSV.read(gwas_file, DataFrame, delim="\t"))
     maf_filtered_gwas_results = filter(
         x -> x.A1FREQ > maf, 

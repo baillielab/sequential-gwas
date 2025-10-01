@@ -184,23 +184,31 @@ workflow gwas {
             }
         }
 
-        # Merge Regenie Step 2 results
-        call merge_chr_results {
+        # Merge GWAS results across chromosomes
+        call merge_chr_results as merge_gwas_group_chr_results {
             input:
                 docker_image = docker_image,
-                group_name = group_name,
+                output_prefix = group_name + ".gwas",
                 julia_cmd = get_julia_cmd.julia_cmd,
-                regenie_step2_files = regenie_step_2.regenie_step2,
-                finemapping_results = finemapping.finemapping_results
+                results_files = regenie_step_2.regenie_step2,
+        }
+
+        # Merge Finemapping results across chromosomes
+        call merge_chr_results as merge_fp_group_chr_results {
+            input:
+                docker_image = docker_image,
+                output_prefix = group_name + ".finemapping",
+                julia_cmd = get_julia_cmd.julia_cmd,
+                results_files = finemapping.finemapping_results
         }
 
         # Generate GWAS plots
-        call gwas_plots {
+        call gwas_plots as gwas_group_plots {
             input:
                 docker_image = docker_image,
                 julia_cmd = get_julia_cmd.julia_cmd,
-                gwas_results = merge_chr_results.merged_gwas_results,
-                finemapping_results = merge_chr_results.merged_finemapping_results,
+                gwas_results = merge_gwas_group_chr_results.merged_results,
+                finemapping_results = merge_fp_group_chr_results.merged_results,
                 maf = maf
         }
     }
@@ -211,13 +219,15 @@ workflow gwas {
             input:
                 docker_image = docker_image,
                 julia_cmd = get_julia_cmd.julia_cmd,
-                gwas_results = merge_chr_results.merged_gwas_results,
+                gwas_results = merge_gwas_group_chr_results.merged_results,
                 exclude = meta_exclude,
                 method = meta_method
         }
 
-        # Finemap meta-analysed results
+        # Finemap meta-analysed results: this effectively loops through phenotypes
         scatter (meta_gwas_result in meta_analyse.meta_gwas_results) {
+            String phenotype = sub(basename(meta_gwas_result, ".gwas.tsv"), "META_ANALYSIS.", "")
+
             scatter (imputed_chr_fileset in imputed_genotypes) {
                 call finemapping_summary_stats {
                     input:
@@ -237,12 +247,31 @@ workflow gwas {
                         clump_kb = clump_kb,
                         n_causal = n_causal,
                         finemap_window_kb = finemap_window_kb,
-                        exclude = meta_exclude
+                        exclude = meta_exclude,
+                        phenotype=phenotype
                 }
+            }
+
+            call merge_chr_results as merge_fp_meta_chr_results {
+                input:
+                    docker_image = docker_image,
+                    output_prefix = "META_ANALYSIS." + phenotype + ".finemapping" ,
+                    julia_cmd = get_julia_cmd.julia_cmd,
+                    results_files = finemapping_summary_stats.finemapping_results
+            }
+
+            call gwas_plots as gwas_meta_plots {
+                input:
+                    docker_image = docker_image,
+                    julia_cmd = get_julia_cmd.julia_cmd,
+                    gwas_results = meta_gwas_result,
+                    finemapping_results = merge_fp_meta_chr_results.merged_results,
+                    maf = maf
             }
         }
     }
 }
+
 
 task gwas_plots {
     input {
@@ -289,11 +318,11 @@ task meta_analyse {
             gwas_meta_list.txt \
             --exclude=~{sep="," exclude} \
             --method=~{method} \
-            --output-prefix=gwas.meta_analysis
+            --output-prefix=META_ANALYSIS
     >>>
 
     output {
-        Array[File] meta_gwas_results = glob("gwas.meta_analysis*.tsv")
+        Array[File] meta_gwas_results = glob("META_ANALYSIS.*.tsv")
     }
 
     runtime {
@@ -305,30 +334,23 @@ task meta_analyse {
 task merge_chr_results {
     input {
         String docker_image
-        String group_name
+        String output_prefix = "results.all_chr"
         String julia_cmd
-        Array[File] regenie_step2_files
-        Array[File] finemapping_results
+        Array[File] results_files
     }
 
     command <<<
-        for f in ~{sep=" " regenie_step2_files}; do
+        for f in ~{sep=" " results_files}; do
             echo "${f}"
-        done > gwas_merge_list.txt
-
-        for f in ~{sep=" " finemapping_results}; do
-            echo "${f}"
-        done >> finemapping_merge_list.txt
+        done > merge_list.txt
 
         ~{julia_cmd} merge-chr-results \
-            gwas_merge_list.txt \
-            finemapping_merge_list.txt \
-            --output-prefix=results.all_chr.~{group_name}
+            merge_list.txt \
+            --output-prefix=~{output_prefix}
     >>>
 
     output {
-        File merged_gwas_results = "results.all_chr.~{group_name}.gwas.tsv"
-        File merged_finemapping_results = "results.all_chr.~{group_name}.finemapping.tsv"
+        File merged_results = "${output_prefix}.tsv"
     }
 
     runtime {
@@ -356,12 +378,10 @@ task finemapping_summary_stats {
         String n_causal = "10"
         String finemap_window_kb = "1000"
         Array[String] exclude = []
+        String phenotype
     }
 
     command <<<
-        # Get phenotype from group_name
-        phenotype=$(echo ~{gwas_results} | cut -d'.' -f3)
-        echo $phenotype > phenotype.txt
         # Make samples files list
         for f in ~{sep=" " sample_files}; do
             echo "${f}"
@@ -374,7 +394,7 @@ task finemapping_summary_stats {
             ${pgen_prefix} \
             ~{covariates_file} \
             samples_file.txt \
-            --output-prefix=finemapping.meta_analysis.${phenotype}.chr~{chr} \
+            --output-prefix=finemapping.meta_analysis.~{phenotype}.chr~{chr} \
             --min-sig-clump-size=~{min_sig_clump_size} \
             --lead-pvalue=~{lead_pvalue} \
             --p2-pvalue=~{p2_pvalue} \
@@ -382,14 +402,14 @@ task finemapping_summary_stats {
             --clump-kb=~{clump_kb} \
             --n-causal=~{n_causal} \
             --finemap-window-kb=~{finemap_window_kb} \
-            --phenotype=${phenotype} \
+            --phenotype=~{phenotype} \
             --rss \
             --exclude=~{sep="," exclude}
     >>>
 
     output {
-        File finemapping_results = "finemapping.meta_analysis." + read_string("phenotype.txt") + ".chr${chr}.tsv"
-        File clumping_results = "finemapping.meta_analysis." + read_string("phenotype.txt") + ".chr${chr}.clumps.tsv"
+        File finemapping_results = "finemapping.meta_analysis.${phenotype}.chr${chr}.tsv"
+        File clumping_results = "finemapping.meta_analysis.${phenotype}.chr${chr}.clumps.tsv"
     }
 
     runtime {
