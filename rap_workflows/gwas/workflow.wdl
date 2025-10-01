@@ -37,9 +37,9 @@ workflow gwas {
         String lead_pvalue = "5e-8"
         String p2_pvalue = "1e-5"
         String r2_threshold = "0.1"
-        String clump_kb = "1000"
+        String clump_kb = "500"
         String n_causal = "10"
-        String finemap_window_kb = "1000"
+        String finemap_window_kb = "500"
         # Meta analysis
         Boolean meta_analysis = length(groupby) > 0
         Array[String] meta_exclude = ["ADMIXED"]
