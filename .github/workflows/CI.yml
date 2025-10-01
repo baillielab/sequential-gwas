@@ -146,6 +146,18 @@ jobs:
       - name: Install susieR
         run: |
           Rscript -e 'install.packages("susieR", repos = "https://cloud.r-project.org/")'
+      - name: Install metal
+        run: |
+          wget https://github.com/statgen/METAL/archive/refs/tags/2020-05-05.zip
+          unzip 2020-05-05.zip
+          cd METAL-2020-05-05
+          mkdir build && cd build
+          cmake -DCMAKE_BUILD_TYPE=Release ..
+          make
+          make test
+          make install
+          cp bin/metal /usr/local/bin/
+          chmod +x /usr/local/bin/metal
       - uses: julia-actions/setup-julia@v2
         with:
           version: 1.11
