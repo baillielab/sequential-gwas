@@ -269,6 +269,17 @@ workflow gwas {
                     maf = maf
             }
         }
+
+        Array[File] phenotypes_meta_plots = flatten(gwas_meta_plots.plots)
+    }
+
+    output {
+        Array[File] gwas_group_results = merge_gwas_group_chr_results.merged_results
+        Array[File] finemapping_group_results = merge_fp_group_chr_results.merged_results
+        Array[File] group_plots = flatten(gwas_group_plots.plots)
+        Array[File]? meta_gwas_results = meta_analyse.meta_gwas_results
+        Array[File]? meta_finemapping_results = merge_fp_meta_chr_results.merged_results
+        Array[File]? meta_plots = phenotypes_meta_plots
     }
 }
 
