@@ -450,12 +450,12 @@ function finemap_significant_regions(
         locus_id = locus[1]
         @info "Fine Mapping locus led by : $(locus_id)"
         clump_finemapping_results = if rss
-            finemap_locus_rss(locus_id, gwas_results, gwas_matched_pgen_prefix, y_df[!, phenotype];
+            finemap_locus_rss(locus, gwas_results, gwas_matched_pgen_prefix, y_df[!, phenotype];
                 n_causal=n_causal,
                 finemap_window_kb=finemap_window_kb,
             )
         else
-            finemap_locus(locus_id, gwas_matched_pgen_prefix, y_df;
+            finemap_locus(locus, gwas_matched_pgen_prefix, y_df;
                 Xtype=Xtype,
                 n_causal=n_causal,
                 finemap_window_kb=finemap_window_kb,
