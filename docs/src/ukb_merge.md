@@ -7,7 +7,7 @@ This workflow yields combined:
 - covariates containing the current age and sex of individuals
 - ancestry estimates: via the 1000 Genome Project
 
-It is assumed that you have installed the required dependencies as explained in [Working with the UKB RAP](@ref).
+It is assumed that you have installed the required dependencies as explained in [UKB RAP](@ref).
 
 ## 1. Uploading Inputs
 
@@ -22,9 +22,7 @@ In particular we need to populate the `genomicc` and `kgp` subfolders as display
 We will need the following GenOMICC data, at the present time, the name of the file does not matter since it seems impossible to reference a file by its path on the RAP, instead we will have to use file IDs: 
 
 - genotypes: Output by [Combining GenOMICC Datasets](@ref).
-- covariates: 
-  - General covariates provided by Dominique, it should contain an `age_years` and a `sex` column.
-  - Inferred covariates output by [Combining GenOMICC Datasets](@ref) containing ancestry estimates.
+- covariates: A covariate file provided by the ODAP team, currently this file contains the following columns: `IID`,`FID`,`PRIM_DIAGNOSIS_ODAP`,`COHORT`,`ISARIC_MAX_SEVERITY_SCORE`,`SEX_SELF_REPORTED`,`AGE_YEARS_AT_RECRUITMENT`,`SUPERPOPULATION`.
 - imputed genotypes: Output by [GenOMICC Genotypes Imputation](@ref).
 
 I recommend to organise them as follows:
@@ -53,9 +51,9 @@ wget -O assets/rap/Homo_sapiens_assembly38.fasta https://storage.googleapis.com/
 Since this is a lot of data, we need to use the [upload agent](https://documentation.dnanexus.com/downloads#installing-the-upload-agent). Asumming `ua` is in your path, run:
 
 ```bash
-export PROJECT_ID=PPP
 export AUTH_TOKEN=XXX
-ua --project $PROJECT_ID --auth-token $AUTH_TOKEN --folder /assets assets/rap/ --recursive
+export PROJECT_ID=project-J0pkqyQJpYQ133JG1p2J1qzv
+ua --project $PROJECT_ID --auth-token $AUTH_TOKEN --recursive --do-not-compress --folder /assets assets/rap/
 ```
 
 ## 2. Extracting Phenotypes
@@ -78,19 +76,36 @@ dx run -y \
 /export_covariates
 ```
 
-You can monitor the workflow on the RAP, once finished you should have two outputs in the `/export_covariates_outputs` folder: `` and ``.
+You can monitor the workflow on the RAP, once finished you should have two outputs in the `/export_covariates_outputs` folder.
 
 ## 3. Merging Cohorts
 
-First you need to compile the WDL workflow and upload it to the RAP, this can be done with the following:
+First you need to compile the WDL workflow and upload it to the RAP. However, a workflow is compiled for specific set of inputs which need to be provided first. All inputs are provided in the `rap_workflows/ukb_merge/inputs.json` file. Unfortunately all file paths are project specific and must be manually set using their `project-id:file-id` format which is quite tedious and error prone (file-ids can be found on the RAP). The inputs are as follows:
+
+- `high_ld_regions`: The `assets/rap/exclude_b38.txt` file.
+- `reference_genome`: The `assets/rap/Homo_sapiens_assembly38.fasta` file.
+- `ukb_bgen_filesets`: The files are the imputed genotypes found in the RAP's `Bulk/Imputation/Imputation_from_genotype_TOPmed` folder.
+- `ukb_covariates`: The output of the previous step, `covariates_table.csv`.
+- `hesin_critical_table`: The output of the previous step, `critical_table.csv`.
+- `genomicc_genotypes`: The typed variants in plink format in `assets/rap/genomicc/genotypes`.
+- `genomicc_pgen_filesets`: The imputed variants in plink2 format in `assets/rap/genomicc/imputed`.
+- `genomicc_covariates`: The covariates file in `assets/rap/genomicc/covariates`.
+- `kgp_genotypes`: The 1000 Genome Project variants in plink format in `assets/rap/kgp`.
+
+Then compiling the workflow can be done with the following:
 
 ```bash
-export DX_COMPILER_PATH=/Users/olabayle/dxCompiler/dxCompiler-2.13.0.jar
-export PROJECT_ID=project-J0pkqyQJpYQ133JG1p2J1qzv
-java -jar $DX_COMPILER_PATH compile rap_workflows/ukb_merge/workflow.wdl -f -project $PROJECT_ID -folder /workflows -inputs rap_workflows/ukb_merge/inputs.json
+java -jar $DX_COMPILER_PATH compile rap_workflows/ukb_merge/workflow.wdl \
+-f -project $PROJECT_ID \
+-reorg \
+-folder /workflows/ukb_merge \
+-inputs rap_workflows/ukb_merge/inputs.json
 ```
 
 where the `DX_COMPILER_PATH` and `PROJECT_ID` have to be set appropriately. The compiler might output some warnings like `missing input for non-optional parameter` but you can ignore these.
+
+!!! warning "Updating workflows"
+    At this point in time it seems like compiling multiple times the same workflow does not replace the old files. You will need to manually erase them from the RAP.
 
 Then, you can run the workflow with the following command
 
@@ -99,5 +114,11 @@ dx run -y \
 -f rap_workflows/ukb_merge/inputs.dx.json \
 --priority high \
 --destination /ukb_merge_outputs/ \
-/workflows/merge_ukb_and_genomicc
+/workflows/ukb_merge/merge_ukb_and_genomicc
 ```
+
+All outputs will be located in the `ukb_merge_outputs` folder on the RAP.
+
+- `genomicc_ukb.merged.imputed.chr_{1..22}.{pgen,psam,pva}`: Merged imputed genotypes.
+- `ukb_genomicc.merged.{bed,bim,fam}`: Merged genotypes.
+- `ukb_genomicc.covariates.csv`: Merged covariates
