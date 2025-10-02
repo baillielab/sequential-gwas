@@ -31,6 +31,9 @@ TESTDIR = joinpath(PKGDIR, "test")
         @test include(joinpath(TESTDIR, "meta_analysis.jl"))
         @test include(joinpath(TESTDIR, "gwas_plots.jl"))
         @test include(joinpath(TESTDIR, "gwas.jl"))
+        if (haskey(ENV, "CI_CONTAINER") && ENV["CI_CONTAINER"] == "docker")
+            @test include(joinpath(TESTDIR, "gwas_e2e_groupby.jl"))
+        end
     end
 end
 
