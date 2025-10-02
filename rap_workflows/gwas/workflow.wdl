@@ -528,6 +528,14 @@ task regenie_step_2 {
         phenotype=$(echo ~{group_name} | cut -d'.' -f2)
         echo $phenotype > phenotype.txt
 
+        # Find the type of the phenotype (quantitative or binary)
+        phenotype_col_idx=$(head -1 ~{covariates_file} | tr '\t' '\n' | grep -n ${phenotype} | cut -d: -f1)
+        uniq_vals_count=$(cut -f"${phenotype_col_idx}" ~{covariates_file} | sort -u | grep -v "NA" | wc -l)
+        trait_type="--bt"
+        if [ "${uniq_vals_count}" -gt 3 ]; then # two binary values + header
+            trait_type="--qt"
+        fi
+
         conda run -n regenie_env regenie \
             --step 2 \
             --pgen ${input_prefix}.biallelic_frequent \
@@ -537,7 +545,7 @@ task regenie_step_2 {
             --write-samples \
             --covarFile ~{covariates_file} \
             --covarColList ${full_covariates_list} \
-            --bt \
+            ${trait_type} \
             --firth --approx --pThresh 0.01 \
             --minMAC ~{mac} \
             --pred ~{regenie_list} \
