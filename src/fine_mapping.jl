@@ -446,11 +446,11 @@ function finemap_significant_regions(
     sample_list = getindex.(split.(readlines(sample_file), "\t"), 2)
     y_df = load_phenotypes_matching_samples(covariates_file, sample_list, phenotype)
     finemapping_results = []
-    for locus in eachrow(loci)
+    for locus in loci
         locus_id = locus[1]
         @info "Fine Mapping locus led by : $(locus_id)"
-       clump_finemapping_results = if rss
-            finemap_locus_rss(locus_id, gwas_results, gwas_matched_pgen_prefix, y;
+        clump_finemapping_results = if rss
+            finemap_locus_rss(locus_id, gwas_results, gwas_matched_pgen_prefix, y_df[!, phenotype];
                 n_causal=n_causal,
                 finemap_window_kb=finemap_window_kb,
             )
