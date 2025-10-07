@@ -25,15 +25,5 @@ TESTDIR = joinpath(PKGDIR, "test")
     if "ukbmerge_tests" in ARGS
         @test include(joinpath(TESTDIR, "merge_ukb_genomicc.jl"))
     end
-    # Test GWAS Workflow
-    if "gwas_tests" in ARGS
-        @test include(joinpath(TESTDIR, "fine_mapping.jl"))
-        @test include(joinpath(TESTDIR, "meta_analysis.jl"))
-        @test include(joinpath(TESTDIR, "gwas_plots.jl"))
-        @test include(joinpath(TESTDIR, "gwas.jl"))
-        if (haskey(ENV, "CI_CONTAINER") && ENV["CI_CONTAINER"] == "docker")
-            @test include(joinpath(TESTDIR, "gwas_e2e_groupby.jl"))
-        end
-    end
 end
 

@@ -26,9 +26,6 @@ using JSON
 using MLJBase
 using Base.Threads
 using Dates
-using RCall
-using PGENFiles
-using MLJTransforms
 
 # Legacy files
 include("one_time_checks.jl")
@@ -48,11 +45,7 @@ include("gvcf_genotyping.jl")
 include("imputation.jl")
 # Merging UKB and GenOMICC Files
 include("merge_ukb_genomicc.jl")
-# GWAS files
 include("covariates.jl")
-include("gwas.jl")
-include("fine_mapping.jl")
-include("gwas_plots.jl")
 
 export julia_main
 
