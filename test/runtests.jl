@@ -18,11 +18,13 @@ TESTDIR = joinpath(PKGDIR, "test")
 
     # Test Dataset Aggregation Workflow
     if "genomicc_aggregation_tests" in ARGS
+        @info "Testing GenOMICC Aggregation"
         @test include(joinpath(TESTDIR, "combine_datasets_wgs.jl"))
         @test include(joinpath(TESTDIR, "combine_datasets_no_wgs.jl"))
     end
     # Test Merging UKB and GenOMICC
     if "ukbmerge_tests" in ARGS
+        @info "Testing UKB and GenOMICC Merging"
         @test include(joinpath(TESTDIR, "merge_ukb_genomicc.jl"))
     end
 end
