@@ -272,10 +272,6 @@ end
 dorun = isinteractive() || (haskey(ENV, "CI_CONTAINER") && ENV["CI_CONTAINER"] == "docker")
 
 if dorun
-    cmd_args = haskey(ENV, "CROMWELL_PATH") ?
-        ["-jar", ENV["CROMWELL_PATH"]] :
-        ["-Dconfig.file=conf/cromwell.mac.conf", "-jar", "/Users/olabayle/cromwell/cromwell-90.jar"]
-
     # Download the reference genome if not already present
     reference_genome_path = joinpath(PKGDIR, "assets", "rap", "Homo_sapiens_assembly38.fasta")
     if !isfile(reference_genome_path)
@@ -283,14 +279,18 @@ if dorun
     end
 
     @testset "Test Array Genotypes Merging" begin
+        configfile = Sys.isapple() ? joinpath("conf", "cromwell.mac.conf") : joinpath("conf", "cromwell.local.conf")
         cmd = Cmd([
-            "java", cmd_args...,
-            "run", "rap_workflows/ukb_merge/workflow.wdl",
+            "java", "-Dconfig.file=$configfile",
+            "-jar", ENV["CROMWELL_PATH"],
+            "run", joinpath(PKGDIR, "rap_workflows", "ukb_merge", "workflow.wdl"),
             "--inputs", joinpath(TESTDIR, "assets", "ukb_merge.json"),
             "--options", joinpath(TESTDIR, "assets", "ukb_merge_options.json")
         ])
-        rc = run(cmd)
-        @test rc.exitcode == 0
+        cd(PKGDIR) do
+            rc = run(cmd)
+            @test rc.exitcode == 0
+        end
 
         results_dirs = readdir("ukb_genomicc_merge_results/merge_ukb_and_genomicc/", join=true)
         results_dir = results_dirs[argmax(mtime(d) for d in results_dirs)]

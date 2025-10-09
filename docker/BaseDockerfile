@@ -8,6 +8,10 @@ RUN rm /var/lib/dpkg/info/libc-bin.* \
     && apt-get clean \
     && apt-get update \
     && apt-get install -y \
+        libcurl4-openssl-dev \
+        bzip2 \
+        libbz2-dev \
+        liblzma-dev \
         git \
         cmake \
         wget \
@@ -18,36 +22,32 @@ RUN rm /var/lib/dpkg/info/libc-bin.* \
         libopenblas-dev \
         tabix \
         unzip \
-        openjdk-17-jdk \
-        zlib1g-dev \
-        r-base \
-        r-base-dev
+        default-jdk \
+        zlib1g-dev
 
-# METAL
-RUN wget https://github.com/statgen/METAL/archive/refs/tags/2020-05-05.zip \
-    && unzip 2020-05-05.zip \
-    && cd METAL-2020-05-05 \
-    && mkdir build && cd build \
-    && cmake -DCMAKE_BUILD_TYPE=Release .. \
+# SAMTOOLS
+RUN wget https://github.com/samtools/samtools/releases/download/1.22.1/samtools-1.22.1.tar.bz2 \
+    && tar -xvjf samtools-1.22.1.tar.bz2 \
+    && cd samtools-1.22.1 \
+    && ./configure --prefix=/usr/local/ \
     && make \
-    && make test \
-    && make install \
-    && cp bin/metal /usr/local/bin/ \
-    && chmod +x /usr/local/bin/metal
+    && make install
+
+# Install BCFTOOLS
+RUN wget https://github.com/samtools/bcftools/releases/download/1.22/bcftools-1.22.tar.bz2 \
+    && tar -xvjf bcftools-1.22.tar.bz2 \
+    && cd bcftools-1.22 \
+    && ./configure --prefix=/usr/local/ \
+    && make \
+    && make install
 
 # KING 2.3.2
-RUN wget https://www.kingrelatedness.com/KINGcode.tar.gz \
-    && mkdir /opt/king \
-    && tar -xzf KINGcode.tar.gz -C /opt/king \
-    && cd /opt/king \
-    && c++ -O2 -fopenmp -o king *.cpp -lm -lz \
-    && cp king /usr/local/bin/ \
+RUN wget https://www.kingrelatedness.com/Linux-king.tar.gz \
+    && tar -xvzf Linux-king.tar.gz \
+    && mv king /usr/local/bin/ \
     && chmod +x /usr/local/bin/king
 
-# Install SuSiE
-RUN Rscript -e 'install.packages(c("susieR", "Rfast"), repos = "https://cloud.r-project.org/")'
-
-# Install SCOPE
+# Install SCOPE: this crashes with modern compilers, for instance if using the newer debian trixie, if trying to upgrade the OS, maybe do: cmake -DCMAKE_CXX_FLAGS="-std=c++14"
 RUN git clone https://github.com/sriramlab/SCOPE.git \
     && cd SCOPE \
     && mkdir build \
@@ -62,12 +62,6 @@ RUN wget https://yanglab.westlake.edu.cn/software/gcta/bin/gcta-1.94.1-linux-ker
     && unzip gcta-1.94.1-linux-kernel-2-x86_64.zip \
     && mv gcta-1.94.1-linux-kernel-2-x86_64/gcta64 /usr/local/bin \
     && chmod +x /usr/local/bin/gcta64
-
-# Install QCTOOL
-RUN wget -O qctool.tgz https://www.well.ox.ac.uk/~gav/resources/qctool_v2.2.5-CentOS_Linux7.9-x86_64.tgz \
-    && tar -xvzf qctool.tgz \
-    && mv qctool_v2.2.5-Ce-x86_64/qctool /usr/local/bin \
-    && chmod +x /usr/local/bin/qctool
 
 # Install GATK
 RUN wget https://github.com/broadinstitute/gatk/releases/download/4.6.1.0/gatk-4.6.1.0.zip \
@@ -89,8 +83,6 @@ RUN wget https://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20241022.zip 
 # Install conda
 RUN wget -O Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh" \
     && bash Miniforge3.sh -b -p /opt/miniforge3 \
-    && /opt/miniforge3/bin/conda create -n bcftools_env -c conda-forge -c bioconda bcftools samtools \
-    && /opt/miniforge3/bin/conda create -y -n regenie_env -c conda-forge -c bioconda regenie==4.1 \
     && /opt/miniforge3/bin/conda create -y -n liftover_env python=3 \
     && /opt/miniforge3/bin/conda run -n liftover_env pip install pyliftover pandas \
     && /opt/miniforge3/bin/conda clean -a -y \
@@ -101,12 +93,6 @@ RUN wget https://dalexander.github.io/admixture/binaries/admixture_linux-1.3.0.t
     && tar -xvzf admixture_linux-1.3.0.tar.gz \
     && mv dist/admixture_linux-1.3.0/admixture /usr/local/bin \
     && chmod +x /usr/local/bin/admixture
-
-RUN wget https://github.com/lukfor/imputationbot/releases/download/v2.0.0/imputationbot-2.0.0-linux.zip \
-    && unzip imputationbot-2.0.0-linux.zip \
-    && mv imputationbot /usr/local/bin \
-    && mv imputationbot.jar /usr/local/bin \
-    && chmod +x /usr/local/bin/imputationbot
 
 # Update Path
 ENV PATH=/opt/miniforge3/bin/:/opt/gatk-4.6.1.0/:${PATH}

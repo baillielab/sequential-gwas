@@ -350,7 +350,7 @@ task filter_ukb_chr_with_r2_and_critical_samples {
 
     command <<<
         # Get variants with R2 > r2_threshold
-        conda run -n bcftools_env bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%INFO/R2\n' ~{vcf_info_file} > ~{input_prefix}.tsv
+        bcftools query -f '%CHROM\t%POS\t%ID\t%REF\t%ALT\t%INFO/R2\n' ~{vcf_info_file} > ~{input_prefix}.tsv
         awk -v t="~{r2_threshold}" 'BEGIN { OFS="\t" } $6 > t { print $1, $2, $3 }' ~{input_prefix}.tsv > variant_passing_r2.tsv
         awk 'BEGIN { OFS="\t" } { print $1, $2, $2 }' variant_passing_r2.tsv > extract_list.txt
         # Filter BGEN file and write PGEN
@@ -639,8 +639,8 @@ task pgen_to_bcf {
             --export bcf \
             --out "~{output_prefix}.chr_~{chr}.temp"
 
-        conda run -n bcftools_env bcftools index "~{output_prefix}.chr_~{chr}.temp.bcf"
-        conda run -n bcftools_env bcftools norm \
+        bcftools index "~{output_prefix}.chr_~{chr}.temp.bcf"
+        bcftools norm \
             -m -both \
             -f ~{reference_genome} \
             --check-ref wx \
@@ -687,7 +687,7 @@ task merge_genomicc_ukb_bcfs_and_convert_to_pgen {
         fi
 
         # Merge BCF files
-        conda run -n bcftools_env bcftools merge \
+        bcftools merge \
             --output-type=b \
             --output="~{output_prefix}.chr_~{ukb_chr}.bcf" \
             --write-index=csi \
@@ -726,7 +726,7 @@ task index_reference_genome {
     String reference_genome_filename = basename(reference_genome)
 
     command <<<
-        conda run -n bcftools_env samtools faidx ~{reference_genome}
+        samtools faidx ~{reference_genome}
         mv ~{reference_genome}.fai ~{reference_genome_filename}.fai
     >>>
 

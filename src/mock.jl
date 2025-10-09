@@ -56,8 +56,8 @@ function make_mock_wgs(outprefix, wgs_prefix, wgs_snps, release_2024_now_map, ne
         output_gvcf_filepath = string(outprefix, ".", new_sample_id, ".gvcf.gz")
         new_sample_file = joinpath(tmpdir, string("new_sample_", new_sample_id ,".txt"))
         write(new_sample_file, new_sample_id)
-        run(`conda run -n bcftools_env bcftools view -O z -R $regions_file -o $output_gvcf_filepath_temp $input_gvcf_filepath`)
-        run(`conda run -n bcftools_env bcftools reheader -s $new_sample_file -o $output_gvcf_filepath $output_gvcf_filepath_temp`)
+        run(`bcftools view -O z -R $regions_file -o $output_gvcf_filepath_temp $input_gvcf_filepath`)
+        run(`bcftools reheader -s $new_sample_file -o $output_gvcf_filepath $output_gvcf_filepath_temp`)
     end
 end
 

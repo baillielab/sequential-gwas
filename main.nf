@@ -54,7 +54,6 @@ params.N_PCS = 20
 include { CombineGeneticDatasets } from './workflows/combine_datasets.nf'
 include { Imputation } from './workflows/imputation.nf'
 include { KGP } from './workflows/kgp.nf'
-include { GWAS } from './workflows/gwas.nf'
 
 log.info """\
          ${workflow.manifest.name} v${workflow.manifest.version}
