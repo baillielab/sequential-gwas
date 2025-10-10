@@ -98,7 +98,7 @@ end
 @testset "Test process_genomicc_covariates: without UKB" begin
     tmpdir = mktempdir()
     output_file = joinpath(tmpdir, "covariates.processed.csv")
-    genomicc_covariates_file = joinpath("test", "assets", "genomicc", "mock.covariates.csv")
+    genomicc_covariates_file = joinpath(TESTDIR, "assets", "genomicc", "mock.covariates.csv")
     copy!(ARGS, [
         "process-genomicc-covariates",
         genomicc_covariates_file,
@@ -135,8 +135,8 @@ end
 @testset "Test process_genomicc_covariates: with UKB" begin
     tmpdir = mktempdir()
     output_file = joinpath(tmpdir, "ukb_genomicc.covariates.csv")
-    genomicc_covariates_file = joinpath("test", "assets", "genomicc", "mock.covariates.csv")
-    ukb_covariates_file = joinpath("test", "assets", "ukb", "covariates_table.csv")
+    genomicc_covariates_file = joinpath(TESTDIR, "assets", "genomicc", "mock.covariates.csv")
+    ukb_covariates_file = joinpath(TESTDIR, "assets", "ukb", "covariates_table.csv")
     ukb_inferred_covariates_file = joinpath(tmpdir, "inferred_covariates.ukb.csv")
     unrelated_ukb_individuals_file = joinpath(tmpdir, "kingunrelated.txt")
     # Make UKB inferred covariates (ancestry estimates and downsample to mimic loss of samples due to both relatedness and critical patients)
@@ -292,7 +292,7 @@ if dorun
             @test rc.exitcode == 0
         end
 
-        results_dirs = readdir("ukb_genomicc_merge_results/merge_ukb_and_genomicc/", join=true)
+        results_dirs = readdir(joinpath("ukb_genomicc_merge_results", "merge_ukb_and_genomicc"), join=true)
         results_dir = results_dirs[argmax(mtime(d) for d in results_dirs)]
 
         # Test get_ukb_individuals
