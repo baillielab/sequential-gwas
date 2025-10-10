@@ -77,7 +77,12 @@ jobs:
         with:
           swap-size-gb: 10
       - name: Delete huge unnecessary tools folder
-        run: sudo rm -rf /opt/hostedtoolcache && sudo rm -rf /usr/local/share/boost && sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        run: |
+          sudo rm -rf /opt/hostedtoolcache
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
       - name: Install Singularity
         if: ${{ matrix.container == 'singularity' }}
         uses: singularityhub/install-singularity@main

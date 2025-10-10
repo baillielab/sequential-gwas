@@ -292,7 +292,7 @@ if dorun
             @test rc.exitcode == 0
         end
 
-        results_dirs = readdir(joinpath("ukb_genomicc_merge_results", "merge_ukb_and_genomicc"), join=true)
+        results_dirs = readdir(joinpath(PKGDIR, "ukb_genomicc_merge_results", "merge_ukb_and_genomicc"), join=true)
         results_dir = results_dirs[argmax(mtime(d) for d in results_dirs)]
 
         # Test get_ukb_individuals
