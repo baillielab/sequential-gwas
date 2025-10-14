@@ -10,3 +10,4 @@ results_no_wgs/*
 assets/rap/*
 assets/topmed-api-token
 assets/resources_broad_hg38_v0_Homo_sapiens_assembly38.fasta
+assets/GTEx_Analysis_*

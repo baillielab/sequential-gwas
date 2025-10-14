@@ -1,9 +1,12 @@
 {
     "merge_ukb_and_genomicc.julia_threads": "1",
     "merge_ukb_and_genomicc.julia_use_sysimage": "false",
-    "merge_ukb_and_genomicc.docker_image": "olivierlabayle/genomicc:main",
+    "merge_ukb_and_genomicc.docker_image": "olivierlabayle/genomicc:0.2.0",
     "merge_ukb_and_genomicc.high_ld_regions": "assets/exclude_b38.txt",
-    "merge_ukb_and_genomicc.relatedness_degree": "2",
+    "merge_ukb_and_genomicc.qc_genotype_missing_rate": "0.05",
+    "merge_ukb_and_genomicc.ancestry_program": "scope",
+    "merge_ukb_and_genomicc.max_ukb_samples": "150",
+    "merge_ukb_and_genomicc.relatedness_degree": "3",
     "merge_ukb_and_genomicc.reference_genome": "assets/rap/Homo_sapiens_assembly38.fasta",
     "merge_ukb_and_genomicc.ukb_bgen_filesets": [
         {
@@ -60,7 +63,6 @@
         }
     ],
     "merge_ukb_and_genomicc.genomicc_covariates": "test/assets/genomicc/mock.covariates.csv",
-    "merge_ukb_and_genomicc.genomicc_inferred_covariates": "test/assets/genomicc/inferred_covariates.csv",
     "merge_ukb_and_genomicc.kgp_genotypes": {
         "chr": "all",
         "bed": "test/assets/kgp/bed_shared_genomicc/kgp.merged.unrelated.shared.bed",

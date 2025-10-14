@@ -2,10 +2,10 @@ name: CI
 on:
   push:
     branches:
-      - main
-    tags: ['*']
-  pull_request:
+      - "**"
   workflow_dispatch:
+  release:
+    types: [published]
 concurrency:
   # Skip intermediate builds: always.
   # Cancel intermediate builds: only if it is a pull request build.
@@ -58,23 +58,15 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
-  test:
-    name: Test Workflow with ${{ matrix.container }}
+  test-genomicc-aggregation:
+    name: Genomicc Datasets Aggregation Tests with ${{ matrix.container }}
     needs: build_and_publish
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    runs-on: ubuntu-latest
     permissions: # needed to allow julia-actions/cache to proactively delete old caches that it has created
       actions: write
       contents: read
     strategy:
-      fail-fast: false
       matrix:
-        version:
-          - '1'
-        os:
-          - ubuntu-latest
-        arch:
-          - x64
         container:
           - docker
           - singularity
@@ -85,33 +77,58 @@ jobs:
         with:
           swap-size-gb: 10
       - name: Delete huge unnecessary tools folder
-        run: sudo rm -rf /opt/hostedtoolcache && sudo rm -rf /usr/local/share/boost && sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        run: |
+          sudo rm -rf /opt/hostedtoolcache
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
       - name: Install Singularity
-        if: ${{ matrix.container == 'SINGULARITY' }}
+        if: ${{ matrix.container == 'singularity' }}
         uses: singularityhub/install-singularity@main
         with:
           singularity-version: '4.2.2'
+      - uses: nf-core/setup-nextflow@v1.2.0
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: 1.11
+      - uses: julia-actions/cache@v2
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/julia-runtest@v1
+        with:
+          test_args: 'genomicc_aggregation_tests'
+        env:
+          CI_CONTAINER: ${{ matrix.container }}
+  test-ukbmerge:
+    name: UKBMerge Tests
+    needs: build_and_publish
+    runs-on: ubuntu-latest
+    permissions: # needed to allow julia-actions/cache to proactively delete old caches that it has created
+      actions: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+      - name: Delete huge unnecessary tools folder
+        run: sudo rm -rf /opt/hostedtoolcache && sudo rm -rf /usr/local/share/boost && sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - name: Download Cromwell
         run: |
           wget https://github.com/broadinstitute/cromwell/releases/download/90/cromwell-90.jar
           mv cromwell-90.jar ${{ github.workspace }}/cromwell.jar
-      - uses: nf-core/setup-nextflow@v1.2.0
       - uses: julia-actions/setup-julia@v2
         with:
-          version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
+          version: 1.11
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
-        env:
-          CI_CONTAINER: ${{ matrix.container }}
-          CROMWELL_PATH: ${{ github.workspace }}/cromwell.jar
-      - uses: julia-actions/julia-processcoverage@v1
-      - uses: codecov/codecov-action@v4
         with:
-          files: lcov.info
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
+          test_args: 'ukbmerge_tests'
+        env:
+          CI_CONTAINER: docker
+          CROMWELL_PATH: ${{ github.workspace }}/cromwell.jar
   docs:
     name: Documentation
     runs-on: ubuntu-latest
@@ -123,15 +140,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
         with:
-          version: '1'
+          version: 1.11
       - uses: julia-actions/cache@v2
       - uses: nf-core/setup-nextflow@v1.2.0
       - name: Install graphviz
         run: sudo apt-get install -y graphviz
       - name: Create Combining GenOMICC Datasets DAG
         run: nextflow run main.nf -with-dag docs/src/assets/combining_datasets_dag.html -preview -c test/assets/combine_datasets.wgs.config
-      - name: Create GWAS DAG
-        run: nextflow run main.nf -entry GWAS -with-dag docs/src/assets/gwas_dag.html -preview -c test/assets/gwas.bygroup.config
       - name: Configure doc environment
         shell: julia --project=docs --color=yes {0}
         run: |

@@ -43,13 +43,13 @@ JULIA_DEPOT_PATH=$JULIA_DEPOT_PATH:/root/.julia julia --project=/mnt/genomicc-wo
 Most tools are available within their conda environment, for instance regenie:
 
 ```bash
-docker run -it --rm genomicc-workflows /opt/miniforge3/bin/mamba run -n regenie_env regenie --help
+docker run -it --rm genomicc-workflows /opt/miniforge3/bin/conda run -n regenie_env regenie --help
 ```
 
 (If running on MacOS with arm platform, add: `--platform linux/amd64`)
 
 
-## UKB RAP
+## Debugging on UKB RAP
 
 ### Cloud Workstation
 
@@ -57,7 +57,7 @@ To debug errors, it may be useful to run the code interactively, for this, you c
 
 ```bash
 dx run \
-  --instance-type mem1_ssd1_v2_x16 \
+  --instance-type mem2_ssd1_v2_x8 \
   -imax_session_length="10h" \
   -y \
   --ssh app-cloud_workstation
@@ -72,13 +72,19 @@ dx download file-J1P9y88JjZjXfq4Y5gYBxk86 file-J1P9y88JjZjbX18xFZ38qY2P
 Then you can download the docker image and enter a container:
 
 ```bash
-docker run -it --rm -v $PWD:/mnt/data olivierlabayle/genomicc:main /bin/bash
+docker run -it --rm -v $PWD:/mnt/data olivierlabayle/genomicc:0.2.0 /bin/bash
 ```
 
 The current directory is mounted to `/mnt/data`. From there, work as usual, for instance to start a Julia REPL:
 
 ```bash
 julia --project=/opt/genomicc-workflows --sysimage=/opt/genomicc-workflows/GenomiccWorkflows.so --startup-file=no
+```
+
+You can upload generated data to your project with `dx upload`:
+
+```bash
+dx upload --path "$DX_PROJECT_CONTEXT_ID:" <FILE>
 ```
 
 Finally, when you are finished, terminate the job with the appropriate job-id:

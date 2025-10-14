@@ -17,9 +17,6 @@ process CleanKGP {
         input_prefix = get_prefix(vcf_file)[0..-5]
         output = "${input_prefix}.clean.vcf.gz"
         """
-        source /opt/miniforge3/etc/profile.d/conda.sh
-        conda activate bcftools_env
-
         bcftools norm --threads ${task.cpus} -m +any ${vcf_file} | \
         bcftools annotate --threads ${task.cpus} -x ID -I +'%CHROM:%POS:%REF:%ALT' | \
         bcftools norm --threads ${task.cpus} -Oz --rm-dup both > ${output}

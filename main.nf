@@ -28,7 +28,8 @@ params.PCA_MAF = 0.01
 params.PCA_APPROX = true
 params.IQR_FACTOR = 10
 params.FILTER_HIGH_LOADINGS_VARIANTS = false
-params.ANCESTRY_THRESHOLD = 0.8
+params.ANCESTRY_THRESHOLD = 0.5
+params.ANCESTRY_PROGRAM = "scope"
 params.RELATEDNESS_DEGREE = 3
 
 // Imputation
@@ -53,7 +54,6 @@ params.N_PCS = 20
 include { CombineGeneticDatasets } from './workflows/combine_datasets.nf'
 include { Imputation } from './workflows/imputation.nf'
 include { KGP } from './workflows/kgp.nf'
-include { GWAS } from './workflows/gwas.nf'
 
 log.info """\
          ${workflow.manifest.name} v${workflow.manifest.version}

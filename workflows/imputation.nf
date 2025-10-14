@@ -149,7 +149,7 @@ process MergeVCFsByChr {
         """
         echo "${sorted_vcf_files_string}" > merge_list.txt
 
-        mamba run -n bcftools_env bcftools merge --threads ${task.cpus} -o ${output} -O z -l merge_list.txt
+        bcftools merge --threads ${task.cpus} -o ${output} -O z -l merge_list.txt
         """
 }
 
@@ -162,7 +162,7 @@ process IndexVCF {
 
     script:
         """
-        mamba run -n bcftools_env bcftools index --tbi --threads ${task.cpus} ${vcf_file}
+        bcftools index --tbi --threads ${task.cpus} ${vcf_file}
         """
 }
 
@@ -176,8 +176,7 @@ process QCMergedImputedFile {
     script:
         output = "${get_prefix(get_prefix(vcf_file))}.qced.vcf.gz"
         """
-        mamba run -n bcftools_env \
-            bcftools view -m2 -e '( R2 < ${params.IMPUTATION_R2_FILTER})' --threads ${task.cpus} -O z -o ${output} ${vcf_file}
+        bcftools view -m2 -e '( R2 < ${params.IMPUTATION_R2_FILTER})' --threads ${task.cpus} -O z -o ${output} ${vcf_file}
         """
 }
 
