@@ -1,0 +1,254 @@
+<!--
+  ~ Copyright 2013-2024, Seqera Labs
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<html>
+<head>
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+</head>
+<body>
+<pre class="mermaid" style="text-align: center;">
+%%{
+  init: {
+    'theme': 'base',
+    'themeVariables': {
+      'primaryColor': '#B6ECE2',
+      'primaryTextColor': '#160F26',
+      'primaryBorderColor': '#065647',
+      'lineColor': '#545555',
+      'clusterBkg': '#BABCBD22',
+      'clusterBorder': '#DDDEDE',
+      'fontFamily': 'arial'
+    }
+  }
+}%%
+flowchart TB
+    subgraph " "
+    v0["Channel.of"]
+    v3["Channel.of"]
+    v6["store_dir"]
+    v19["publish_dir"]
+    v20["output_prefix"]
+    v30["Channel.of"]
+    v32["Channel.of"]
+    v35["Channel.of"]
+    v37["Channel.fromFilePairs"]
+    v41["chain_file"]
+    v64["publish_dir"]
+    v65["output_prefix"]
+    v74["publish_dir"]
+    v75["output_prefix"]
+    v86["publish_dir"]
+    v87["output_prefix"]
+    v91["high_ld_regions"]
+    v94["high_ld_regions"]
+    end
+    subgraph "CombineGeneticDatasets [CombineGeneticDatasets]"
+    subgraph "CombineGeneticDatasets:KGP [KGP]"
+    v7(["DownloadOrAccessStoredResource"])
+    v14(["CleanKGP"])
+    v15(["KGPVCFToBed"])
+    v21(["MergeKGPChromosomes"])
+    v25(["KeepKGPUnrelated"])
+    v1(( ))
+    v8(( ))
+    v12(( ))
+    v16(( ))
+    v18(( ))
+    v24(( ))
+    end
+    v29(["DownloadOrAccessReferenceGenome"])
+    v40(["WGSIndividuals"])
+    subgraph "CombineGeneticDatasets:GenotypesQC [GenotypesQC]"
+    v42(["LiftOver"])
+    v43(["PedToBed"])
+    v45(["GenotypingArrayBasicQC"])
+    v47(["QCFilesFromKGP"])
+    v55(["FlipAndExtract"])
+    v44(( ))
+    v46(( ))
+    v49(( ))
+    v50(( ))
+    v57(( ))
+    end
+    subgraph "CombineGeneticDatasets:GVCFGenotyping [GVCFGenotyping]"
+    v58(["IndexReferenceGenome"])
+    v59(["CreateSequenceDictionary"])
+    v60(["GenotypeGVCFs"])
+    v66(["MergeGenotypes"])
+    v61(( ))
+    v63(( ))
+    end
+    subgraph "CombineGeneticDatasets:MergeGenotypesAndQC [MergeGenotypesAndQC]"
+    v76(["MergeGenotypes"])
+    v78(["KingRelationshipInference"])
+    v79(["QCMergedGenotypes"])
+    v81(["AncestryEstimation"])
+    v95(["PCAAnalysis"])
+    v71(( ))
+    v73(( ))
+    end
+    v108(["CombineCovariates"])
+    subgraph "CombineGeneticDatasets:Report [Report]"
+    v112(["MakeReport"])
+    v109(( ))
+    v110(( ))
+    v111(( ))
+    end
+    v27(( ))
+    v28(( ))
+    v31(( ))
+    v36(( ))
+    v38(( ))
+    v69(( ))
+    v99(( ))
+    v102(( ))
+    v105(( ))
+    end
+    subgraph " "
+    v22[" "]
+    v23[" "]
+    v26[" "]
+    v48[" "]
+    v56[" "]
+    v67[" "]
+    v68["counts"]
+    v77[" "]
+    v80[" "]
+    v89[" "]
+    v90[" "]
+    v97[" "]
+    v113[" "]
+    v114[" "]
+    end
+    v0 --> v1
+    v3 --> v1
+    v6 --> v7
+    v1 --> v7
+    v7 --> v8
+    v7 --> v12
+    v8 --> v14
+    v14 --> v15
+    v15 --> v16
+    v15 --> v18
+    v19 --> v21
+    v20 --> v21
+    v16 --> v21
+    v18 --> v21
+    v21 --> v23
+    v21 --> v22
+    v21 --> v24
+    v12 --> v25
+    v24 --> v25
+    v25 --> v26
+    v25 --> v27
+    v25 --> v28
+    v29 --> v58
+    v29 --> v59
+    v29 --> v60
+    v30 --> v31
+    v32 --> v31
+    v35 --> v36
+    v37 --> v60
+    v37 --> v38
+    v38 --> v40
+    v40 --> v47
+    v40 --> v108
+    v41 --> v42
+    v31 --> v42
+    v42 --> v44
+    v42 --> v109
+    v36 --> v43
+    v43 --> v44
+    v44 --> v45
+    v45 --> v46
+    v45 --> v50
+    v45 --> v111
+    v28 --> v47
+    v46 --> v47
+    v47 --> v48
+    v47 --> v112
+    v47 --> v49
+    v47 --> v50
+    v47 --> v57
+    v49 --> v55
+    v50 --> v55
+    v55 --> v56
+    v55 --> v69
+    v55 --> v99
+    v55 --> v102
+    v55 --> v105
+    v58 --> v60
+    v59 --> v60
+    v49 --> v60
+    v57 --> v60
+    v60 --> v61
+    v60 --> v63
+    v64 --> v66
+    v65 --> v66
+    v61 --> v66
+    v63 --> v66
+    v66 --> v68
+    v66 --> v67
+    v66 --> v112
+    v66 --> v69
+    v74 --> v76
+    v75 --> v76
+    v71 --> v76
+    v73 --> v76
+    v76 --> v78
+    v76 --> v77
+    v76 --> v112
+    v76 --> v79
+    v78 --> v79
+    v78 --> v112
+    v79 --> v112
+    v79 --> v80
+    v79 --> v81
+    v79 --> v95
+    v86 --> v81
+    v87 --> v81
+    v81 --> v89
+    v81 --> v90
+    v91 --> v81
+    v94 --> v95
+    v95 --> v97
+    v99 --> v108
+    v102 --> v108
+    v105 --> v108
+    v81 --> v108
+    v95 --> v108
+    v108 --> v112
+    v49 --> v112
+    v109 --> v112
+    v110 --> v112
+    v111 --> v112
+    v95 --> v112
+    v112 --> v114
+    v112 --> v113
+    v12 --> v81
+    v27 --> v81
+    v44 --> v110
+    v49 --> v81
+    v69 --> v71
+    v69 --> v73
+    v81 --> v95
+
+</pre>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, maxTextSize: Number.MAX_SAFE_INTEGER, maxEdges: Number.MAX_SAFE_INTEGER });
+</script>
+</body>
+</html>
