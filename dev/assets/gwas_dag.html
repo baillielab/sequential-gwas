@@ -19,87 +19,60 @@
 </head>
 <body>
 <pre class="mermaid" style="text-align: center;">
-%%{
-  init: {
-    'theme': 'base',
-    'themeVariables': {
-      'primaryColor': '#B6ECE2',
-      'primaryTextColor': '#160F26',
-      'primaryBorderColor': '#065647',
-      'lineColor': '#545555',
-      'clusterBkg': '#BABCBD22',
-      'clusterBorder': '#DDDEDE',
-      'fontFamily': 'arial'
-    }
-  }
-}%%
 flowchart TB
     subgraph " "
     v0["Channel.fromPath"]
     v2["Channel.fromPath"]
-    v6["covariates"]
-    v7["inferred_covariates"]
-    v8["variables_config"]
-    v16["high_ld_regions"]
+    v4["covariates"]
+    v5["variables_config"]
+    v11["high_ld_regions"]
     end
-    subgraph "GWAS [GWAS]"
-    v9(["MakeCovariatesAndGroups"])
-    v15(["BEDGroupsQCed"])
-    subgraph "GWAS:LOCOPCA [LOCOPCA]"
-    v17(["GroupLDPruning"])
-    v19(["LocoGroupPCA"])
-    v18(( ))
+    subgraph GWAS
+    v6([MakeCovariatesAndGroups])
+    v10([BEDGroupsQCed])
+    subgraph PCA
+    v12([GroupLDPruning])
+    v13([GroupPCA])
     end
-    v22(["MergeCovariatesPCs"])
-    v24(["RegenieStep1"])
-    v27(["RegenieStep2"])
-    v29(["MergeRegenieResults"])
-    v30(["MakeGWASPlots"])
+    v16([MergeCovariatesPCs])
+    v22([RegenieStep1])
+    v26([RegenieStep2])
+    v27([MakeGWASPlots])
     v1(( ))
     v3(( ))
-    v10(( ))
-    v20(( ))
-    v28(( ))
+    v7(( ))
     end
     subgraph " "
-    v31[" "]
-    v32[" "]
+    v18["group_phenotypes"]
+    v28[" "]
+    v29[" "]
     end
     v0 --> v1
     v2 --> v3
-    v6 --> v9
-    v7 --> v9
-    v8 --> v9
-    v9 --> v22
-    v9 --> v24
-    v9 --> v27
-    v9 --> v3
-    v9 --> v10
-    v1 --> v15
-    v3 --> v15
-    v15 --> v17
-    v15 --> v3
-    v16 --> v17
-    v17 --> v18
-    v18 --> v19
-    v19 --> v20
-    v20 --> v22
-    v22 --> v27
-    v3 --> v24
-    v10 --> v24
-    v24 --> v3
-    v3 --> v27
-    v10 --> v27
+    v4 --> v6
+    v5 --> v6
+    v6 --> v7
+    v1 --> v10
+    v7 --> v10
+    v10 --> v12
+    v10 --> v7
+    v11 --> v12
+    v12 --> v13
+    v13 --> v7
+    v7 --> v16
+    v16 --> v7
+    v7 --> v18
+    v7 --> v22
+    v22 --> v7
+    v3 --> v26
+    v7 --> v26
+    v26 --> v27
+    v27 --> v29
     v27 --> v28
-    v28 --> v29
-    v29 --> v30
-    v30 --> v32
-    v30 --> v31
-    v3 --> v18
 
 </pre>
 <script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
   mermaid.initialize({ startOnLoad: true, maxTextSize: Number.MAX_SAFE_INTEGER, maxEdges: Number.MAX_SAFE_INTEGER });
 </script>
 </body>
