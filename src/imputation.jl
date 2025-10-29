@@ -1,5 +1,5 @@
 function write_sample_batches(prefix; output_prefix="genomicc", samples_per_file=5_000)
-    fam = GenomiccWorkflows.read_fam(string(prefix, ".fam"))
+    fam = read_fam(string(prefix, ".fam"))
     return map(Iterators.partition(1:nrow(fam), samples_per_file)) do indices
         filename = string(output_prefix, ".samples_", indices[1], "_", indices[end], ".keep")
         CSV.write(filename, fam[indices, [:FID, :IID]], delim=' ', header=false)
@@ -7,7 +7,7 @@ function write_sample_batches(prefix; output_prefix="genomicc", samples_per_file
 end
 
 function write_chromosome_list(genotypes_prefix; output_prefix="genomicc")
-    bim = GenomiccWorkflows.read_bim(string(genotypes_prefix, ".bim"))
+    bim = read_bim(string(genotypes_prefix, ".bim"))
     open(string(output_prefix, ".chromosomes.txt"), "w") do io
         for chr in unique(bim.CHR_CODE)
             println(io, chr)

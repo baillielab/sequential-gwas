@@ -43,10 +43,6 @@ function cli_settings()
             action = :command
             help = "Completes a bim file with the KGP."
 
-        "write-chromosomes"
-            action = :command
-            help = "Write list of chromosomes present in genotypes to file."
-
         "make-report"
             action = :command
             help = "Generates a report after the pipeline execution."
@@ -54,10 +50,6 @@ function cli_settings()
         "combine-covariates"
             action = :command
             help = "Merges covariates, ancestry and PCs files."
-
-        "merge-covariates-pcs"
-            action = :command
-            help = "Merges covariates and PCs files."
         
         "write-imputation-split-lists"
             action = :command
@@ -74,136 +66,6 @@ function cli_settings()
         "download-topmed-file"
             action = :command
             help = "Downloads a file from TOPMed."
-
-        "merge-chr-results"
-            action = :command
-            help = "Merges REGENIE results from different chromosomes."
-        
-        "align-ukb-variants-with-kgp-and-keep-unrelated"
-            action = :command
-            help = "Format variant Ids as CHR:POS:REF:ALT and keep only unrelated individuals from UKB data."
-
-        "process-genomicc-covariates"
-            action = :command
-            help = "Merges UKB and GenOMICC covariates files."
-
-        "make-ukb-genomicc-merge-report"
-            action = :command
-            help = "Generates a report after merging UKB and GenOMICC data."
-
-        "fill-chr-pvar-with-variant-id"
-            action = :command
-            help = "Generates UKB BGEN QC and R2 filter files."
-
-        "make-ukb-individuals-list"
-            action = :command
-            help = "Generates a list of UKB individuals to be used in the workflow."
-    end
-
-    @add_arg_table! s["make-ukb-individuals-list"] begin
-        "covariates-file"
-            arg_type = String
-            required = true
-            help = "Covariates file."
-
-        "critical-table-file"
-            arg_type = String
-            required = true
-            help = "File containing critical IDs."
-        
-        "--output"
-            arg_type = String
-            help = "Output file."
-            default = "ukb_eids_to_keep.txt"
-
-        "--max-samples"
-            arg_type = Int
-            help = "Maximum number of samples to keep."
-            default = nothing
-    end
-
-    @add_arg_table! s["fill-chr-pvar-with-variant-id"] begin
-        "pvar-file"
-            arg_type = String
-            required = true
-            help = "pvar file."
-
-        "variants-info-file"
-            arg_type = String
-            required = true
-            help = "File containing variants info (CHROM, POS, ID)."
-    end
-
-    @add_arg_table! s["make-ukb-genomicc-merge-report"] begin
-        "ukb-genomicc-merged-bim-file"
-            arg_type = String
-            required = true
-            help = "Path to the merged UKB and GenOMICC bim file."
-        "ukb-genomicc-merged-fam-file"
-            arg_type = String
-            required = true
-            help = "Path to the merged UKB and GenOMICC fam file."
-        "ukb-genomicc-imputed-files-list"
-            arg_type = String
-            required = true
-            help = "Path to the list of imputed files."
-        "ukb-genomicc-covariates-file"
-            arg_type = String
-            required = true
-            help = "Path to the merged UKB and GenOMICC covariates file."
-    end
-
-    @add_arg_table! s["process-genomicc-covariates"] begin
-        "genomicc-covariates"
-            arg_type = String
-            required = true
-            help = "Path to GenOMICC covariates file."
-
-        "--ukb-covariates"
-            arg_type = String
-            help = "Optional path to UKB covariates file to be concatenated to GenOMICC."
-
-        "--ukb-inferred-covariates"
-            arg_type = String
-            help = "Optional path to UKB inferred covariates file to be concatenated to GenOMICC."
-
-        "--output-file"
-            arg_type = String
-            help = "Output file name."
-            default = "covariates.processed.csv"
-    end
-
-    @add_arg_table! s["align-ukb-variants-with-kgp-and-keep-unrelated"] begin
-        "ukb-bed-prefix"
-            arg_type = String
-            required = true
-            help = "Prefix to UKB bed files."
-
-        "kgp-bed-prefix"
-            arg_type = String
-            required = true
-            help = "Prefix to KGP bed files."
-        
-        "--out-prefix"
-            arg_type = String
-            help = "Prefix to output files."
-            default = "ukb_unrelated"
-
-        "--relatedness-degree"
-            arg_type = Float64
-            help = "Degree of relatedness to keep individuals."
-            default = 3
-    end
-
-    @add_arg_table! s["merge-chr-results"] begin
-        "merge-list"
-            arg_type = String
-            required = true
-            help = "File containing list of files to be merged."
-        "--output-prefix"
-            arg_type = String
-            help = "Output path"
-            default = "results.all_chr"
     end
 
     @add_arg_table! s["download-topmed-file"] begin
@@ -307,23 +169,6 @@ function cli_settings()
             arg_type = String
             help = "Output prefix for jobs files."
             default = "."
-    end
-
-    @add_arg_table! s["merge-covariates-pcs"] begin
-        "covariates-file"
-            arg_type = String
-            required = true
-            help = "Path to covariates file."
-        
-        "pcs-prefix"
-            arg_type = String
-            required = true
-            help = "Prefix to PCs files."
-
-        "--output"
-            arg_type = String
-            help = "Output file name."
-            default = "covariates_and_pcs.csv"
     end
 
     @add_arg_table! s["combine-covariates"] begin
@@ -584,19 +429,6 @@ function cli_settings()
             help = "Output file name."
     end
 
-    @add_arg_table! s["write-chromosomes"] begin
-        "input-prefix"
-            arg_type = String
-            required = true
-            help = "Prefix to genotypes."
-
-        "--output"
-            arg_type = String
-            required = false
-            default = "chromosomes.txt"
-            help = "Output file name."
-    end
-
     @add_arg_table! s["qc-from-kgp"] begin
         "--outdir"
             arg_type = String
@@ -724,11 +556,6 @@ function julia_main()::Cint
     cmd_settings = settings[cmd]
     if cmd == "snps-to-flip"
         make_snps_to_flip_list(cmd_settings["out"], cmd_settings["manifest-file"])
-    elseif cmd == "write-chromosomes"
-        write_chromosomes(
-            cmd_settings["input-prefix"], 
-            output=cmd_settings["output"]
-        )
     elseif cmd == "report-qc-effect"
         report_qc_effect(
             cmd_settings["input-prefix"], 
@@ -831,12 +658,6 @@ function julia_main()::Cint
             cmd_settings["release-2024-now-fam"];
             output=cmd_settings["output"]
         )
-    elseif cmd == "merge-covariates-pcs"
-        merge_covariates_and_pcs(
-            cmd_settings["covariates-file"],
-            cmd_settings["pcs-prefix"];
-            output=cmd_settings["output"]
-        )
     elseif cmd == "write-imputation-split-lists"
         write_imputation_split_lists(
             cmd_settings["genotypes-prefix"]; 
@@ -867,44 +688,6 @@ function julia_main()::Cint
             md5_file=cmd_settings["md5-file"],
             refresh_rate=cmd_settings["refresh-rate"]
             )
-    elseif cmd == "merge-chr-results"
-        merge_chr_results(
-            cmd_settings["merge-list"];
-            output_prefix=cmd_settings["output-prefix"]
-        )
-    elseif cmd == "align-ukb-variants-with-kgp-and-keep-unrelated"
-        align_ukb_variants_with_kgp_and_keep_unrelated(
-            cmd_settings["ukb-bed-prefix"],
-            cmd_settings["kgp-bed-prefix"];
-            out_prefix=cmd_settings["out-prefix"],
-            relatedness_degree=cmd_settings["relatedness-degree"]
-        )
-    elseif cmd == "process-genomicc-covariates"
-        process_genomicc_covariates(
-            cmd_settings["genomicc-covariates"];
-            ukb_covariates_file=cmd_settings["ukb-covariates"],
-            ukb_inferred_covariates_file=cmd_settings["ukb-inferred-covariates"],
-            output_file=cmd_settings["output-file"]
-        )
-    elseif cmd == "make-ukb-genomicc-merge-report"
-        make_ukb_genomicc_merge_report(
-            ukb_genomicc_merged_bim_file=cmd_settings["ukb-genomicc-merged-bim-file"],
-            ukb_genomicc_merged_fam_file=cmd_settings["ukb-genomicc-merged-fam-file"],
-            ukb_genomicc_imputed_files_list=cmd_settings["ukb-genomicc-imputed-files-list"],
-            ukb_genomicc_covariates_file=cmd_settings["ukb-genomicc-covariates-file"]
-        )
-    elseif cmd == "fill-chr-pvar-with-variant-id"
-        fill_chr_pvar_with_variant_id(
-            cmd_settings["pvar-file"],
-            cmd_settings["variants-info-file"]
-        )
-    elseif cmd == "make-ukb-individuals-list"
-        make_ukb_individuals_list(
-            cmd_settings["covariates-file"],
-            cmd_settings["critical-table-file"];
-            output=cmd_settings["output"],
-            max_samples=cmd_settings["max-samples"]
-        )
     else
         throw(ArgumentError(string("Unknown command: ", cmd)))
     end

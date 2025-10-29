@@ -58,7 +58,7 @@ function update_bim_with_mapped_alleles(tmp_prefix, shared_variants_file)
     # Convert VCF to a temporary PLINK bed
     variants_map = allele_map_from_shared_variants(shared_variants_file)
     # Fill the missing allele and update the variant id in the bim file
-    bim = GenomiccWorkflows.read_bim(bim_file)
+    bim = read_bim(bim_file)
     bim.VARIANT_ID = convert(Vector{String}, bim.VARIANT_ID)
     bim.ALLELE_1 = convert(Vector{String}, bim.ALLELE_1)
     for row in eachrow(bim)
