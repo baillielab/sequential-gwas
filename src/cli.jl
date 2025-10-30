@@ -19,10 +19,6 @@ function cli_settings()
             action = :command
             help = "Plots PCA of genotypes."
 
-        "snps-to-flip"
-            action = :command
-            help = "Extracts SNPs to flip based on Illumina manifest file."
-
         "mock"
             action = :command
             help = "Creates mock data for testing purposes."
@@ -472,18 +468,6 @@ function cli_settings()
             help = "Prefix to output genotypes data."
     end
 
-    @add_arg_table! s["snps-to-flip"] begin
-        "manifest-file"
-            arg_type = String
-            required = true
-            help = "Path to Illumina manifest file."
-
-        "--out"
-            arg_type = String
-            help = "Output .txt file with SNPs to flip (1 SNP per line)."
-            default = "snps_to_flip.txt"
-    end
-
     @add_arg_table! s["mock"] begin
         "release-r8"
             arg_type = String
@@ -554,9 +538,7 @@ function julia_main()::Cint
     cmd = settings["%COMMAND%"]
     @info "Running GenOMICC Workflows: $cmd"
     cmd_settings = settings[cmd]
-    if cmd == "snps-to-flip"
-        make_snps_to_flip_list(cmd_settings["out"], cmd_settings["manifest-file"])
-    elseif cmd == "report-qc-effect"
+    if cmd == "report-qc-effect"
         report_qc_effect(
             cmd_settings["input-prefix"], 
             cmd_settings["output-prefix"]

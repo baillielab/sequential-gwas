@@ -19,19 +19,7 @@ Since the covariates are not sensitive, the newly created odap identifier is sim
 
 ## How to Mock 
 
-To run, on ODAP, assuming:
-
-- The data output by Dominique is in `/odp-beefgs/a015/linked_data/preqc/array-pre-imputation/` and mounted in the singularity container in `/mnt/data`
-- The repo is mounted in `/mnt/genomicc-workflows` (This is not necessary anymore once the code is in the container, just need to point to `/opt/genomicc-workflows`)
-
-```bash
-singularity shell --bind /odp-beefgs/a015/linked_data/preqc/array-pre-imputation/:/mnt/data PATH_TO_SINGULARITY_IMAGE
-```
-
-Then run 
-```bash
-JULIA_DEPOT_PATH=$JULIA_DEPOT_PATH:/root/.julia julia --project=/opt/genomicc-workflows /opt/genomicc-workflows/bin/genomicc.jl
-```
+The mocked data was generated on ODAP using the `mock_data` function in the `bin/mock.jl` script.
 
 I also manually:
 

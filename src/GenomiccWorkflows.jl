@@ -24,9 +24,6 @@ using JSON
 using Base.Threads
 using GenomiccUtils
 
-# Legacy files
-include("one_time_checks.jl")
-include("mock.jl")
 # Common files
 include("read_write.jl")
 # Not yet categorised files

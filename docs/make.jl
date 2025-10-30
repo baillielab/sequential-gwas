@@ -19,7 +19,7 @@ makedocs(;
         "For Developpers" => [
             "Development" => "development.md",
             "Mock Data" => "mock_data.md",
-            "Index Of Julia Functions" => "julia_fns.md"
+            "Legacy" => "misc.md"
         ]
     ],
 )

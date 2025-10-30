@@ -14,10 +14,10 @@ In this section we discuss how to regenerate results from an analysis from scrat
 
 ## Step 3: Merging GenOMICC and the UK Biobank
 
-- workflow: [Merging the GenOMICC and UK Biobank Cohorts](@ref)
-- platform: [UKB RAP](@ref)
+- workflow: [Merging the GenOMICC and UK Biobank Cohorts](https://github.com/baillielab/ukb-genomicc-workflows)
+- platform: [UKB RAP](https://www.ukbiobank.ac.uk/use-our-data/research-analysis-platform/)
 
-## Step 4: Analysis
+## Step 4: GWAS
 
-- workflow: Todo
-- platform: [UKB RAP](@ref)
+- workflow: [WDL-GWAS](https://github.com/olivierlabayle/WDL-GWAS)
+- platform: [UKB RAP](https://www.ukbiobank.ac.uk/use-our-data/research-analysis-platform/)
