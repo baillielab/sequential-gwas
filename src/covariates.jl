@@ -1,23 +1,3 @@
-function process_genomicc_sexes(sexes)
-    return map(sexes) do sex
-        if sex == "Male"
-            return 1
-        elseif sex == "Female"
-            return 0
-        else
-            return missing
-        end
-    end
-end
-
-function process_ukb_age(years_of_birth)
-    current_year = year(Dates.now())
-    ages = current_year .- years_of_birth
-    μ = round(Int, mean(skipmissing(ages)))
-    return coalesce.(ages, μ)
-end
-
-
 function read_and_process_ancestry(ancestry_file)
     ancestries = CSV.read(ancestry_file, DataFrame)
     rename!(ancestries, :Superpopulation => :ANCESTRY_ESTIMATE)
@@ -36,11 +16,11 @@ function map_sample_ids_to_platform(wgs_samples_file,
     # because platforms are given the following priority: WGS > GSA-MD-48v4-0_A1 > GSA-MD-24v3-0_A1 
     sample_id_to_platform = Dict()
     for file in (release_r8_fam, release_2021_2023_fam)
-        for iid in GenomiccWorkflows.read_fam(file).IID
+        for iid in read_fam(file).IID
             sample_id_to_platform[iid] = "GSA-MD-24v3-0_A1"
         end
     end
-    for iid in GenomiccWorkflows.read_fam(release_2024_now_fam).IID
+    for iid in read_fam(release_2024_now_fam).IID
         sample_id_to_platform[iid] = "GSA-MD-48v4-0_A1"
     end
     for iid in readlines(wgs_samples_file)

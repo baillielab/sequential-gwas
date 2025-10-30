@@ -58,8 +58,8 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
-  test-genomicc-aggregation:
-    name: Genomicc Datasets Aggregation Tests with ${{ matrix.container }}
+  test:
+    name: Test with ${{ matrix.container }}
     needs: build_and_publish
     runs-on: ubuntu-latest
     permissions: # needed to allow julia-actions/cache to proactively delete old caches that it has created
@@ -95,40 +95,8 @@ jobs:
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
-        with:
-          test_args: 'genomicc_aggregation_tests'
         env:
           CI_CONTAINER: ${{ matrix.container }}
-  test-ukbmerge:
-    name: UKBMerge Tests
-    needs: build_and_publish
-    runs-on: ubuntu-latest
-    permissions: # needed to allow julia-actions/cache to proactively delete old caches that it has created
-      actions: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set Swap Space
-        uses: pierotofy/set-swap-space@master
-        with:
-          swap-size-gb: 10
-      - name: Delete huge unnecessary tools folder
-        run: sudo rm -rf /opt/hostedtoolcache && sudo rm -rf /usr/local/share/boost && sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-      - name: Download Cromwell
-        run: |
-          wget https://github.com/broadinstitute/cromwell/releases/download/90/cromwell-90.jar
-          mv cromwell-90.jar ${{ github.workspace }}/cromwell.jar
-      - uses: julia-actions/setup-julia@v2
-        with:
-          version: 1.11
-      - uses: julia-actions/cache@v2
-      - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-runtest@v1
-        with:
-          test_args: 'ukbmerge_tests'
-        env:
-          CI_CONTAINER: docker
-          CROMWELL_PATH: ${{ github.workspace }}/cromwell.jar
   docs:
     name: Documentation
     runs-on: ubuntu-latest
@@ -151,17 +119,9 @@ jobs:
         shell: julia --project=docs --color=yes {0}
         run: |
           using Pkg
-          Pkg.develop(PackageSpec(path=pwd()))
           Pkg.instantiate()
-      - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-docdeploy@v1
+      - name: Build and deploy
+        run: julia --color=yes --project=docs docs/make.jl
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # If authenticating with GitHub Actions token
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
-      - name: Run doctests
-        shell: julia --project=docs --color=yes {0}
-        run: |
-          using Documenter: DocMeta, doctest
-          using GenomiccWorkflows
-          DocMeta.setdocmeta!(GenomiccWorkflows, :DocTestSetup, :(using GenomiccWorkflows); recursive=true)
-          doctest(GenomiccWorkflows)

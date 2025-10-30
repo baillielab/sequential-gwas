@@ -5,6 +5,7 @@ using GenomiccWorkflows
 using DataFrames
 using CSV
 using DelimitedFiles
+using GenomiccUtils
 
 PKGDIR = pkgdir(GenomiccWorkflows)
 TESTDIR = joinpath(PKGDIR, "test")
@@ -24,16 +25,17 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
             throw(ArgumentError("Unsupported CI container"))
         end
     end
-    cd(PKGDIR)
     cmd = Cmd(["nextflow", "run", "main.nf", "-c", "test/assets/combine_datasets.wgs.config", "-profile", profile, "-resume"])
-    run(cmd)
+    cd(PKGDIR) do
+        run(cmd)
+    end
 
     # Check 1000 GP
     kgp_dir = joinpath(RESULTS_DIR, "kgp", "merged_unrelated")
-    bim = GenomiccWorkflows.read_bim(joinpath(kgp_dir, "kgp.merged.unrelated.bim"))
+    bim = read_bim(joinpath(kgp_dir, "kgp.merged.unrelated.bim"))
     @test unique(bim.CHR_CODE) == [string("chr", k) for k in 1:22]
     @test nrow(bim) > 100
-    fam = GenomiccWorkflows.read_fam(joinpath(kgp_dir, "kgp.merged.unrelated.fam"))
+    fam = read_fam(joinpath(kgp_dir, "kgp.merged.unrelated.fam"))
     unrelated = CSV.read(joinpath(kgp_dir, "kgp_unrelated_individuals.txt"), DataFrame, header=[:IID])
     @test issubset(fam.IID, unrelated.IID)
 
@@ -69,13 +71,13 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     unflipped_bim_files = joinpath.(kgp_qc_files_dir, ["mock.release_r8.liftedOver.qced.new.bim", "mock.release_2021_2023.liftedOver.qced.new.bim", "mock.release_2024_now.qced.new.bim"])
 
     for (flipped_bim_file, unflipped_bim_file, flip_file) in zip(flipped_bim_files, unflipped_bim_files, flip_files)
-        flipped_bim = GenomiccWorkflows.read_bim(flipped_bim_file)
+        flipped_bim = read_bim(flipped_bim_file)
         # Check chr:pos:ref:alt format
         @test all(length.(split.(flipped_bim.VARIANT_ID, ":")) .== 4)
         # Check all shared variants are present in the bim file
         @test sort(shared_variants) == sort(flipped_bim.VARIANT_ID)
         # Check variants have been flipped
-        unflipped_bim = GenomiccWorkflows.read_bim(unflipped_bim_file)
+        unflipped_bim = read_bim(unflipped_bim_file)
         select!(unflipped_bim, 
             :VARIANT_ID, 
             :ALLELE_1 => :UNFLIPPED_ALLELE_1,
@@ -99,14 +101,14 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
         end
     end
     ## New fam files
-    release_2024_now_fam_before_extract = GenomiccWorkflows.read_fam(joinpath(qced_dir, "mock.release_2024_now.qced.fam"))
-    release_2024_now_fam_after_extract = GenomiccWorkflows.read_fam(joinpath(flipped_shared_dir, "release-2024-now.flipped.shared.fam"))
+    release_2024_now_fam_before_extract = read_fam(joinpath(qced_dir, "mock.release_2024_now.qced.fam"))
+    release_2024_now_fam_after_extract = read_fam(joinpath(flipped_shared_dir, "release-2024-now.flipped.shared.fam"))
     release_2024_now_samples_to_drop = CSV.read(joinpath(kgp_qc_files_dir, "mock.release_2024_now.qced.samples_to_drop.txt"), DataFrame, header=false)
     dropped_samples_from_fam = setdiff(release_2024_now_fam_before_extract.IID, release_2024_now_fam_after_extract.IID)
     @test dropped_samples_from_fam == release_2024_now_samples_to_drop[!, 2] == ["odap3001"]
 
-    release_r8_fam_before_extract = GenomiccWorkflows.read_fam(joinpath(qced_dir, "mock.release_r8.liftedOver.qced.fam"))
-    release_r8_fam_after_extract = GenomiccWorkflows.read_fam(joinpath(flipped_shared_dir, "release-r8.flipped.shared.fam"))
+    release_r8_fam_before_extract = read_fam(joinpath(qced_dir, "mock.release_r8.liftedOver.qced.fam"))
+    release_r8_fam_after_extract = read_fam(joinpath(flipped_shared_dir, "release-r8.flipped.shared.fam"))
     release_r8_samples_to_drop = CSV.read(joinpath(kgp_qc_files_dir, "mock.release_r8.liftedOver.qced.samples_to_drop.txt"), DataFrame, header=false)
     dropped_samples_from_fam = setdiff(release_r8_fam_before_extract.IID, release_r8_fam_after_extract.IID)
     @test sort(dropped_samples_from_fam) == sort(release_r8_samples_to_drop[!, 2]) == ["odap2002", "odap3001"]
@@ -124,7 +126,7 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
 
     odap_bim_files = joinpath.(wgs_dir, string.("mock.odap", 3001:3010, ".shared.bim"))
     for bim_file in odap_bim_files
-        bim = GenomiccWorkflows.read_bim(bim_file)
+        bim = read_bim(bim_file)
         # Check no unknwon ALLELE_1/2
         @test all(bim.ALLELE_1 .!= ".")
         @test all(bim.ALLELE_2 .!= ".")
@@ -137,9 +139,9 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     
     # Check merged genotypes
     merge_dir = joinpath(RESULTS_DIR, "merged")
-    merged_bim = GenomiccWorkflows.read_bim(joinpath(merge_dir, "merged", "genotypes.merged.bim"))
+    merged_bim = read_bim(joinpath(merge_dir, "merged", "genotypes.merged.bim"))
     @test sort(merged_bim.VARIANT_ID) == sort(shared_variants)
-    merged_fam = GenomiccWorkflows.read_fam(joinpath(merge_dir, "merged", "genotypes.merged.fam"))
+    merged_fam = read_fam(joinpath(merge_dir, "merged", "genotypes.merged.fam"))
 
     ## Check plink resolves inconsistent alleles when Merging
     ## Even though according to the following link this is the case, we make sure of this: https://wanggroup.org/compbio_tutorial/allele_qc.html
@@ -166,9 +168,9 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
 
     # Check QC of merged genotypes
     ## Check filtered samples
-    qced_merged_bim = GenomiccWorkflows.read_bim(joinpath(merge_dir, "qced", "genotypes.merged.qced.bim"))
+    qced_merged_bim = read_bim(joinpath(merge_dir, "qced", "genotypes.merged.qced.bim"))
     @test issubset(qced_merged_bim.VARIANT_ID, shared_variants)
-    qced_merged_fam = GenomiccWorkflows.read_fam(joinpath(merge_dir, "qced", "genotypes.merged.qced.fam"))
+    qced_merged_fam = read_fam(joinpath(merge_dir, "qced", "genotypes.merged.qced.fam"))
     @test qced_merged_fam.FID == qced_merged_fam.IID
     unrelated_king = CSV.read(
         joinpath(RESULTS_DIR, "merged/king_relatedness/kingunrelated.txt"),
@@ -213,9 +215,9 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
     # Check report and final dataset
     @test isfile(joinpath(RESULTS_DIR, "report.md"))
     @test isfile(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.bed"))
-    final_fam = GenomiccWorkflows.read_fam(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.fam"))
+    final_fam = read_fam(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.fam"))
     @test final_fam.FID == final_fam.IID
-    final_bim = GenomiccWorkflows.read_bim(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.bim"))
+    final_bim = read_bim(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.bim"))
     for row in eachrow(final_bim)
         @test split(row.VARIANT_ID, ":")[3] == row.ALLELE_2
     end

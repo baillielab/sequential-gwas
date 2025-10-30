@@ -1,12 +1,10 @@
 [deps]
-Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
-BGEN = "6db4b851-9beb-4b83-9d64-eb1cfb37721d"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+GenomiccUtils = "45214ce5-ea42-4256-97be-5000532e2146"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 
 [compat]
-Aqua = "0.8.10"
 Test = "1.11.0"

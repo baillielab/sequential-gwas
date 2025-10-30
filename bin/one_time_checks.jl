@@ -1,8 +1,3 @@
-module OneTimeChecks
-
-using CSV
-using DataFrames
-
 function identify_assay_and_control_blocks(manifest_file)
     assay_line = 0
     for (line_id, line) in enumerate(eachline(manifest_file))
@@ -73,6 +68,4 @@ function array_overlap(manifest_file1, manifest_file2)
         "# SNPs only in first array" => length(snps_only_in_manifest1),
         "# SNPs only in second array" => length(snps_only_in_manifest_2)
     )
-end
-
 end

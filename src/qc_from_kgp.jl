@@ -190,7 +190,7 @@ function update_bim_with_minor_major_info!(bim, acount)
 end
 
 function load_variants_info(prefix)
-    bim = GenomiccWorkflows.read_bim(string(prefix, ".bim"))
+    bim = read_bim(string(prefix, ".bim"))
     acount = CSV.read(string(prefix, ".acount"), DataFrame)
     return update_bim_with_minor_major_info!(bim, acount)
 end
@@ -242,9 +242,9 @@ function generate_qc_extraction_files_from_kgp(
     generate_files_from_actions(outdir, prefixes_and_bims)
     # Write samples to drop from each release, the order is important here, it indicates the priority of the release
     prefixes_and_fams = (
-        release_2024_now = (basename(release_2024_now), GenomiccWorkflows.read_fam(string(release_2024_now, ".fam"))),
-        release_2021_2023 = (basename(release_2021_2023), GenomiccWorkflows.read_fam(string(release_2021_2023, ".fam"))),
-        release_r8 = (basename(release_r8), GenomiccWorkflows.read_fam(string(release_r8, ".fam"))),
+        release_2024_now = (basename(release_2024_now), read_fam(string(release_2024_now, ".fam"))),
+        release_2021_2023 = (basename(release_2021_2023), read_fam(string(release_2021_2023, ".fam"))),
+        release_r8 = (basename(release_r8), read_fam(string(release_r8, ".fam"))),
     )
     write_release_samples_to_drop(prefixes_and_fams, wgs_samples_file)
 end

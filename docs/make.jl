@@ -1,10 +1,6 @@
-using GenomiccWorkflows
 using Documenter
 
-DocMeta.setdocmeta!(GenomiccWorkflows, :DocTestSetup, :(using GenomiccWorkflows); recursive=true)
-
 makedocs(;
-    modules=[GenomiccWorkflows],
     authors="Olivier Labayle <olabayle@gmail.com> and contributors",
     sitename="GenOMICC Workflows",
     format=Documenter.HTML(;
@@ -15,20 +11,12 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Walk Through" => "walk_through.md",
-        "Prerequisites" => [
-            "ODAP" => "odap_prerequisites.md",
-            "UKB RAP" => "rap_prerequisites.md",
-        ],
-        "Workflows" => [
-            "Combining GenOMICC Datasets" => "combining_genomicc_datasets.md",
-            "GenOMICC Genotypes Imputation" => "genotypes_imputation.md",
-            "Merging the GenOMICC and UK Biobank Cohorts" => "ukb_merge.md",
-            "GWAS" => "gwas.md",
-        ],
+        "ODAP" => "odap_prerequisites.md",
+        "Workflow" => "combining_genomicc_datasets.md",
         "For Developpers" => [
             "Development" => "development.md",
             "Mock Data" => "mock_data.md",
-            "Index Of Julia Functions" => "julia_fns.md"
+            "Legacy" => "misc.md"
         ]
     ],
 )
