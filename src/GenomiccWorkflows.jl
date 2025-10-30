@@ -24,9 +24,8 @@ using JSON
 using Base.Threads
 using GenomiccUtils
 
-# Common files
+
 include("read_write.jl")
-# Not yet categorised files
 include("resources.jl")
 include("cli.jl")
 include("report.jl")
@@ -34,9 +33,6 @@ include("qc_from_kgp.jl")
 include("relatedness.jl")
 include("pca_qc.jl")
 include("gvcf_genotyping.jl")
-# Imputation Files
-include("imputation.jl")
-# Merging UKB and GenOMICC Files
 include("covariates.jl")
 
 export julia_main

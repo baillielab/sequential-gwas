@@ -12,10 +12,7 @@ makedocs(;
         "Home" => "index.md",
         "Walk Through" => "walk_through.md",
         "ODAP" => "odap_prerequisites.md",
-        "Workflows" => [
-            "Combining GenOMICC Datasets" => "combining_genomicc_datasets.md",
-            "GenOMICC Genotypes Imputation" => "genotypes_imputation.md",
-        ],
+        "Workflow" => "combining_genomicc_datasets.md",
         "For Developpers" => [
             "Development" => "development.md",
             "Mock Data" => "mock_data.md",

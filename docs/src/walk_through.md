@@ -9,7 +9,7 @@ In this section we discuss how to regenerate results from an analysis from scrat
 
 ## Step 2: Imputation of Genotypes
 
-- workflow: [GenOMICC Genotypes Imputation](@ref)
+- workflow: [TOPMed Imputation](https://github.com/olivierlabayle/nf-topmed-imputation)
 - platform: [Eddie](https://information-services.ed.ac.uk/research-support/research-computing/ecdf/high-performance-computing)
 
 ## Step 3: Merging GenOMICC and the UK Biobank

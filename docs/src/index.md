@@ -67,4 +67,3 @@ Inclusion criteria:
 These workflows will typically be run sequentially.
 
 - [Combining GenOMICC Datasets](@ref)
-- [GenOMICC Genotypes Imputation](@ref)
