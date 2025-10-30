@@ -72,5 +72,3 @@ These workflows will typically be run sequentially.
 
 - [Combining GenOMICC Datasets](@ref)
 - [GenOMICC Genotypes Imputation](@ref)
-- [Combining with UK Biobank](@ref)
-- [GWAS](@ref)

@@ -25,9 +25,10 @@ RESULTS_DIR = joinpath(PKGDIR, "results")
             throw(ArgumentError("Unsupported CI container"))
         end
     end
-    cd(PKGDIR)
     cmd = Cmd(["nextflow", "run", "main.nf", "-c", "test/assets/combine_datasets.wgs.config", "-profile", profile, "-resume"])
-    run(cmd)
+    cd(PKGDIR) do
+        run(cmd)
+    end
 
     # Check 1000 GP
     kgp_dir = joinpath(RESULTS_DIR, "kgp", "merged_unrelated")

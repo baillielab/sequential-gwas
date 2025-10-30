@@ -25,9 +25,10 @@ RESULTS_DIR = joinpath(PKGDIR, "results_no_wgs")
             throw(ArgumentError("Unsupported CI container"))
         end
     end
-    cd(PKGDIR)
     cmd = Cmd(["nextflow", "run", "main.nf", "-c", "test/assets/combine_datasets.no_wgs.config", "-profile", profile, "-resume"])
-    run(cmd)
+    cd(PKGDIR) do
+        run(cmd)
+    end
 
     # Basic checks, complete checks are implemented in `combine_datasets_wgs.jl`
     fam = read_fam(joinpath(RESULTS_DIR, "genotypes.aggregated.qced.final.fam"))

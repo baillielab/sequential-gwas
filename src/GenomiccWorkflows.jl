@@ -22,6 +22,7 @@ using MarkdownTables
 using YAML
 using JSON
 using Base.Threads
+using GenomiccUtils
 
 # Legacy files
 include("one_time_checks.jl")
