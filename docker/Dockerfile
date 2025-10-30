@@ -11,6 +11,3 @@ RUN julia --project=/opt/genomicc-workflows --startup-file=no -e 'using Pkg; Pkg
 
 RUN cd /opt/genomicc-workflows \
     && julia --project --startup-file=no --threads=auto bin/make_sysimage.jl
-
-
-
