@@ -35,6 +35,7 @@ gwas_results/
 .nextflow.*
 trace*
 
+
 # Assets
 assets/topmed-api-token
 assets/GSA*
@@ -60,4 +61,4 @@ cromwell-workflow-logs/
 
 # vscode
 
-.vscode/*
+.vscode

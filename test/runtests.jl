@@ -1,6 +1,5 @@
 using GenomiccWorkflows
 using Test
-using Aqua
 
 PKGDIR = pkgdir(GenomiccWorkflows)
 TESTDIR = joinpath(PKGDIR, "test")
