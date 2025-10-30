@@ -1,2 +1,0 @@
-phenotypes: ["case_or_control"]
-covariates: ["AGE", "SEX"]
